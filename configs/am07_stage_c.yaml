@@ -1,0 +1,47 @@
+# Stage C experiment config — AM07 pilot
+# Run detect on workstation (CUDA + DINO ops). Assignment can also run on laptop
+# if detections.csv is already produced.
+
+participant_id: AM07AM07
+recording_id: "Recording 50"
+tsv_path: "AM07AM07_01_data_export.tsv"
+video_path: "AM07AM07_01 scenevideo.mp4"
+output_dir: "outputs/am07_stage_c_pilot"
+
+# Verified sync (same as configs/am07_recording50.yaml)
+timestamp_unit: milliseconds
+timestamp_unit_status: verified
+video_start_recording_s: 0.0
+time_mapping_status: verified
+max_abs_residual_s: 0.05
+
+clip:
+  recording_start_s: 30.0
+  recording_end_s: 60.0
+
+# Frame selection for detection (not every gaze sample)
+frame_selection:
+  # unique matched frames in clip; optionally subsample
+  mode: unique_matched_frames
+  stride: 5          # keep every Nth unique frame (1 = all)
+  max_frames: 60     # hard cap for pilot
+
+detector:
+  backend: idea_dino          # idea_dino | mock
+  # Workstation paths — adjust after copying project / downloading weights
+  dino_repo: "DINO"           # or absolute path on workstation, e.g. ~/gaze_project/DINO
+  config_file: "DINO/config/DINO/DINO_4scale.py"
+  checkpoint: "models/dino/checkpoint_4scale.pth"   # download before detect
+  device: cuda
+  score_threshold: 0.3
+  # COCO pretrained classes mapped explicitly in code/config; unmapped stay raw
+  class_map_file: "configs/class_definitions.yaml"
+
+assignment:
+  # Baseline: gaze point inside box after score filter
+  score_threshold: 0.3
+  # If multiple boxes contain the point: ambiguous (do not auto-pick smallest/largest)
+  overlap_policy: ambiguous
+  require_normalized_label: false   # if true, ignore detections without study label map
+
+compute_hash: true

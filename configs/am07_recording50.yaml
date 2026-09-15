@@ -1,0 +1,27 @@
+# Verified recording config for AM07AM07 / Recording 50
+# Sync verified visually against Tobii Pro Lab (user, 2026-09).
+
+participant_id: AM07AM07
+recording_id: "Recording 50"
+tsv_path: "AM07AM07_01_data_export.tsv"
+video_path: "AM07AM07_01 scenevideo.mp4"
+output_dir: "outputs/am07_overlay_pilot"
+
+timestamp_unit: milliseconds
+timestamp_unit_status: verified
+
+# Scene video starts at recording time 0 (verified via Tobii overlay comparison).
+video_start_recording_s: 0.0
+time_mapping_status: verified
+time_mapping_notes: >
+  Offset model video_time_s = recording_time_s - 0.0 under millisecond units.
+  Visually verified against Tobii playback (early/mid/late in pilot clip).
+
+max_abs_residual_s: 0.05
+
+compute_hash: true
+max_pts_samples: 3000
+
+clip:
+  recording_start_s: 30.0
+  recording_end_s: 60.0

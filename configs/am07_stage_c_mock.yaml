@@ -1,0 +1,35 @@
+# Stage C local path test on Windows (no CUDA) — uses mock boxes only.
+# Not for scientific detector claims.
+
+participant_id: AM07AM07
+recording_id: "Recording 50"
+tsv_path: "AM07AM07_01_data_export.tsv"
+video_path: "AM07AM07_01 scenevideo.mp4"
+output_dir: "outputs/am07_stage_c_mock"
+
+timestamp_unit: milliseconds
+timestamp_unit_status: verified
+video_start_recording_s: 0.0
+time_mapping_status: verified
+max_abs_residual_s: 0.05
+
+clip:
+  recording_start_s: 30.0
+  recording_end_s: 45.0
+
+frame_selection:
+  mode: unique_matched_frames
+  stride: 10
+  max_frames: 8
+
+detector:
+  backend: mock
+  score_threshold: 0.3
+  class_map_file: "configs/class_definitions.yaml"
+
+assignment:
+  score_threshold: 0.3
+  overlap_policy: ambiguous
+  require_normalized_label: false
+
+compute_hash: false

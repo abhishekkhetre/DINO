@@ -1,0 +1,36 @@
+# Raw study data and large media
+*.tsv
+*.mp4
+*.avi
+*.mov
+*.mkv
+data/raw/
+weights/
+checkpoints/
+models/
+*.pth
+*.pt
+
+# Upstream IDEA-Research DINO clone (install separately; see README)
+/DINO/
+
+# Outputs and caches
+outputs/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,27 @@
+# Initial category map — raw AOI names preserved; semantics still open.
+# Do not treat these as confirmed instance definitions.
+
+version: 1
+status: provisional
+
+categories:
+  - raw_name: "Angle Grinder"
+    normalized_id: angle_grinder
+    open_questions:
+      - whole device vs components vs work region
+  - raw_name: "Boxes"
+    normalized_id: boxes
+    open_questions:
+      - instance vs category; contents included?
+  - raw_name: "Manual"
+    normalized_id: manual
+    open_questions:
+      - instruction booklet? not the same as manual-mapping method
+  - raw_name: "Tools"
+    normalized_id: tools
+    open_questions:
+      - which implements; tools inside a box?
+
+notes:
+  - Detector boxes describe visible objects; reference AOIs may be broader regions.
+  - Hands / background / unlisted parts: unresolved; keep uncertainty statuses.

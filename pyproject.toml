@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gaze-objects"
+version = "0.1.0"
+description = "Offline gaze-to-object analysis for Tobii first-person recordings"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+video = [
+  "opencv-python-headless>=4.8",
+  "av>=12.0",
+]
+dev = [
+  "pytest>=7.0",
+  "pyarrow>=14.0",
+]
+
+[project.scripts]
+gaze-objects = "gaze_objects.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
