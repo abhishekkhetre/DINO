@@ -204,6 +204,14 @@ def cmd_assign(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_evaluate(args: argparse.Namespace) -> int:
+    from gaze_objects.evaluate import run_evaluate
+
+    summary = run_evaluate(args.config)
+    print(json.dumps(summary, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="gaze_objects", description="Gaze-to-object pipeline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -232,6 +240,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_asg = sub.add_parser("assign", help="Stage C: assign gaze to cached detections")
     p_asg.add_argument("--config", required=True)
     p_asg.set_defaults(func=cmd_assign)
+
+    p_eval = sub.add_parser("evaluate", help="Stage D: compare assignments to AOI reference labels")
+    p_eval.add_argument("--config", required=True)
+    p_eval.set_defaults(func=cmd_evaluate)
 
     return parser
 
