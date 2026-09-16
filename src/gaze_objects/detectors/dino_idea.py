@@ -88,7 +88,7 @@ class IdeaDinoDetector:
         args.device = self.device
         build_func = MODULE_BUILD_FUNCS.get(args.modelname)
         model, _criterion, postprocessors = build_func(args)
-        ckpt = torch.load(str(self.checkpoint), map_location="cpu")
+        ckpt = torch.load(str(self.checkpoint), map_location="cpu", weights_only=False)
         state = ckpt["model"] if isinstance(ckpt, dict) and "model" in ckpt else ckpt
         model.load_state_dict(clean_state_dict(state), strict=False)
         model.eval()

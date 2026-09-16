@@ -109,17 +109,24 @@ def select_frame_indices(joined: pd.DataFrame, cfg: dict[str, Any]) -> list[int]
 
 
 def _build_detector(cfg: dict[str, Any]):
-    det_cfg = cfg.get("detector", {})
+    det_cfg = cfg.get("detector") or {}
+    if not isinstance(det_cfg, dict):
+        raise ValueError(
+            "Config key 'detector' must be a mapping. Check YAML indentation under detector:."
+        )
     backend = det_cfg.get("backend", "mock")
     if backend == "mock":
         return "mock", None
     if backend == "idea_dino":
         from gaze_objects.detectors.dino_idea import IdeaDinoDetector
 
+        checkpoint = det_cfg.get("checkpoint")
+        if not checkpoint:
+            raise ValueError("detector.checkpoint is required for backend idea_dino")
         detector = IdeaDinoDetector(
             dino_repo=det_cfg.get("dino_repo", "DINO"),
             config_file=det_cfg.get("config_file", "DINO/config/DINO/DINO_4scale.py"),
-            checkpoint=det_cfg["checkpoint"],
+            checkpoint=checkpoint,
             device=det_cfg.get("device", "cuda"),
             score_threshold=float(det_cfg.get("score_threshold", 0.3)),
             class_map_file=det_cfg.get("class_map_file"),
