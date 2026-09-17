@@ -132,6 +132,29 @@ def _build_detector(cfg: dict[str, Any]):
             class_map_file=det_cfg.get("class_map_file"),
         )
         return "idea_dino", detector
+    if backend == "grounding_dino":
+        from gaze_objects.detectors.grounding_dino import GroundingDinoDetector
+
+        checkpoint = det_cfg.get("checkpoint")
+        if not checkpoint:
+            raise ValueError("detector.checkpoint is required for backend grounding_dino")
+        detector = GroundingDinoDetector(
+            grounding_repo=det_cfg.get("grounding_repo", "GroundingDINO"),
+            config_file=det_cfg.get(
+                "config_file",
+                "GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py",
+            ),
+            checkpoint=checkpoint,
+            text_prompt=det_cfg.get(
+                "text_prompt",
+                "angle grinder . instruction manual . storage box . screwdriver . wrench . tool",
+            ),
+            device=det_cfg.get("device", "cuda"),
+            box_threshold=float(det_cfg.get("box_threshold", det_cfg.get("score_threshold", 0.3))),
+            text_threshold=float(det_cfg.get("text_threshold", 0.25)),
+            class_map_file=det_cfg.get("class_map_file"),
+        )
+        return "grounding_dino", detector
     raise ValueError(f"Unknown detector.backend: {backend}")
 
 

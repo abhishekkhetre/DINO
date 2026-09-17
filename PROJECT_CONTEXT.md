@@ -23,8 +23,8 @@ Derived from the 9 September 2026 handoff brief. Update when evidence or supervi
 - Timestamp unit and selected-interval meaning vs export settings and video PTS.
 - Exact AOI semantics (`Manual`, `Angle Grinder`, Boxes/Tools boundaries).
 - Tobii glasses model / Pro Lab version.
-- Whether this Cursor machine is the RTX 3080 workstation (see STATUS for local env evidence).
-- Visual sync review early/mid/late against Tobii playback.
+- Whether development PC vs RTX workstation is used for which stage (see STATUS for env evidence).
+- Visual sync review early/mid/late against Tobii playback (AM07 overlay verified).
 
 ## Label policy
 

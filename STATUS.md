@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-09-11.
+Last updated: 2026-09-16.
 
 ## Completed
 
@@ -8,33 +8,30 @@ Last updated: 2026-09-11.
 Reproducible on AM07; SHA-256 and Section 7 counts matched.
 
 ### Stage B — sync + overlay
-- Pilot overlay generated.
-- **Visually verified against Tobii** by user (sync OK).
-- Config statuses set to `verified` in `configs/am07_recording50.yaml`.
+- Pilot overlay generated and **visually verified against Tobii**.
+- Sync config marked `verified`.
 
 ### Workstation GPU stack (Ubuntu)
 - RTX 3080 Ti, driver 595.91, conda `dino_gpu`, PyTorch cu118.
-- IDEA-Research DINO `MultiScaleDeformableAttention` built and importable (`MSDA OK`).
-- `/data` personal folder deferred (using `$HOME` for now).
+- IDEA-Research DINO ops built (`MSDA OK`).
+- AM07 Stage C with `idea_dino` completed (60 frames, 135 detections).
+- Stage D evaluate completed: **0% AOI name agreement** because COCO labels (`refrigerator`, `person`, `hair drier`) do not match study AOIs.
 
-### Stage C — code scaffold (this repo)
-- `assign.py`: gaze-in-box + statuses (`assigned`, `ambiguous`, `no_detected_target`, …).
-- `detectors/`: shared `Detection` schema, label map, `mock`, `idea_dino` adapter.
-- `stage_c.py` + CLI: `detect`, `assign`.
-- Configs: `configs/am07_stage_c.yaml` (workstation DINO), `configs/am07_stage_c_mock.yaml` (laptop path test).
+### Pipeline package
+- `gaze_objects`: audit, sync, overlay, detect, assign, evaluate.
+- Detectors: `mock`, `idea_dino`; Grounding DINO adapter added locally (pending push/pull if not on remote yet).
 
-## Next concrete steps
+## Current goal
 
-1. **Mock Stage C on laptop — executed** (`outputs/am07_stage_c_mock/`):
-   - 8 frames detected (mock), 24 boxes
-   - 1497 gaze rows assigned: 12 assigned, 18 no_detected_target, 21 invalid_gaze, 1446 frame_not_processed (expected: only 8 frames were detected)
-2. **Download DINO ResNet-50 4-scale checkpoint** on workstation → `$HOME/models/dino/`.
-3. **Copy this project** to workstation; adjust paths in `configs/am07_stage_c.yaml`.
-4. **On workstation (`dino_gpu`):** run real `detect` then `assign` for AM07 pilot.
-5. Review detections + assignments; then Stage D evaluation vs `reference_labels.csv`.
+Try **Grounding DINO** (text prompts for study objects) on the same AM07 30–60 s clip, then re-run assign + evaluate. Goal: labels closer to `Manual` / `Tools` / `Boxes` / `Angle Grinder`.
+
+## Not yet
+
+- Stage E attention sequences
+- Batch / full ~400 recordings (wait until category detection is credible)
 
 ## Notes
 
-- Pretrained COCO DINO labels are **not** angle-grinder AOIs; mapping is provisional.
-- Mock backend is for pipeline testing only.
-- Full 400-recording scale waits until the AM07 pilot is credible.
+- Assigned baseline remains IDEA-Research DINO; Grounding DINO is a comparison backend.
+- Prompts and phrase→AOI maps are provisional hypotheses.
+- Do not scale to all videos while category agreement stays near zero.

@@ -1,0 +1,43 @@
+# Stage C — AM07 pilot with Grounding DINO (text prompts)
+# Prompts are hypotheses; confirm wording with supervisor after visual review.
+
+participant_id: AM07AM07
+recording_id: "Recording 50"
+
+tsv_path: "/home/ifab-agiprobotw-0001/KHETRE/DINO_KHETRE/DINO/AM07AM07_01_data_export.tsv"
+video_path: "/home/ifab-agiprobotw-0001/KHETRE/DINO_KHETRE/DINO/AM07AM07_01_scenevideo.mp4"
+output_dir: "outputs/am07_stage_c_grounding"
+
+timestamp_unit: milliseconds
+timestamp_unit_status: verified
+video_start_recording_s: 0.0
+time_mapping_status: verified
+max_abs_residual_s: 0.05
+
+clip:
+  recording_start_s: 30.0
+  recording_end_s: 60.0
+
+frame_selection:
+  mode: unique_matched_frames
+  stride: 5
+  max_frames: 60
+
+detector:
+  backend: grounding_dino
+  grounding_repo: "/home/ifab-agiprobotw-0001/gaze_project/GroundingDINO"
+  config_file: "/home/ifab-agiprobotw-0001/gaze_project/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
+  checkpoint: "/home/ifab-agiprobotw-0001/gaze_project/GroundingDINO/weights/groundingdino_swint_ogc.pth"
+  device: cuda
+  box_threshold: 0.30
+  text_threshold: 0.25
+  # Hypothesis prompt — adjust after looking at failure cases
+  text_prompt: "angle grinder . instruction manual . storage box . screwdriver . wrench . tool"
+  class_map_file: "configs/class_definitions.yaml"
+
+assignment:
+  score_threshold: 0.30
+  overlap_policy: ambiguous
+  require_normalized_label: false
+
+compute_hash: true

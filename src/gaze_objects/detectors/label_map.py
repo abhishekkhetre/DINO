@@ -30,6 +30,28 @@ DEFAULT_COCO_TO_STUDY = {
     "hair drier": None,
 }
 
+# Grounding-DINO / prompt phrase heuristics (provisional).
+DEFAULT_PHRASE_TO_STUDY = {
+    "angle grinder": "Angle Grinder",
+    "grinder": "Angle Grinder",
+    "instruction manual": "Manual",
+    "manual": "Manual",
+    "booklet": "Manual",
+    "instructions": "Manual",
+    "storage box": "Boxes",
+    "box": "Boxes",
+    "boxes": "Boxes",
+    "bin": "Boxes",
+    "screwdriver": "Tools",
+    "wrench": "Tools",
+    "spanner": "Tools",
+    "tool": "Tools",
+    "tools": "Tools",
+    "hammer": "Tools",
+    "plier": "Tools",
+    "pliers": "Tools",
+}
+
 
 def load_class_definitions(path: str | Path | None) -> dict[str, Any]:
     if path is None:
@@ -70,4 +92,13 @@ def normalize_label(raw_label: str, class_defs: dict[str, Any] | None = None) ->
                 return cat.get("raw_name")
 
     mapped = DEFAULT_COCO_TO_STUDY.get(lower)
-    return mapped
+    if mapped is not None or lower in DEFAULT_COCO_TO_STUDY:
+        return mapped
+
+    # Phrase contains / exact match for Grounding DINO outputs
+    if lower in DEFAULT_PHRASE_TO_STUDY:
+        return DEFAULT_PHRASE_TO_STUDY[lower]
+    for phrase, study in DEFAULT_PHRASE_TO_STUDY.items():
+        if phrase in lower:
+            return study
+    return None
