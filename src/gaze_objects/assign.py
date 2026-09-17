@@ -6,6 +6,8 @@ from typing import Any, Iterable
 
 import pandas as pd
 
+from gaze_objects.detectors.label_map import normalize_label
+
 
 ASSIGNMENT_STATUSES = (
     "assigned",
@@ -140,7 +142,12 @@ def assign_table(
         for _, row in detections_df.iterrows():
             fi = int(row[frame_id_col])
             processed_frames.add(fi)
-            by_frame.setdefault(fi, []).append(row.to_dict())
+            det = row.to_dict()
+            # Re-apply current phrase→AOI map so map fixes work without re-detect.
+            raw = det.get("raw_label")
+            if raw is not None and str(raw).strip():
+                det["normalized_label"] = normalize_label(str(raw))
+            by_frame.setdefault(fi, []).append(det)
 
     records = []
     for _, g in gaze_frame_df.iterrows():

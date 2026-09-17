@@ -38,6 +38,7 @@ DEFAULT_PHRASE_TO_STUDY = {
     "manual": "Manual",
     "booklet": "Manual",
     "instructions": "Manual",
+    "instruction": "Manual",  # Grounding often returns truncated prompt token
     "storage box": "Boxes",
     "box": "Boxes",
     "boxes": "Boxes",
