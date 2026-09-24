@@ -34,6 +34,9 @@ DEFAULT_COCO_TO_STUDY = {
 DEFAULT_PHRASE_TO_STUDY = {
     "angle grinder": "Angle Grinder",
     "grinder": "Angle Grinder",
+    "electric grinder": "Angle Grinder",
+    "disk grinder": "Angle Grinder",
+    "disc grinder": "Angle Grinder",
     "instruction manual": "Manual",
     "manual": "Manual",
     "booklet": "Manual",

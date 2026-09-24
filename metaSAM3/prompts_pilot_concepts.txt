@@ -1,5 +1,7 @@
 angle grinder
 grinder
+electric grinder
+disk grinder
 instruction manual
 storage box
 screwdriver
