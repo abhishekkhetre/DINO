@@ -88,6 +88,11 @@ class Sam3Detector:
         if not self.concepts:
             raise ValueError("sam3 backend needs at least one text concept.")
 
+        # Match Meta example notebooks (Ampere+ / SAM3 image inference).
+        if self.device.startswith("cuda"):
+            torch.backends.cuda.matmul.allow_tf32 = True
+            torch.backends.cudnn.allow_tf32 = True
+
         self.model = build_sam3_image_model(
             device=self.device,
             eval_mode=True,
@@ -107,48 +112,64 @@ class Sam3Detector:
             self.load()
         assert self.processor is not None
 
+        import torch
         from PIL import Image
 
         rgb = frame_bgr[:, :, ::-1]
         image_pil = Image.fromarray(rgb)
-        state = self.processor.set_image(image_pil)
+
+        # Official SAM3 image demos run under bfloat16 autocast; without it,
+        # linear layers can mix BFloat16 weights with Float32 activations.
+        autocast_ctx = (
+            torch.autocast("cuda", dtype=torch.bfloat16)
+            if self.device.startswith("cuda")
+            else torch.autocast("cpu", enabled=False)
+        )
 
         dets: list[Detection] = []
         det_i = 0
-        for concept in self.concepts:
-            self.processor.reset_all_prompts(state)
-            state = self.processor.set_text_prompt(prompt=concept, state=state)
-            boxes = state.get("boxes")
-            scores = state.get("scores")
-            if boxes is None or scores is None or len(boxes) == 0:
-                continue
+        with torch.inference_mode():
+            with autocast_ctx:
+                state = self.processor.set_image(image_pil)
+                for concept in self.concepts:
+                    self.processor.reset_all_prompts(state)
+                    state = self.processor.set_text_prompt(prompt=concept, state=state)
+                    boxes = state.get("boxes")
+                    scores = state.get("scores")
+                    if boxes is None or scores is None or len(boxes) == 0:
+                        continue
 
-            boxes_np = boxes.detach().cpu().numpy()
-            scores_np = scores.detach().cpu().numpy()
-            for j in range(len(boxes_np)):
-                score = float(scores_np[j])
-                if score < self.score_threshold:
-                    continue
-                x_min, y_min, x_max, y_max = [float(v) for v in boxes_np[j].tolist()]
-                dets.append(
-                    Detection(
-                        detection_id=f"{frame_key}_sam3_{det_i}",
-                        frame_key=frame_key,
-                        x_min=x_min,
-                        y_min=y_min,
-                        x_max=x_max,
-                        y_max=y_max,
-                        raw_label=concept,
-                        normalized_label=normalize_label(concept, self.class_defs),
-                        score=score,
-                        model_provenance={
-                            "backend": "sam3",
-                            "model_name": "facebook/sam3",
-                            "checkpoint": self.checkpoint_path or "huggingface:facebook/sam3",
-                            "text_concept": concept,
-                            "score_threshold": self.score_threshold,
-                        },
-                    )
-                )
-                det_i += 1
+                    boxes_np = boxes.detach().float().cpu().numpy()
+                    scores_np = scores.detach().float().cpu().numpy()
+                    for j in range(len(boxes_np)):
+                        score = float(scores_np[j])
+                        if score < self.score_threshold:
+                            continue
+                        x_min, y_min, x_max, y_max = [
+                            float(v) for v in boxes_np[j].tolist()
+                        ]
+                        dets.append(
+                            Detection(
+                                detection_id=f"{frame_key}_sam3_{det_i}",
+                                frame_key=frame_key,
+                                x_min=x_min,
+                                y_min=y_min,
+                                x_max=x_max,
+                                y_max=y_max,
+                                raw_label=concept,
+                                normalized_label=normalize_label(
+                                    concept, self.class_defs
+                                ),
+                                score=score,
+                                model_provenance={
+                                    "backend": "sam3",
+                                    "model_name": "facebook/sam3",
+                                    "checkpoint": self.checkpoint_path
+                                    or "huggingface:facebook/sam3",
+                                    "text_concept": concept,
+                                    "score_threshold": self.score_threshold,
+                                },
+                            )
+                        )
+                        det_i += 1
         return dets
