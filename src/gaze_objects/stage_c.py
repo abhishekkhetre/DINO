@@ -173,7 +173,8 @@ def _build_detector(cfg: dict[str, Any]):
             class_map_file=det_cfg.get("class_map_file"),
             resolution=int(det_cfg.get("resolution", 1008)),
         )
-        return "sam3", detector    raise ValueError(f"Unknown detector.backend: {backend}")
+        return "sam3", detector
+    raise ValueError(f"Unknown detector.backend: {backend}")
 
 
 def run_detect(config_path: str | Path) -> dict[str, Any]:
