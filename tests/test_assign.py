@@ -69,6 +69,44 @@ def test_ambiguous_overlap():
     assert out["selected_detection_id"] is None
 
 
+def test_same_normalized_label_not_ambiguous():
+    out = assign_gaze_to_detections(
+        50,
+        50,
+        has_gaze_coordinates=True,
+        in_frame=True,
+        out_of_frame=False,
+        association_status="matched",
+        frame_processed=True,
+        detections=[
+            {
+                "detection_id": "d0",
+                "x_min": 0,
+                "y_min": 0,
+                "x_max": 100,
+                "y_max": 100,
+                "raw_label": "grinder",
+                "normalized_label": "Angle Grinder",
+                "score": 0.4,
+            },
+            {
+                "detection_id": "d1",
+                "x_min": 20,
+                "y_min": 20,
+                "x_max": 80,
+                "y_max": 80,
+                "raw_label": "electric grinder",
+                "normalized_label": "Angle Grinder",
+                "score": 0.7,
+            },
+        ],
+    )
+    assert out["assignment_status"] == "assigned"
+    assert out["selected_detection_id"] == "d1"
+    assert out["selected_normalized_label"] == "Angle Grinder"
+    assert out["assignment_reason"] == "same_normalized_label_highest_score"
+
+
 def test_score_threshold_filters():
     out = assign_gaze_to_detections(
         50,

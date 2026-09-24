@@ -23,8 +23,10 @@ Reproducible on AM07; SHA-256 and Section 7 counts matched.
 | Grounding DINO (raw) | 597 | 112 / 82 | **~55%** (60/109) |
 | SAM 3 (thr 0.30, +tool) | 1938 | 16 / 219 | unusable (almost all ambiguous) |
 | **SAM 3 tuned (thr 0.55, no tool)** | **512** | **150 / 9** | **~91.5%** (130/142) |
+| **SAM 3 v2 (grinder synonyms)** | **1198** | **95 / 129** | **~95.5%** (85/89); Angle Grinder recall 0.8 |
 
-SAM 3 tuned: Boxes/Tools perfect; Manual strong; **Angle Grinder → all called Manual** (12/12).
+SAM 3 tuned: Boxes/Tools perfect; Manual strong; **Angle Grinder → all called Manual** (12/12).  
+SAM 3 v2: Angle Grinder recovered (16/20); many `ambiguous` from overlapping grinder synonyms — next: same-AOI merge in assign.
 
 ### Pipeline package
 - Detectors: `mock`, `idea_dino`, `grounding_dino`, **`sam3`**.

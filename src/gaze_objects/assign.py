@@ -109,6 +109,27 @@ def assign_gaze_to_detections(
         return base
 
     if len(candidates) > 1:
+        # If every containing box maps to the same study AOI (e.g. grinder /
+        # electric grinder synonyms), treat as a single assignment — pick
+        # highest score. Different AOIs still count as ambiguous.
+        norm_labels = []
+        for d in candidates:
+            lab = d.get("normalized_label")
+            if lab is None or (isinstance(lab, float) and pd.isna(lab)):
+                lab = None
+            else:
+                lab = str(lab).strip() or None
+            norm_labels.append(lab)
+        unique_norms = {n for n in norm_labels if n is not None}
+        if len(unique_norms) == 1 and None not in norm_labels:
+            chosen = max(candidates, key=lambda d: float(d.get("score", 0.0)))
+            base["selected_detection_id"] = str(chosen["detection_id"])
+            base["selected_raw_label"] = chosen.get("raw_label")
+            base["selected_normalized_label"] = chosen.get("normalized_label")
+            base["selected_score"] = float(chosen.get("score", 0.0))
+            base["assignment_status"] = "assigned"
+            base["assignment_reason"] = "same_normalized_label_highest_score"
+            return base
         base["assignment_status"] = "ambiguous"
         base["assignment_reason"] = "multiple_boxes_contain_gaze"
         return base
