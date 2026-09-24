@@ -1,0 +1,43 @@
+# Stage C — AM07 pilot with Meta SAM 3 (text concepts)
+# Same clip/protocol as grounding for side-by-side Stage D comparison.
+# Concepts are short noun phrases (one per forward pass).
+
+participant_id: AM07AM07
+recording_id: "Recording 50"
+
+tsv_path: "/home/ifab-agiprobotw-0001/KHETRE/DINO_KHETRE/DINO/AM07AM07_01_data_export.tsv"
+video_path: "/home/ifab-agiprobotw-0001/KHETRE/DINO_KHETRE/DINO/AM07AM07_01_scenevideo.mp4"
+output_dir: "outputs/am07_stage_c_sam3"
+
+timestamp_unit: milliseconds
+timestamp_unit_status: verified
+video_start_recording_s: 0.0
+time_mapping_status: verified
+max_abs_residual_s: 0.05
+
+clip:
+  recording_start_s: 30.0
+  recording_end_s: 60.0
+
+frame_selection:
+  mode: unique_matched_frames
+  stride: 5
+  max_frames: 60
+
+detector:
+  backend: sam3
+  device: cuda
+  score_threshold: 0.30
+  # Auto-download from HF if checkpoint_path omitted (requires hf auth login)
+  load_from_hf: true
+  # checkpoint_path: null
+  text_concepts_file: "metaSAM3/prompts_pilot_concepts.txt"
+  class_map_file: "configs/class_definitions.yaml"
+  resolution: 1008
+
+assignment:
+  score_threshold: 0.30
+  overlap_policy: ambiguous
+  require_normalized_label: false
+
+compute_hash: true

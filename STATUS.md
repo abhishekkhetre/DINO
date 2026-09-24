@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-09-17.
+Last updated: 2026-09-24.
 
 ## Completed
 
@@ -33,7 +33,7 @@ Reproducible on AM07; SHA-256 and Section 7 counts matched.
 
 ## Current goal
 
-Re-run **assign + evaluate** on existing Grounding detections after pulling the `instruction`→`Manual` map fix. Expect conditional agreement near ceiling on this clip (Manual FP should collapse). Then Stage E or a second recording pilot.
+Run **SAM 3** AM07 pilot (`configs/am07_stage_c_sam3.yaml`) on the workstation and compare Stage D to Grounding. Adapter: `gaze_objects.detectors.sam3_meta` (`backend: sam3`). Keep Grounding as baseline.
 
 ## Not yet
 

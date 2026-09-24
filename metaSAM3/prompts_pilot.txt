@@ -1,0 +1,30 @@
+# Pilot concept prompts (AM07-aligned)
+
+SAM 3 prefers **short noun phrases**, one concept at a time (unlike Grounding DINO’s period-separated multi-prompt string).
+
+## Coarse study AOIs (first pilot — match current Stage D)
+
+Run once per concept (or batch if using batched API), then merge boxes with the phrase as `raw_label`:
+
+```
+angle grinder
+instruction manual
+storage box
+screwdriver
+wrench
+tool
+```
+
+Map via existing `label_map.py` to: Angle Grinder / Manual / Boxes / Tools.
+
+## Optional finer parts (later — after coarse SAM3 baseline)
+
+```
+angle grinder disc
+angle grinder handle
+angle grinder guard
+battery pack
+screw
+```
+
+Needs part-level reference labels to score properly.

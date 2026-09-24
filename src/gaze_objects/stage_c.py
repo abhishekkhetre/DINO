@@ -155,6 +155,24 @@ def _build_detector(cfg: dict[str, Any]):
             class_map_file=det_cfg.get("class_map_file"),
         )
         return "grounding_dino", detector
+    if backend == "sam3":
+        from gaze_objects.detectors.sam3_meta import Sam3Detector
+
+        detector = Sam3Detector(
+            device=det_cfg.get("device", "cuda"),
+            score_threshold=float(
+                det_cfg.get("score_threshold", det_cfg.get("box_threshold", 0.3))
+            ),
+            text_concepts=det_cfg.get("text_concepts"),
+            text_concepts_file=det_cfg.get(
+                "text_concepts_file", "metaSAM3/prompts_pilot_concepts.txt"
+            ),
+            checkpoint_path=det_cfg.get("checkpoint_path") or det_cfg.get("checkpoint"),
+            load_from_hf=bool(det_cfg.get("load_from_hf", True)),
+            class_map_file=det_cfg.get("class_map_file"),
+            resolution=int(det_cfg.get("resolution", 1008)),
+        )
+        return "sam3", detector
     raise ValueError(f"Unknown detector.backend: {backend}")
 
 

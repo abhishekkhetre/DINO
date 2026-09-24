@@ -14,6 +14,10 @@ models/
 # Upstream IDEA-Research DINO clone (install separately; see README)
 /DINO/
 
+# Upstream Meta SAM 3 clone (docs stay under metaSAM3/; code is large)
+/metaSAM3/sam3/
+/metaSAM3/checkpoints/
+
 # Outputs and caches
 outputs/
 __pycache__/
