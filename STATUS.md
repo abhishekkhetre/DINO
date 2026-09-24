@@ -12,36 +12,30 @@ Reproducible on AM07; SHA-256 and Section 7 counts matched.
 - Sync config marked `verified`.
 
 ### Workstation GPU stack (Ubuntu)
-- RTX 3080 Ti, driver 595.91, conda `dino_gpu`, PyTorch cu118.
-- IDEA-Research DINO ops built (`MSDA OK`).
-- GroundingDINO installed under `~/gaze_project/GroundingDINO` with `transformers==4.37.2`.
+- RTX 3080 Ti; conda `dino_gpu` (Grounding) and conda `sam3` (Meta SAM 3).
+- GroundingDINO + IDEA-Research DINO previously validated.
 
-### Stage C/D — AM07 pilot (COCO IDEA-DINO)
-- 60 frames, 135 detections.
-- Stage D: **0%** conditional AOI agreement (COCO names ≠ study AOIs).
+### Stage C/D — AM07 pilots (same 30–60 s, 60 frames)
 
-### Stage C/D — AM07 pilot (Grounding DINO)
-- Same 30–60 s clip, 60 frames, **597** detections.
-- Conditional AOI agreement: **55%** (60/109) before phrase-map fix.
-- Strong classes when assigned: Angle Grinder / Boxes / Tools.
-- Main error: raw phrase `instruction` not mapped to `Manual` (48 cases).
-- Fix in `label_map.py` (`instruction` → `Manual`); assign re-applies map so **re-detect not required**.
+| Backend | Detections | Assigned / ambiguous | Conditional AOI accuracy |
+| --- | ---: | --- | ---: |
+| COCO IDEA-DINO | 135 | — | **0%** |
+| Grounding DINO (raw) | 597 | 112 / 82 | **~55%** (60/109) |
+| SAM 3 (thr 0.30, +tool) | 1938 | 16 / 219 | unusable (almost all ambiguous) |
+| **SAM 3 tuned (thr 0.55, no tool)** | **512** | **150 / 9** | **~91.5%** (130/142) |
+
+SAM 3 tuned: Boxes/Tools perfect; Manual strong; **Angle Grinder → all called Manual** (12/12).
 
 ### Pipeline package
-- `gaze_objects`: audit, sync, overlay, detect, assign, evaluate.
-- Detectors: `mock`, `idea_dino`, `grounding_dino`.
+- Detectors: `mock`, `idea_dino`, `grounding_dino`, **`sam3`**.
 
 ## Current goal
 
-Run **SAM 3** AM07 pilot (`configs/am07_stage_c_sam3.yaml`) on the workstation and compare Stage D to Grounding. Adapter: `gaze_objects.detectors.sam3_meta` (`backend: sam3`). Keep Grounding as baseline.
+1. Persist tuned SAM 3 settings + per-concept thresholds for grinder.
+2. Re-run AM07 SAM 3 detect/assign/evaluate; check Angle Grinder recall.
+3. Then Stage E (attention sequences) or a second recording.
 
 ## Not yet
 
 - Stage E attention sequences
-- Batch / full ~400 recordings (wait until category detection is credible on more than one clip)
-
-## Notes
-
-- Assigned baseline remains IDEA-Research DINO; Grounding DINO is the stronger AM07 pilot for AOI-name agreement.
-- Prompts and phrase→AOI maps are provisional hypotheses.
-- Do not scale to all videos until agreement holds beyond this single pilot.
+- Batch / full ~400 recordings

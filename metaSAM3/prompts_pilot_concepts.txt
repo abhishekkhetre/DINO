@@ -1,6 +1,6 @@
 angle grinder
+grinder
 instruction manual
 storage box
 screwdriver
 wrench
-tool

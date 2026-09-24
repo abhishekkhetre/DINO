@@ -163,6 +163,7 @@ def _build_detector(cfg: dict[str, Any]):
             score_threshold=float(
                 det_cfg.get("score_threshold", det_cfg.get("box_threshold", 0.3))
             ),
+            score_threshold_by_concept=det_cfg.get("score_threshold_by_concept"),
             text_concepts=det_cfg.get("text_concepts"),
             text_concepts_file=det_cfg.get(
                 "text_concepts_file", "metaSAM3/prompts_pilot_concepts.txt"
@@ -172,8 +173,7 @@ def _build_detector(cfg: dict[str, Any]):
             class_map_file=det_cfg.get("class_map_file"),
             resolution=int(det_cfg.get("resolution", 1008)),
         )
-        return "sam3", detector
-    raise ValueError(f"Unknown detector.backend: {backend}")
+        return "sam3", detector    raise ValueError(f"Unknown detector.backend: {backend}")
 
 
 def run_detect(config_path: str | Path) -> dict[str, Any]:

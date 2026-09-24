@@ -55,6 +55,7 @@ class Sam3Detector:
         *,
         device: str = "cuda",
         score_threshold: float = 0.30,
+        score_threshold_by_concept: dict[str, float] | None = None,
         text_concepts: list[str] | None = None,
         text_concepts_file: str | Path | None = None,
         checkpoint_path: str | Path | None = None,
@@ -64,6 +65,10 @@ class Sam3Detector:
     ) -> None:
         self.device = device
         self.score_threshold = float(score_threshold)
+        self.score_threshold_by_concept = {
+            str(k).strip().lower(): float(v)
+            for k, v in (score_threshold_by_concept or {}).items()
+        }
         self.concepts = load_text_concepts(text_concepts, text_concepts_file)
         self.checkpoint_path = (
             str(Path(checkpoint_path).expanduser().resolve())
@@ -76,6 +81,12 @@ class Sam3Detector:
         self.model = None
         self.processor = None
 
+    def _threshold_for(self, concept: str) -> float:
+        return float(
+            self.score_threshold_by_concept.get(
+                concept.strip().lower(), self.score_threshold
+            )
+        )
     def load(self) -> None:
         import torch
         from sam3.model_builder import build_sam3_image_model
@@ -104,7 +115,11 @@ class Sam3Detector:
             self.model,
             resolution=self.resolution,
             device=self.device,
-            confidence_threshold=self.score_threshold,
+            # Processor gate uses the global floor; per-concept cuts applied below.
+            confidence_threshold=min(
+                [self.score_threshold, *self.score_threshold_by_concept.values()]
+                or [self.score_threshold]
+            ),
         )
 
     def detect_frame(self, frame_bgr: np.ndarray, frame_key: str) -> list[Detection]:
@@ -132,6 +147,7 @@ class Sam3Detector:
             with autocast_ctx:
                 state = self.processor.set_image(image_pil)
                 for concept in self.concepts:
+                    concept_thr = self._threshold_for(concept)
                     self.processor.reset_all_prompts(state)
                     state = self.processor.set_text_prompt(prompt=concept, state=state)
                     boxes = state.get("boxes")
@@ -143,7 +159,7 @@ class Sam3Detector:
                     scores_np = scores.detach().float().cpu().numpy()
                     for j in range(len(boxes_np)):
                         score = float(scores_np[j])
-                        if score < self.score_threshold:
+                        if score < concept_thr:
                             continue
                         x_min, y_min, x_max, y_max = [
                             float(v) for v in boxes_np[j].tolist()
@@ -167,7 +183,7 @@ class Sam3Detector:
                                     "checkpoint": self.checkpoint_path
                                     or "huggingface:facebook/sam3",
                                     "text_concept": concept,
-                                    "score_threshold": self.score_threshold,
+                                    "score_threshold": concept_thr,
                                 },
                             )
                         )

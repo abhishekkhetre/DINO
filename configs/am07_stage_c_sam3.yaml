@@ -1,6 +1,6 @@
 # Stage C — AM07 pilot with Meta SAM 3 (text concepts)
+# Tuned 2026-09-24: score_threshold 0.55, dropped vague "tool" prompt.
 # Same clip/protocol as grounding for side-by-side Stage D comparison.
-# Concepts are short noun phrases (one per forward pass).
 
 participant_id: AM07AM07
 recording_id: "Recording 50"
@@ -27,16 +27,18 @@ frame_selection:
 detector:
   backend: sam3
   device: cuda
-  score_threshold: 0.30
-  # Auto-download from HF if checkpoint_path omitted (requires hf auth login)
+  score_threshold: 0.55
+  # Optional per-phrase overrides (grinder was missing at 0.55 → all Manual)
+  score_threshold_by_concept:
+    angle grinder: 0.35
+    grinder: 0.35
   load_from_hf: true
-  # checkpoint_path: null
   text_concepts_file: "metaSAM3/prompts_pilot_concepts.txt"
   class_map_file: "configs/class_definitions.yaml"
   resolution: 1008
 
 assignment:
-  score_threshold: 0.30
+  score_threshold: 0.35
   overlap_policy: ambiguous
   require_normalized_label: false
 
