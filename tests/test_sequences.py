@@ -5,6 +5,7 @@ from __future__ import annotations
 import pandas as pd
 
 from gaze_objects.sequences import (
+    apply_fixation_quality_gates,
     build_attention_sequences,
     build_fixation_table,
     majority_attended_label,
@@ -74,3 +75,46 @@ def test_build_fixation_and_sequences():
     assert len(seq) == 3
     assert list(seq["attended_label"]) == ["Manual", "Tools", "Manual"]
     assert int(seq.iloc[0]["n_fixations"]) == 1
+
+
+def test_quality_gates_demote_weak_fixations():
+    fix = pd.DataFrame(
+        [
+            {
+                "fixation_index": 1,
+                "attended_label": "Manual",
+                "attended_status": "labelled",
+                "n_labelled_assigned": 1,
+                "label_fraction": 1.0,
+                "recording_start_s": 1.0,
+                "recording_end_s": 1.2,
+                "video_start_s": 1.0,
+                "video_end_s": 1.2,
+                "gaze_event_duration_raw": 200.0,
+            },
+            {
+                "fixation_index": 2,
+                "attended_label": "Tools",
+                "attended_status": "labelled",
+                "n_labelled_assigned": 3,
+                "label_fraction": 0.75,
+                "recording_start_s": 2.0,
+                "recording_end_s": 2.5,
+                "video_start_s": 2.0,
+                "video_end_s": 2.5,
+                "gaze_event_duration_raw": 500.0,
+            },
+        ]
+    )
+    gated = apply_fixation_quality_gates(
+        fix, min_assigned_samples=2, min_label_fraction=0.5
+    )
+    assert gated.loc[0, "attended_status"] == "below_quality_gate"
+    assert pd.isna(gated.loc[0, "attended_label"])
+    assert gated.loc[0, "attended_label_candidate"] == "Manual"
+    assert gated.loc[1, "attended_status"] == "labelled"
+    assert gated.loc[1, "attended_label"] == "Tools"
+
+    seq = build_attention_sequences(gated)
+    assert len(seq) == 1
+    assert seq.iloc[0]["attended_label"] == "Tools"
