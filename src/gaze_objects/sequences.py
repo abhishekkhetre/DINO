@@ -85,6 +85,13 @@ def majority_attended_label(
     }
 
 
+def _series_numeric(frame: pd.DataFrame, column: str) -> pd.Series:
+    """Always return a numeric Series (empty if column missing)."""
+    if column not in frame.columns:
+        return pd.Series(dtype="float64")
+    return pd.to_numeric(frame[column], errors="coerce")
+
+
 def build_fixation_table(
     assignments: pd.DataFrame,
     associations: pd.DataFrame,
@@ -112,7 +119,10 @@ def build_fixation_table(
         ]
         if c in assoc.columns
     ]
-    merged = asg.merge(assoc[keep_cols], on="source_row_id", how="left", validate="one_to_one")
+    # Drop overlap so merge does not create video_time_s_x / _y and hide columns.
+    overlap = [c for c in keep_cols if c != "source_row_id" and c in asg.columns]
+    asg_slim = asg.drop(columns=overlap)
+    merged = asg_slim.merge(assoc[keep_cols], on="source_row_id", how="left", validate="one_to_one")
 
     fix = merged[merged["eye_movement_type"] == movement_type].copy()
     fix["eye_movement_type_index"] = pd.to_numeric(
@@ -123,9 +133,9 @@ def build_fixation_table(
     records: list[dict[str, Any]] = []
     for fix_idx, sub in fix.groupby("eye_movement_type_index", sort=True):
         label_info = majority_attended_label(sub, label_policy=label_policy)
-        t_rec = pd.to_numeric(sub["recording_time_s_provisional"], errors="coerce")
-        t_vid = pd.to_numeric(sub.get("video_time_s"), errors="coerce")
-        dur = pd.to_numeric(sub["gaze_event_duration_raw"], errors="coerce")
+        t_rec = _series_numeric(sub, "recording_time_s_provisional")
+        t_vid = _series_numeric(sub, "video_time_s")
+        dur = _series_numeric(sub, "gaze_event_duration_raw")
         records.append(
             {
                 "fixation_index": int(fix_idx),

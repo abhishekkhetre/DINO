@@ -47,6 +47,9 @@ def test_build_fixation_and_sequences():
                 "Manual",
             ],
             "selected_score": [0.8, 0.7, 0.9, 0.85, None, 0.6],
+            # Overlaps association columns — must not break merge.
+            "video_time_s": [30.0, 30.1, 31.0, 31.1, 32.0, 33.0],
+            "recording_time_s_provisional": [30.0, 30.1, 31.0, 31.1, 32.0, 33.0],
         }
     )
     associations = pd.DataFrame(
@@ -64,6 +67,7 @@ def test_build_fixation_and_sequences():
     assert fix.loc[fix["fixation_index"] == 10, "attended_label"].iloc[0] == "Manual"
     assert fix.loc[fix["fixation_index"] == 11, "attended_label"].iloc[0] == "Tools"
     assert fix.loc[fix["fixation_index"] == 12, "attended_status"].iloc[0] == "no_assigned_label"
+    assert fix.loc[fix["fixation_index"] == 10, "video_start_s"].iloc[0] == 30.0
 
     seq = build_attention_sequences(fix)
     # Manual(10), Tools(11), gap(12), Manual(13) → 3 sequences
