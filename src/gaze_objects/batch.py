@@ -26,23 +26,30 @@ def discover_recording_pairs(data_dir: str | Path) -> list[dict[str, str]]:
     """
     Pair ``*_data_export.tsv`` with a matching scene video.
 
-    Video name may be ``{stem}_scenevideo.mp4`` or ``{stem} scenevideo.mp4``.
+    Searches ``data_dir`` recursively so nested Tobii export folders work.
+    Video may sit beside the TSV as ``{stem}_scenevideo.mp4`` or
+    ``{stem} scenevideo.mp4``.
     """
     root = Path(data_dir)
     if not root.is_dir():
         raise FileNotFoundError(f"data_dir not found: {root}")
 
     pairs: list[dict[str, str]] = []
-    for tsv in sorted(root.glob("*_data_export.tsv")):
+    seen: set[str] = set()
+    for tsv in sorted(root.rglob("*_data_export.tsv")):
         stem = tsv.name[: -len("_data_export.tsv")]
+        if stem in seen:
+            continue
+        parent = tsv.parent
         candidates = [
-            root / f"{stem}_scenevideo.mp4",
-            root / f"{stem} scenevideo.mp4",
-            root / f"{stem}_01_scenevideo.mp4",  # unlikely but harmless
+            parent / f"{stem}_scenevideo.mp4",
+            parent / f"{stem} scenevideo.mp4",
+            parent / f"{stem}_01_scenevideo.mp4",
         ]
         video = next((p for p in candidates if p.is_file()), None)
         if video is None:
             continue
+        seen.add(stem)
         pairs.append(
             {
                 "id": stem,
@@ -53,23 +60,21 @@ def discover_recording_pairs(data_dir: str | Path) -> list[dict[str, str]]:
     return pairs
 
 
-def _resolve_existing_path(path: str | Path, data_dir: str | Path | None = None) -> Path:
+def _resolve_existing_path(path: str | Path, data_dir: str | Path | None = None) -> Path | None:
+    """Return resolved file path if it exists (incl. Tobii space/underscore variants)."""
     p = Path(path)
     if not p.is_absolute() and data_dir:
         p = Path(data_dir) / p
-    if p.is_file():
-        return p.resolve()
-    # Common Tobii naming: underscore vs space before scenevideo
+    candidates = [p]
     name = p.name
-    alts: list[Path] = []
     if "_scenevideo.mp4" in name:
-        alts.append(p.with_name(name.replace("_scenevideo.mp4", " scenevideo.mp4")))
+        candidates.append(p.with_name(name.replace("_scenevideo.mp4", " scenevideo.mp4")))
     if " scenevideo.mp4" in name:
-        alts.append(p.with_name(name.replace(" scenevideo.mp4", "_scenevideo.mp4")))
-    for alt in alts:
-        if alt.is_file():
-            return alt.resolve()
-    return p.resolve()
+        candidates.append(p.with_name(name.replace(" scenevideo.mp4", "_scenevideo.mp4")))
+    for cand in candidates:
+        if cand.is_file():
+            return cand.resolve()
+    return None
 
 
 def resolve_batch_recordings(cfg: dict[str, Any]) -> list[dict[str, str]]:
@@ -77,6 +82,8 @@ def resolve_batch_recordings(cfg: dict[str, Any]) -> list[dict[str, str]]:
     data_dir = cfg.get("data_dir")
     select = cfg.get("select") or {}
     recordings: list[dict[str, str]] = []
+    discovered = discover_recording_pairs(data_dir) if data_dir else []
+    by_id = {p["id"]: p for p in discovered}
 
     for item in cfg.get("recordings") or []:
         rec_id = str(item.get("id") or item.get("stem") or "").strip()
@@ -89,10 +96,20 @@ def resolve_batch_recordings(cfg: dict[str, Any]) -> list[dict[str, str]]:
                 if name.endswith("_data_export.tsv")
                 else Path(tsv).stem
             )
+        if rec_id and rec_id in by_id:
+            recordings.append(by_id[rec_id])
+            continue
         if not tsv or not video:
-            raise ValueError(f"Recording entry missing tsv/video: {item}")
+            print(f"[batch] skip preferred recording (missing paths): {item}", flush=True)
+            continue
         tsv_p = _resolve_existing_path(tsv, data_dir)
         video_p = _resolve_existing_path(video, data_dir)
+        if tsv_p is None or video_p is None:
+            print(
+                f"[batch] skip preferred recording (not found under data_dir): {rec_id or item}",
+                flush=True,
+            )
+            continue
         recordings.append(
             {"id": rec_id, "tsv_path": str(tsv_p), "video_path": str(video_p)}
         )
@@ -102,7 +119,6 @@ def resolve_batch_recordings(cfg: dict[str, Any]) -> list[dict[str, str]]:
         if not data_dir:
             raise ValueError("select.mode=first_n requires data_dir")
         n = int(select.get("n", 5))
-        discovered = discover_recording_pairs(data_dir)
         have = {r["id"] for r in recordings}
         for pair in discovered:
             if pair["id"] in have:
@@ -113,7 +129,9 @@ def resolve_batch_recordings(cfg: dict[str, Any]) -> list[dict[str, str]]:
         recordings = recordings[:n]
 
     if not recordings:
-        raise ValueError("No recordings resolved. Set recordings: and/or select: first_n.")
+        raise ValueError(
+            "No recordings resolved. Check data_dir for *_data_export.tsv + scenevideo pairs."
+        )
     return recordings
 
 

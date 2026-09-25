@@ -23,6 +23,22 @@ def test_discover_recording_pairs(tmp_path: Path):
     assert ids == ["AA01", "BB02"]
 
 
+def test_discover_nested_tobii_data(tmp_path: Path):
+    nested = tmp_path / "Participant_AM07" / "Recording1"
+    nested.mkdir(parents=True)
+    (nested / "AM07AM07_01_data_export.tsv").write_text("x\n", encoding="utf-8")
+    (nested / "AM07AM07_01_scenevideo.mp4").write_bytes(b"0")
+    other = tmp_path / "flat"
+    other.mkdir()
+    (other / "KI05KO01_01_data_export.tsv").write_text("x\n", encoding="utf-8")
+    (other / "KI05KO01_01 scenevideo.mp4").write_bytes(b"0")
+
+    pairs = discover_recording_pairs(tmp_path)
+    ids = [p["id"] for p in pairs]
+    assert ids == ["AM07AM07_01", "KI05KO01_01"]
+    assert Path(pairs[0]["tsv_path"]).parent == nested.resolve()
+
+
 def test_resolve_first_n_with_preferred(tmp_path: Path):
     (tmp_path / "AM07AM07_01_data_export.tsv").write_text("x\n", encoding="utf-8")
     (tmp_path / "AM07AM07_01_scenevideo.mp4").write_bytes(b"0")
@@ -53,3 +69,29 @@ def test_resolve_first_n_with_preferred(tmp_path: Path):
     assert one["detector"]["backend"] == "sam3"
     assert one["output_dir"].endswith("AM07AM07_01")
     assert Path(one["tsv_path"]).name == "AM07AM07_01_data_export.tsv"
+
+
+def test_preferred_missing_falls_back_to_discover(tmp_path: Path):
+    nested = tmp_path / "sub"
+    nested.mkdir()
+    (nested / "KI05KO01_01_data_export.tsv").write_text("x\n", encoding="utf-8")
+    (nested / "KI05KO01_01_scenevideo.mp4").write_bytes(b"0")
+    (nested / "ZZ99_data_export.tsv").write_text("x\n", encoding="utf-8")
+    (nested / "ZZ99_scenevideo.mp4").write_bytes(b"0")
+
+    cfg = {
+        "data_dir": str(tmp_path),
+        "recordings": [
+            {
+                "id": "AM07AM07_01",
+                "tsv": "AM07AM07_01_data_export.tsv",
+                "video": "AM07AM07_01_scenevideo.mp4",
+            }
+        ],
+        "select": {"mode": "first_n", "n": 2},
+        "defaults": {},
+        "output_root": "outputs/tmp_batch",
+    }
+    recs = resolve_batch_recordings(cfg)
+    assert len(recs) == 2
+    assert "AM07AM07_01" not in {r["id"] for r in recs}

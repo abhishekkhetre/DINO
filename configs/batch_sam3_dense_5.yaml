@@ -1,8 +1,8 @@
 # Smoke batch: up to 5 Tobii recordings with dense SAM3 + Stage E gates.
-# On workstation, set data_dir to the folder that holds *_data_export.tsv + scene videos.
-# AM07 is listed first; remaining slots filled by discover order until 5 total.
+# data_dir: full Tobii corpus (TSV + scene videos; nested folders OK).
+# AM07 is preferred first when present; remaining slots filled by discover until 5.
 
-data_dir: "/home/ifab-agiprobotw-0001/KHETRE/DINO_KHETRE/DINO"
+data_dir: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data"
 output_root: "outputs/batch_sam3_dense_5"
 
 stages:
