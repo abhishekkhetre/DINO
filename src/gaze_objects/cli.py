@@ -220,6 +220,25 @@ def cmd_sequences(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_discover_pairs(args: argparse.Namespace) -> int:
+    from gaze_objects.batch import discover_recording_pairs
+
+    pairs = discover_recording_pairs(args.data_dir)
+    if args.limit is not None:
+        pairs = pairs[: int(args.limit)]
+    print(json.dumps(pairs, indent=2))
+    print(f"n_pairs={len(pairs)}", file=sys.stderr)
+    return 0
+
+
+def cmd_batch(args: argparse.Namespace) -> int:
+    from gaze_objects.batch import run_batch
+
+    summary = run_batch(args.config)
+    print(json.dumps(summary, indent=2, default=str))
+    return 0 if summary.get("n_error", 0) == 0 else 2
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="gaze_objects", description="Gaze-to-object pipeline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -259,6 +278,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_seq.add_argument("--config", required=True)
     p_seq.set_defaults(func=cmd_sequences)
+
+    p_disc = sub.add_parser(
+        "discover-pairs",
+        help="List TSV+scenevideo pairs under a data directory",
+    )
+    p_disc.add_argument("--data-dir", required=True)
+    p_disc.add_argument("--limit", type=int, default=None)
+    p_disc.set_defaults(func=cmd_discover_pairs)
+
+    p_batch = sub.add_parser(
+        "batch",
+        help="Run detect/assign/evaluate/sequences over a batch manifest",
+    )
+    p_batch.add_argument("--config", required=True)
+    p_batch.set_defaults(func=cmd_batch)
 
     return parser
 

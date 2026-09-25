@@ -16,15 +16,10 @@ See prior rows: SAM3 v2 + same-AOI assign ≈ **97%** conditional AOI agreement 
 
 ## Current goal
 
-**Dense SAM3 + gated Stage E** on AM07 (`configs/am07_stage_c_sam3_dense.yaml`):
-- stride 2, max_frames 150
-- `min_assigned_samples: 2`, `min_label_fraction: 0.5`
-- output: `outputs/am07_stage_c_sam3_dense/`
-
-Then second recording pilot before any full batch.
+**5-video dense SAM3 smoke batch** (`configs/batch_sam3_dense_5.yaml`):
+discover/fill 5 TSV+video pairs → detect → assign → evaluate → sequences → `batch_qc_summary.csv`.
 
 ## Not yet
 
-- Second-recording validation
-- Batch / ~400 videos
+- Full ~400 batch
 - Process-step alignment / dwell-transition analysis
