@@ -152,6 +152,39 @@ def build_fixation_table(
     return pd.DataFrame.from_records(records)
 
 
+def apply_fixation_quality_gates(
+    fixation_table: pd.DataFrame,
+    *,
+    min_assigned_samples: int = 1,
+    min_label_fraction: float = 0.0,
+) -> pd.DataFrame:
+    """
+    Demote weak fixation labels so they do not enter attention sequences.
+
+    Keeps ``attended_label_candidate`` for inspection; clears ``attended_label``
+    when gates fail and sets ``attended_status`` to ``below_quality_gate``.
+    """
+    out = fixation_table.copy()
+    if out.empty:
+        out["attended_label_candidate"] = pd.Series(dtype=object)
+        out["passes_quality_gate"] = pd.Series(dtype=bool)
+        return out
+
+    out["attended_label_candidate"] = out["attended_label"]
+    labelled = out["attended_status"] == "labelled"
+    n_lab = pd.to_numeric(out["n_labelled_assigned"], errors="coerce").fillna(0)
+    frac = pd.to_numeric(out["label_fraction"], errors="coerce")
+    frac_ok = frac.isna() | (frac >= float(min_label_fraction))
+    sample_ok = n_lab >= int(min_assigned_samples)
+    passes = labelled & sample_ok & frac_ok
+    out["passes_quality_gate"] = passes
+
+    weak = labelled & ~passes
+    out.loc[weak, "attended_status"] = "below_quality_gate"
+    out.loc[weak, "attended_label"] = None
+    return out
+
+
 def build_attention_sequences(fixation_table: pd.DataFrame) -> pd.DataFrame:
     """
     Collapse consecutive fixations that share the same attended_label.
@@ -241,6 +274,8 @@ def run_sequences(config_path: str | Path) -> dict[str, Any]:
     seq_cfg = cfg.get("sequences") or {}
     movement_type = str(seq_cfg.get("movement_type", "Fixation"))
     label_policy = str(seq_cfg.get("label_policy", "assigned_majority"))
+    min_assigned_samples = int(seq_cfg.get("min_assigned_samples", 1))
+    min_label_fraction = float(seq_cfg.get("min_label_fraction", 0.0))
 
     assignments = pd.read_csv(asg_path)
     associations = pd.read_csv(assoc_path)
@@ -250,12 +285,18 @@ def run_sequences(config_path: str | Path) -> dict[str, Any]:
         movement_type=movement_type,
         label_policy=label_policy,
     )
+    fixations = apply_fixation_quality_gates(
+        fixations,
+        min_assigned_samples=min_assigned_samples,
+        min_label_fraction=min_label_fraction,
+    )
     sequences = build_attention_sequences(fixations)
 
     fixations.to_csv(out_dir / "fixation_attended_objects.csv", index=False)
     sequences.to_csv(out_dir / "attention_sequences.csv", index=False)
 
     labelled = fixations[fixations["attended_status"] == "labelled"]
+    weak = fixations[fixations["attended_status"] == "below_quality_gate"]
     label_counts = (
         labelled["attended_label"].value_counts(dropna=False).to_dict() if len(labelled) else {}
     )
@@ -265,8 +306,11 @@ def run_sequences(config_path: str | Path) -> dict[str, Any]:
     summary = {
         "movement_type": movement_type,
         "label_policy": label_policy,
+        "min_assigned_samples": min_assigned_samples,
+        "min_label_fraction": min_label_fraction,
         "n_fixations": int(len(fixations)),
         "n_fixations_labelled": int(len(labelled)),
+        "n_fixations_below_quality_gate": int(len(weak)),
         "n_sequences": int(len(sequences)),
         "fixation_attended_label_counts": {str(k): int(v) for k, v in label_counts.items()},
         "sequence_label_counts": {str(k): int(v) for k, v in seq_label_counts.items()},
@@ -274,7 +318,8 @@ def run_sequences(config_path: str | Path) -> dict[str, Any]:
         "notes": [
             "Fixations use Tobii Eye movement type index; Gaze event duration is max-per-index (not summed).",
             "attended_label = majority selected_normalized_label among assignment_status==assigned.",
-            "Sequences merge consecutive fixations with the same attended_label; unlabelled fixations break runs.",
+            "Quality gates: min_assigned_samples and min_label_fraction; failures → below_quality_gate (excluded from sequences).",
+            "Sequences merge consecutive fixations with the same attended_label; unlabelled/weak fixations break runs.",
         ],
     }
     write_json(out_dir / "sequences_summary.json", summary)
