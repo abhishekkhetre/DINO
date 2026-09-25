@@ -1,0 +1,52 @@
+# Stage C/E — AM07 SAM3 dense pilot (better sequence coverage)
+# Same clip/prompts as v2; denser frames + Stage E quality gates.
+# Expect longer GPU detect than stride-5 / 60-frame run.
+
+participant_id: AM07AM07
+recording_id: "Recording 50"
+
+tsv_path: "/home/ifab-agiprobotw-0001/KHETRE/DINO_KHETRE/DINO/AM07AM07_01_data_export.tsv"
+video_path: "/home/ifab-agiprobotw-0001/KHETRE/DINO_KHETRE/DINO/AM07AM07_01_scenevideo.mp4"
+output_dir: "outputs/am07_stage_c_sam3_dense"
+
+timestamp_unit: milliseconds
+timestamp_unit_status: verified
+video_start_recording_s: 0.0
+time_mapping_status: verified
+max_abs_residual_s: 0.05
+
+clip:
+  recording_start_s: 30.0
+  recording_end_s: 60.0
+
+frame_selection:
+  mode: unique_matched_frames
+  stride: 2
+  max_frames: 150
+
+detector:
+  backend: sam3
+  device: cuda
+  score_threshold: 0.55
+  score_threshold_by_concept:
+    angle grinder: 0.25
+    grinder: 0.25
+    electric grinder: 0.25
+    disk grinder: 0.25
+  load_from_hf: true
+  text_concepts_file: "metaSAM3/prompts_pilot_concepts.txt"
+  class_map_file: "configs/class_definitions.yaml"
+  resolution: 1008
+
+assignment:
+  score_threshold: 0.25
+  overlap_policy: ambiguous
+  require_normalized_label: false
+
+sequences:
+  movement_type: Fixation
+  label_policy: assigned_majority
+  min_assigned_samples: 2
+  min_label_fraction: 0.5
+
+compute_hash: true

@@ -1,45 +1,40 @@
 # Status
 
-Last updated: 2026-09-24.
+Last updated: 2026-09-25.
 
 ## Completed
 
-### Stage A — TSV audit
-Reproducible on AM07; SHA-256 and Section 7 counts matched.
+### Stage A–D AM07 pilots
+See prior rows: SAM3 v2 + same-AOI assign ≈ **97%** conditional AOI agreement on the sparse 60-frame clip.
 
-### Stage B — sync + overlay
-- Pilot overlay generated and **visually verified against Tobii**.
-- Sync config marked `verified`.
+### Stage E (sparse v2)
+- 39 fixations, 20 labelled, 12 sequences (Manual / Angle Grinder / Tools / Boxes).
 
-### Workstation GPU stack (Ubuntu)
-- RTX 3080 Ti; conda `dino_gpu` (Grounding) and conda `sam3` (Meta SAM 3).
-- GroundingDINO + IDEA-Research DINO previously validated.
+### Pipeline
+- Detectors: `mock`, `idea_dino`, `grounding_dino`, `sam3`
+- Stage E: `sequences` CLI with optional quality gates
+- Batch: `discover-pairs` + `batch` over `~/KHETRE/Tobii_Data`
 
-### Stage C/D — AM07 pilots (same 30–60 s, 60 frames)
+### 5-video dense SAM3 smoke batch (workstation)
+Config: `configs/batch_sam3_dense_5.yaml` → `outputs/batch_sam3_dense_5/batch_qc_summary.csv`
 
-| Backend | Detections | Assigned / ambiguous | Conditional AOI accuracy |
-| --- | ---: | --- | ---: |
-| COCO IDEA-DINO | 135 | — | **0%** |
-| Grounding DINO (raw) | 597 | 112 / 82 | **~55%** (60/109) |
-| SAM 3 (thr 0.30, +tool) | 1938 | 16 / 219 | unusable (almost all ambiguous) |
-| **SAM 3 tuned (thr 0.55, no tool)** | **512** | **150 / 9** | **~91.5%** (130/142) |
-| **SAM 3 v2 (grinder synonyms)** | **1198** | **95 / 129** | **~95.5%** (85/89); Angle Grinder recall 0.8 |
-| **SAM 3 v2 + same-AOI assign** | 1198 | **145 / 79** | **~97.1%** (132/136); Angle Grinder recall **0.94** |
+| recording | frames | dets | cond. AOI acc | cond. n | fixations | labelled | sequences |
+|-----------|-------:|-----:|--------------:|--------:|----------:|---------:|----------:|
+| AM07AM07_01 | 150 | 2972 | 0.997 | 319 | 39 | 22 | 12 |
+| AA05ED02_01 | 150 | 1934 | 0.972 | 327 | 52 | 15 | 6 |
+| AA05ED02_02 | 150 | 1391 | 1.000 | 341 | 60 | 19 | 4 |
+| AA05ED02_03 | 150 | 1481 | **0.443** | 318 | 45 | 13 | 5 |
+| AA05ED02_04 | 150 | 1829 | 1.000 | 411 | 68 | 16 | 7 |
 
-SAM 3 tuned: Boxes/Tools perfect; Manual strong; **Angle Grinder → all called Manual** (12/12).  
-SAM 3 v2: Angle Grinder recovered; synonym overlaps raised ambiguous until same-AOI merge.
-
-### Pipeline package
-- Detectors: `mock`, `idea_dino`, `grounding_dino`, **`sam3`**.
-- Stage E: `gaze_objects.cli sequences` (fixation majority → attention runs).
+- **5/5 ok**, 0 errors
+- Outlier: `AA05ED02_03` conditional accuracy ~44% (others ≥97%)
+- Labelled-fixation yield still modest (quality gates): ~15–22 labelled / 39–68 fixations
 
 ## Current goal
 
-Run Stage E on AM07 SAM3 v2 outputs (no re-detect):
-`python -m gaze_objects.cli sequences --config configs/am07_stage_c_sam3.yaml`
+Review `AA05ED02_03` failure mode (sync / concept coverage / AOI mapping), then decide whether to scale beyond the 5-video smoke.
 
 ## Not yet
 
-- Batch / full ~400 recordings
-- Second-recording SAM3 validation
-- Gaze-in-mask / video tracker upgrades
+- Full ~400 batch
+- Process-step alignment / dwell-transition analysis
