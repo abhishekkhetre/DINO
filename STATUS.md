@@ -24,20 +24,22 @@ Reproducible on AM07; SHA-256 and Section 7 counts matched.
 | SAM 3 (thr 0.30, +tool) | 1938 | 16 / 219 | unusable (almost all ambiguous) |
 | **SAM 3 tuned (thr 0.55, no tool)** | **512** | **150 / 9** | **~91.5%** (130/142) |
 | **SAM 3 v2 (grinder synonyms)** | **1198** | **95 / 129** | **~95.5%** (85/89); Angle Grinder recall 0.8 |
+| **SAM 3 v2 + same-AOI assign** | 1198 | **145 / 79** | **~97.1%** (132/136); Angle Grinder recall **0.94** |
 
 SAM 3 tuned: Boxes/Tools perfect; Manual strong; **Angle Grinder → all called Manual** (12/12).  
-SAM 3 v2: Angle Grinder recovered (16/20); many `ambiguous` from overlapping grinder synonyms — next: same-AOI merge in assign.
+SAM 3 v2: Angle Grinder recovered; synonym overlaps raised ambiguous until same-AOI merge.
 
 ### Pipeline package
 - Detectors: `mock`, `idea_dino`, `grounding_dino`, **`sam3`**.
+- Stage E: `gaze_objects.cli sequences` (fixation majority → attention runs).
 
 ## Current goal
 
-1. Persist tuned SAM 3 settings + per-concept thresholds for grinder.
-2. Re-run AM07 SAM 3 detect/assign/evaluate; check Angle Grinder recall.
-3. Then Stage E (attention sequences) or a second recording.
+Run Stage E on AM07 SAM3 v2 outputs (no re-detect):
+`python -m gaze_objects.cli sequences --config configs/am07_stage_c_sam3.yaml`
 
 ## Not yet
 
-- Stage E attention sequences
 - Batch / full ~400 recordings
+- Second-recording SAM3 validation
+- Gaze-in-mask / video tracker upgrades

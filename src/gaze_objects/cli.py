@@ -212,6 +212,14 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sequences(args: argparse.Namespace) -> int:
+    from gaze_objects.sequences import run_sequences
+
+    summary = run_sequences(args.config)
+    print(json.dumps(summary, indent=2, default=str))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="gaze_objects", description="Gaze-to-object pipeline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -244,6 +252,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval = sub.add_parser("evaluate", help="Stage D: compare assignments to AOI reference labels")
     p_eval.add_argument("--config", required=True)
     p_eval.set_defaults(func=cmd_evaluate)
+
+    p_seq = sub.add_parser(
+        "sequences",
+        help="Stage E: Tobii fixation → attended-object sequences from assignments",
+    )
+    p_seq.add_argument("--config", required=True)
+    p_seq.set_defaults(func=cmd_sequences)
 
     return parser
 

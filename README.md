@@ -45,6 +45,9 @@ python -m gaze_objects.cli assign --config configs/am07_stage_c_mock.yaml
 # Stage C — workstation DINO (after checkpoint + path edits)
 python -m gaze_objects.cli detect --config configs/am07_stage_c.yaml
 python -m gaze_objects.cli assign --config configs/am07_stage_c.yaml
+
+# Stage E — fixation → attended-object sequences (needs assign outputs)
+python -m gaze_objects.cli sequences --config configs/am07_stage_c_sam3.yaml
 ```
 
 Tests:

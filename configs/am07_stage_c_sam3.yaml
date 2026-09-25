@@ -42,4 +42,8 @@ assignment:
   overlap_policy: ambiguous
   require_normalized_label: false
 
+sequences:
+  movement_type: Fixation
+  label_policy: assigned_majority
+
 compute_hash: true
