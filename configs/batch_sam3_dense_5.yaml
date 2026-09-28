@@ -50,10 +50,8 @@ defaults:
       grinder: 0.25
       electric grinder: 0.25
       disk grinder: 0.25
-      tool: 0.45
-      tools: 0.45
     load_from_hf: true
-    # No screwdriver/wrench — they stole Angle Grinder AOI on AA05ED02_03
+    # Grinder / Manual / Boxes only — no tool prompts (steal AG AOI)
     text_concepts_file: "metaSAM3/prompts_assembly_aoi.txt"
     class_map_file: "configs/class_definitions.yaml"
     resolution: 1008
