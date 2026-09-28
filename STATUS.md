@@ -5,37 +5,36 @@ Last updated: 2026-09-28.
 ## Completed
 
 ### Stage A–D AM07 pilots
-See prior rows: SAM3 v2 + same-AOI assign ≈ **97%** conditional AOI agreement on the sparse 60-frame clip.
+SAM3 + same-AOI assign ≈ **97%** conditional AOI on sparse pilot; dense AM07 ~98–100%.
 
-### Stage E (sparse v2)
-- 39 fixations, 20 labelled, 12 sequences (Manual / Angle Grinder / Tools / Boxes).
+### Stage E
+Fixation → attended-object sequences with quality gates.
 
 ### Pipeline
 - Detectors: `mock`, `idea_dino`, `grounding_dino`, `sam3`
-- Stage E: `sequences` CLI with optional quality gates
 - Batch: `discover-pairs` + `batch` over `~/KHETRE/Tobii_Data`
+- Assembly prompts: `metaSAM3/prompts_assembly_aoi.txt` (grinder / manual / box; no tools)
+- Assign: `prefer_nested_parent` for **Tools→Angle Grinder only** (not Manual)
 
-### 5-video dense SAM3 smoke batch (workstation)
-Config: `configs/batch_sam3_dense_5.yaml` → tool-free `prompts_assembly_aoi.txt`
+### 5-video dense SAM3 smoke — stable QC
+Config: `configs/batch_sam3_dense_5.yaml`  
+Output: `outputs/batch_sam3_dense_5/batch_qc_summary.csv`
 
 | recording | cond. acc | cond. n | dets | labelled fix. | sequences |
 |-----------|----------:|--------:|-----:|--------------:|----------:|
 | AM07AM07_01 | 0.984 | 307 | 2376 | 21 | 12 |
 | AA05ED02_01 | 0.988 | 322 | 1434 | 14 | 5 |
 | AA05ED02_02 | 1.000 | 341 | 841 | 19 | 4 |
-| AA05ED02_03 | **0.906** | 212 | 923 | 9 | 3 |
+| AA05ED02_03 | 0.906 | 212 | 923 | 9 | 3 |
 | AA05ED02_04 | 1.000 | 407 | 1245 | 15 | 6 |
 
-- **5/5 ok**. Dropping tool prompts fixed AG→Tools theft on 03 (was 0.44–0.47).
-- Tradeoff on 03: smaller assigned+labelled n (409→212) and fewer labelled fixations (14→9).
-- Tobii **Tools** AOI has no detector concept in this prompt set (deferred).
+- **5/5 ok**. Four recordings ≥0.98; 03 at 0.91 with residual **AG→Manual** (20).
+- Do not nest Manual under AG (collapsed AM07). Tools prompts steal AG — deferred.
 
 ## Current goal
 
-- Reverted Manual→AG nesting (it collapsed AM07 0.98→0.48).
-- AA05ED02_03 residual **AG→Manual** (20/212): raise `instruction manual`
-  detect threshold + re-detect 03 only (or accept ~0.91).
-- Then scale smoke batch.
+Scale smoke batch (more participants / more recordings) with the same config, or
+optionally re-detect 03 only with higher `instruction manual` threshold.
 
 ## Not yet
 
