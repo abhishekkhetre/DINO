@@ -183,7 +183,8 @@ def test_nested_tools_overlap_prefers_grinder():
     assert out["assignment_reason"] == "prefer_angle_grinder_over_nested_child"
 
 
-def test_manual_overlap_prefers_grinder():
+def test_manual_overlap_stays_ambiguous():
+    # Manual must not be forced under Angle Grinder (AM07 regression).
     out = assign_gaze_to_detections(
         55,
         55,
@@ -198,9 +199,7 @@ def test_manual_overlap_prefers_grinder():
         ],
         prefer_nested_parent=True,
     )
-    assert out["assignment_status"] == "assigned"
-    assert out["selected_normalized_label"] == "Angle Grinder"
-    assert out["assignment_reason"] == "prefer_angle_grinder_over_nested_child"
+    assert out["assignment_status"] == "ambiguous"
 
 
 def test_tools_near_expanded_grinder():

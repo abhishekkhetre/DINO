@@ -19,12 +19,11 @@ ASSIGNMENT_STATUSES = (
     "frame_not_processed",
 )
 
-# When gaze lands on a child box that sits inside / near a parent AOI box,
-# prefer the parent (Tobii AOIs are often broad work regions).
-# Manual is included: instruction sheets on/near the grinder stole AG on AA05ED02_03.
+# When gaze lands on a Tools box that sits inside / near an Angle Grinder box,
+# prefer the grinder (Tobii AG AOIs are often broad work regions).
+# Do NOT nest Manual under AG — that destroyed AM07 where Manual is a real AOI.
 NESTED_CHILD_TO_PARENT = {
     "Tools": "Angle Grinder",
-    "Manual": "Angle Grinder",
 }
 
 

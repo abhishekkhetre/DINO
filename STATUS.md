@@ -32,8 +32,10 @@ Config: `configs/batch_sam3_dense_5.yaml` → tool-free `prompts_assembly_aoi.tx
 
 ## Current goal
 
-Remaining 03 errors are **AG→Manual** (20/212). Prefer Manual nested under AG
-on re-assign; optionally raise `instruction manual` detect threshold. Then scale.
+- Reverted Manual→AG nesting (it collapsed AM07 0.98→0.48).
+- AA05ED02_03 residual **AG→Manual** (20/212): raise `instruction manual`
+  detect threshold + re-detect 03 only (or accept ~0.91).
+- Then scale smoke batch.
 
 ## Not yet
 
