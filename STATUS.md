@@ -16,38 +16,27 @@ See prior rows: SAM3 v2 + same-AOI assign ≈ **97%** conditional AOI agreement 
 - Batch: `discover-pairs` + `batch` over `~/KHETRE/Tobii_Data`
 
 ### 5-video dense SAM3 smoke batch (workstation)
-Config: `configs/batch_sam3_dense_5.yaml` → `outputs/batch_sam3_dense_5/batch_qc_summary.csv`
+Config: `configs/batch_sam3_dense_5.yaml` → tool-free `prompts_assembly_aoi.txt`
 
-Baseline (pilot prompts + screwdriver):
+| recording | cond. acc | cond. n | dets | labelled fix. | sequences |
+|-----------|----------:|--------:|-----:|--------------:|----------:|
+| AM07AM07_01 | 0.984 | 307 | 2376 | 21 | 12 |
+| AA05ED02_01 | 0.988 | 322 | 1434 | 14 | 5 |
+| AA05ED02_02 | 1.000 | 341 | 841 | 19 | 4 |
+| AA05ED02_03 | **0.906** | 212 | 923 | 9 | 3 |
+| AA05ED02_04 | 1.000 | 407 | 1245 | 15 | 6 |
 
-| recording | cond. acc | dets |
-|-----------|----------:|-----:|
-| AM07AM07_01 | 0.997 | 2972 |
-| AA05ED02_01 | 0.972 | 1934 |
-| AA05ED02_02 | 1.000 | 1391 |
-| AA05ED02_03 | **0.443** | 1481 |
-| AA05ED02_04 | 1.000 | 1829 |
-
-After `tool`/`tools` assembly prompts (re-detect):
-
-| recording | cond. acc | dets |
-|-----------|----------:|-----:|
-| AM07AM07_01 | 1.000 | 7343 |
-| AA05ED02_01 | 0.893 | 5010 |
-| AA05ED02_02 | 0.959 | 4245 |
-| AA05ED02_03 | **0.469** | 2970 |
-| AA05ED02_04 | 0.987 | 4906 |
-
-- 03 still broken; generic `tool`/`tools` inflated detections and did not fix AG theft.
-- Next prompts: **grinder / manual / storage box only** (no tool concepts).
+- **5/5 ok**. Dropping tool prompts fixed AG→Tools theft on 03 (was 0.44–0.47).
+- Tradeoff on 03: smaller assigned+labelled n (409→212) and fewer labelled fixations (14→9).
+- Tobii **Tools** AOI has no detector concept in this prompt set (deferred).
 
 ## Current goal
 
-Re-detect with tool-free `prompts_assembly_aoi.txt`; confirm 03 recovers without
-regressing the other four.
+Inspect remaining ~9% errors on `AA05ED02_03` (likely Manual), then scale smoke
+batch beyond 5 videos / restore safer Tools prompts later.
 
 ## Not yet
 
 - Full ~400 batch
-- Tobii "Tools" AOI detector coverage (deferred — needs safer prompts)
+- Safe Tools AOI detector coverage
 - Process-step alignment / dwell-transition analysis
