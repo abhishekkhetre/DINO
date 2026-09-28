@@ -33,11 +33,12 @@ Output: `outputs/batch_sam3_dense_5/batch_qc_summary.csv`
 
 ## Current goal
 
-Scale smoke batch (more participants / more recordings) with the same config, or
-optionally re-detect 03 only with higher `instruction manual` threshold.
+**Full corpus batch** via `configs/batch_sam3_dense_all.yaml` (`select.mode: all`,
+incremental QC, `skip_if_done`). Reuse the 5 finished smoke dirs under
+`outputs/batch_sam3_dense/`.
 
 ## Not yet
 
-- Full ~400 batch
 - Safe Tools AOI detector coverage
 - Process-step alignment / dwell-transition analysis
+- Optional: raise manual threshold + re-detect AA05ED02_03 only

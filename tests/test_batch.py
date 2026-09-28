@@ -95,3 +95,25 @@ def test_preferred_missing_falls_back_to_discover(tmp_path: Path):
     recs = resolve_batch_recordings(cfg)
     assert len(recs) == 2
     assert "AM07AM07_01" not in {r["id"] for r in recs}
+
+
+def test_resolve_all_pairs(tmp_path: Path):
+    for stem in ["AM07AM07_01", "AA05ED02_01", "ZZ99ZZ99_01"]:
+        (tmp_path / f"{stem}_data_export.tsv").write_text("x\n", encoding="utf-8")
+        (tmp_path / f"{stem}_scenevideo.mp4").write_bytes(b"0")
+
+    cfg = {
+        "data_dir": str(tmp_path),
+        "recordings": [
+            {
+                "id": "AM07AM07_01",
+                "tsv": "AM07AM07_01_data_export.tsv",
+                "video": "AM07AM07_01_scenevideo.mp4",
+            }
+        ],
+        "select": {"mode": "all"},
+        "defaults": {},
+        "output_root": "outputs/tmp_batch",
+    }
+    recs = resolve_batch_recordings(cfg)
+    assert [r["id"] for r in recs] == ["AM07AM07_01", "AA05ED02_01", "ZZ99ZZ99_01"]

@@ -115,18 +115,18 @@ def resolve_batch_recordings(cfg: dict[str, Any]) -> list[dict[str, str]]:
         )
 
     mode = str(select.get("mode", "")).strip().lower()
-    if mode in {"first_n", "discover_first_n"}:
+    if mode in {"first_n", "discover_first_n", "all", "discover_all"}:
         if not data_dir:
-            raise ValueError("select.mode=first_n requires data_dir")
-        n = int(select.get("n", 5))
+            raise ValueError(f"select.mode={mode} requires data_dir")
         have = {r["id"] for r in recordings}
         for pair in discovered:
             if pair["id"] in have:
                 continue
             recordings.append(pair)
-            if len(recordings) >= n:
-                break
-        recordings = recordings[:n]
+        if mode in {"first_n", "discover_first_n"}:
+            n = int(select.get("n", 5))
+            recordings = recordings[:n]
+        # mode all / discover_all: keep every discovered pair (preferred first)
 
     if not recordings:
         raise ValueError(
@@ -250,30 +250,11 @@ def run_one_recording(
     return row
 
 
-def run_batch(config_path: str | Path) -> dict[str, Any]:
-    batch_cfg = _load_yaml(config_path)
-    recordings = resolve_batch_recordings(batch_cfg)
-    stages = list(batch_cfg.get("stages") or ["detect", "assign", "evaluate", "sequences"])
-    skip_if_done = bool(batch_cfg.get("skip_if_done", True))
-    continue_on_error = bool(batch_cfg.get("continue_on_error", True))
-
-    out_root = Path(batch_cfg.get("output_root", "outputs/batch_sam3_dense"))
-    out_root.mkdir(parents=True, exist_ok=True)
-
-    rows: list[dict[str, Any]] = []
-    for recording in recordings:
-        rec_cfg = build_recording_config(batch_cfg, recording)
-        print(f"[batch] start {recording['id']}", flush=True)
-        row = run_one_recording(rec_cfg, stages=stages, skip_if_done=skip_if_done)
-        rows.append(row)
-        print(f"[batch] done  {recording['id']} status={row['status']}", flush=True)
-        if row["status"] != "ok" and not continue_on_error:
-            break
-
+def _write_batch_qc(out_root: Path, rows: list[dict[str, Any]], stages: list[str]) -> dict[str, Any]:
+    """Persist QC CSV + summary (safe to call after each recording)."""
     qc = pd.DataFrame.from_records(rows)
     qc_path = out_root / "batch_qc_summary.csv"
     qc.to_csv(qc_path, index=False)
-
     summary = {
         "n_recordings": int(len(rows)),
         "n_ok": int(sum(1 for r in rows if r["status"] == "ok")),
@@ -284,4 +265,34 @@ def run_batch(config_path: str | Path) -> dict[str, Any]:
         "recordings": rows,
     }
     write_json(out_root / "batch_summary.json", summary)
+    return summary
+
+
+def run_batch(config_path: str | Path) -> dict[str, Any]:
+    batch_cfg = _load_yaml(config_path)
+    recordings = resolve_batch_recordings(batch_cfg)
+    stages = list(batch_cfg.get("stages") or ["detect", "assign", "evaluate", "sequences"])
+    skip_if_done = bool(batch_cfg.get("skip_if_done", True))
+    continue_on_error = bool(batch_cfg.get("continue_on_error", True))
+
+    out_root = Path(batch_cfg.get("output_root", "outputs/batch_sam3_dense"))
+    out_root.mkdir(parents=True, exist_ok=True)
+
+    print(f"[batch] n_recordings={len(recordings)} output_root={out_root}", flush=True)
+
+    rows: list[dict[str, Any]] = []
+    summary: dict[str, Any] = {}
+    for i, recording in enumerate(recordings, start=1):
+        rec_cfg = build_recording_config(batch_cfg, recording)
+        print(f"[batch] ({i}/{len(recordings)}) start {recording['id']}", flush=True)
+        row = run_one_recording(rec_cfg, stages=stages, skip_if_done=skip_if_done)
+        rows.append(row)
+        print(
+            f"[batch] ({i}/{len(recordings)}) done  {recording['id']} status={row['status']}",
+            flush=True,
+        )
+        summary = _write_batch_qc(out_root, rows, stages)
+        if row["status"] != "ok" and not continue_on_error:
+            break
+
     return summary

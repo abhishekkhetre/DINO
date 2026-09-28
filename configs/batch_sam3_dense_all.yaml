@@ -1,9 +1,13 @@
-# Smoke batch: up to 5 Tobii recordings with dense SAM3 + Stage E gates.
-# data_dir: full Tobii corpus (TSV + scene videos; nested folders OK).
-# AM07 is preferred first when present; remaining slots filled by discover until 5.
+# Full Tobii_Data corpus: every discoverable TSV + scenevideo pair.
+# Same dense SAM3 + Stage E settings as the 5-video smoke.
+# skip_if_done: re-run is safe; finished recordings are skipped.
+#
+# Reuse smoke outputs (optional, saves GPU):
+#   mv outputs/batch_sam3_dense_5 outputs/batch_sam3_dense
+# Or let this create a fresh tree under output_root.
 
 data_dir: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data"
-output_root: "outputs/batch_sam3_dense_5"
+output_root: "outputs/batch_sam3_dense"
 
 stages:
   - detect
@@ -14,15 +18,14 @@ stages:
 skip_if_done: true
 continue_on_error: true
 
-# Prefer known AM07 first; discover fills up to n=5.
+# Prefer AM07 first when present; then all other discovered pairs.
 recordings:
   - id: AM07AM07_01
     tsv: AM07AM07_01_data_export.tsv
     video: AM07AM07_01_scenevideo.mp4
 
 select:
-  mode: first_n
-  n: 5
+  mode: all
 
 defaults:
   timestamp_unit: milliseconds
@@ -50,10 +53,8 @@ defaults:
       grinder: 0.25
       electric grinder: 0.25
       disk grinder: 0.25
-      # Manual boxes on/near grinder stole AG on AA05ED02_03 (needs re-detect)
       instruction manual: 0.60
     load_from_hf: true
-    # Grinder / Manual / Boxes only — no tool prompts (steal AG AOI)
     text_concepts_file: "metaSAM3/prompts_assembly_aoi.txt"
     class_map_file: "configs/class_definitions.yaml"
     resolution: 1008
@@ -62,7 +63,6 @@ defaults:
     score_threshold: 0.25
     overlap_policy: ambiguous
     require_normalized_label: false
-    # Prefer Angle Grinder when Tools sits inside / overlaps / near grinder
     prefer_nested_parent: true
     nested_parent_expand_px: 80
 
