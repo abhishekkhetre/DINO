@@ -32,7 +32,9 @@ Config: `configs/batch_sam3_dense_5.yaml` → `outputs/batch_sam3_dense_5/batch_
 
 ## Current goal
 
-Review `AA05ED02_03` failure mode (sync / concept coverage / AOI mapping), then decide whether to scale beyond the 5-video smoke.
+Re-run assign/evaluate on the 5-video batch with **nested Tools→Angle Grinder**
+(`prefer_nested_parent`) + higher screwdriver detect threshold; confirm
+`AA05ED02_03` conditional accuracy recovers.
 
 ## Not yet
 

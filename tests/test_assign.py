@@ -122,6 +122,86 @@ def test_score_threshold_filters():
     assert out["assignment_status"] == "no_detected_target"
 
 
+def test_nested_tools_under_grinder_single_candidate():
+    # Gaze only inside screwdriver; grinder does not contain gaze but does
+    # contain the tool-box center → prefer Angle Grinder.
+    out = assign_gaze_to_detections(
+        55,
+        55,
+        has_gaze_coordinates=True,
+        in_frame=True,
+        out_of_frame=False,
+        association_status="matched",
+        frame_processed=True,
+        detections=[
+            {
+                "detection_id": "ag",
+                "x_min": 56,
+                "y_min": 56,
+                "x_max": 200,
+                "y_max": 200,
+                "raw_label": "angle grinder",
+                "normalized_label": "Angle Grinder",
+                "score": 0.5,
+            },
+            {
+                "detection_id": "tool",
+                "x_min": 50,
+                "y_min": 50,
+                "x_max": 70,
+                "y_max": 70,
+                "raw_label": "screwdriver",
+                "normalized_label": "Tools",
+                "score": 0.9,
+            },
+        ],
+        prefer_nested_parent=True,
+    )
+    assert out["assignment_status"] == "assigned"
+    assert out["selected_normalized_label"] == "Angle Grinder"
+    assert out["selected_detection_id"] == "ag"
+    assert out["assignment_reason"] == "nested_tools_under_angle_grinder"
+
+
+def test_nested_tools_overlap_prefers_grinder():
+    out = assign_gaze_to_detections(
+        55,
+        55,
+        has_gaze_coordinates=True,
+        in_frame=True,
+        out_of_frame=False,
+        association_status="matched",
+        frame_processed=True,
+        detections=[
+            _det(0, 0, 0, 200, 200, "Angle Grinder", score=0.4),
+            _det(1, 40, 40, 80, 80, "Tools", score=0.9),
+        ],
+        prefer_nested_parent=True,
+    )
+    assert out["assignment_status"] == "assigned"
+    assert out["selected_normalized_label"] == "Angle Grinder"
+    assert out["assignment_reason"] == "nested_tools_under_angle_grinder"
+
+
+def test_nested_parent_disabled_keeps_tools():
+    out = assign_gaze_to_detections(
+        55,
+        55,
+        has_gaze_coordinates=True,
+        in_frame=True,
+        out_of_frame=False,
+        association_status="matched",
+        frame_processed=True,
+        detections=[
+            _det(0, 0, 0, 200, 200, "Angle Grinder", score=0.4),
+            _det(1, 50, 50, 70, 70, "Tools", score=0.9),
+        ],
+        prefer_nested_parent=False,
+    )
+    # Gaze only in Tools (AG also contains gaze here → ambiguous when disabled)
+    assert out["assignment_status"] == "ambiguous"
+
+
 def test_invalid_and_unmatched_and_unprocessed():
     assert (
         assign_gaze_to_detections(

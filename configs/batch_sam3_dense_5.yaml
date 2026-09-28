@@ -50,6 +50,9 @@ defaults:
       grinder: 0.25
       electric grinder: 0.25
       disk grinder: 0.25
+      # AA05ED02_03: weak screwdriver boxes stole Angle Grinder AOI gaze
+      screwdriver: 0.60
+      wrench: 0.55
     load_from_hf: true
     text_concepts_file: "metaSAM3/prompts_pilot_concepts.txt"
     class_map_file: "configs/class_definitions.yaml"
@@ -59,6 +62,8 @@ defaults:
     score_threshold: 0.25
     overlap_policy: ambiguous
     require_normalized_label: false
+    # Prefer Angle Grinder when Tools (screwdriver/wrench) sits inside a grinder box
+    prefer_nested_parent: true
 
   sequences:
     movement_type: Fixation

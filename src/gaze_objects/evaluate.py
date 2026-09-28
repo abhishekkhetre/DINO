@@ -153,6 +153,7 @@ def evaluate_assignments(
         "gaze_x_px",
         "gaze_y_px",
         "assignment_status",
+        "assignment_reason",
         "pred_label",
         "selected_raw_label",
         "selected_score",

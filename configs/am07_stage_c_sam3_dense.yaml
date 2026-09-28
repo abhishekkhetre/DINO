@@ -33,6 +33,8 @@ detector:
     grinder: 0.25
     electric grinder: 0.25
     disk grinder: 0.25
+    screwdriver: 0.60
+    wrench: 0.55
   load_from_hf: true
   text_concepts_file: "metaSAM3/prompts_pilot_concepts.txt"
   class_map_file: "configs/class_definitions.yaml"
@@ -42,6 +44,7 @@ assignment:
   score_threshold: 0.25
   overlap_policy: ambiguous
   require_normalized_label: false
+  prefer_nested_parent: true
 
 sequences:
   movement_type: Fixation
