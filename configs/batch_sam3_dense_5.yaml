@@ -50,6 +50,8 @@ defaults:
       grinder: 0.25
       electric grinder: 0.25
       disk grinder: 0.25
+      # Manual boxes on/near grinder stole AG on AA05ED02_03 (needs re-detect)
+      instruction manual: 0.60
     load_from_hf: true
     # Grinder / Manual / Boxes only — no tool prompts (steal AG AOI)
     text_concepts_file: "metaSAM3/prompts_assembly_aoi.txt"
@@ -60,7 +62,7 @@ defaults:
     score_threshold: 0.25
     overlap_policy: ambiguous
     require_normalized_label: false
-    # Prefer Angle Grinder when Tools sits inside / overlaps / near a grinder box
+    # Prefer Angle Grinder when Tools/Manual sits inside / overlaps / near grinder
     prefer_nested_parent: true
     nested_parent_expand_px: 80
 

@@ -19,10 +19,12 @@ ASSIGNMENT_STATUSES = (
     "frame_not_processed",
 )
 
-# When gaze lands only on a child tool box that sits inside / near a parent AOI
-# box, prefer the parent (Tobii AOIs are often broad work regions).
+# When gaze lands on a child box that sits inside / near a parent AOI box,
+# prefer the parent (Tobii AOIs are often broad work regions).
+# Manual is included: instruction sheets on/near the grinder stole AG on AA05ED02_03.
 NESTED_CHILD_TO_PARENT = {
     "Tools": "Angle Grinder",
+    "Manual": "Angle Grinder",
 }
 
 
@@ -256,11 +258,13 @@ def assign_gaze_to_detections(
             chosen = max(candidates, key=lambda d: float(d.get("score", 0.0)))
             return _fill_assigned(base, chosen, "same_normalized_label_highest_score")
 
-        # Gaze in both Tools and Angle Grinder → prefer the broader Tobii AOI.
-        if prefer_nested_parent and unique_norms == {"Tools", "Angle Grinder"}:
-            grinders = [c for c in candidates if _norm_label(c) == "Angle Grinder"]
-            chosen = max(grinders, key=lambda d: float(d.get("score", 0.0)))
-            return _fill_assigned(base, chosen, "prefer_angle_grinder_over_tools")
+        # Gaze in Angle Grinder + nested child (Tools/Manual) → prefer AG.
+        if prefer_nested_parent and "Angle Grinder" in unique_norms:
+            others = unique_norms - {"Angle Grinder"}
+            if others and others.issubset(set(NESTED_CHILD_TO_PARENT)):
+                grinders = [c for c in candidates if _norm_label(c) == "Angle Grinder"]
+                chosen = max(grinders, key=lambda d: float(d.get("score", 0.0)))
+                return _fill_assigned(base, chosen, "prefer_angle_grinder_over_nested_child")
 
         base["assignment_status"] = "ambiguous"
         base["assignment_reason"] = "multiple_boxes_contain_gaze"
@@ -278,7 +282,7 @@ def assign_gaze_to_detections(
             expand_px=nested_parent_expand_px,
         )
         if parent is not None:
-            return _fill_assigned(base, parent, "nested_tools_under_angle_grinder")
+            return _fill_assigned(base, parent, "nested_child_under_angle_grinder")
     return _fill_assigned(base, chosen, "single_containing_box")
 
 

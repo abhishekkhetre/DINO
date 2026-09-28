@@ -33,6 +33,7 @@ detector:
     grinder: 0.25
     electric grinder: 0.25
     disk grinder: 0.25
+    instruction manual: 0.60
   load_from_hf: true
   text_concepts_file: "metaSAM3/prompts_assembly_aoi.txt"
   class_map_file: "configs/class_definitions.yaml"

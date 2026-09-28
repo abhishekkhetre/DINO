@@ -160,7 +160,7 @@ def test_nested_tools_under_grinder_single_candidate():
     assert out["assignment_status"] == "assigned"
     assert out["selected_normalized_label"] == "Angle Grinder"
     assert out["selected_detection_id"] == "ag"
-    assert out["assignment_reason"] == "nested_tools_under_angle_grinder"
+    assert out["assignment_reason"] == "nested_child_under_angle_grinder"
 
 
 def test_nested_tools_overlap_prefers_grinder():
@@ -180,7 +180,27 @@ def test_nested_tools_overlap_prefers_grinder():
     )
     assert out["assignment_status"] == "assigned"
     assert out["selected_normalized_label"] == "Angle Grinder"
-    assert out["assignment_reason"] == "prefer_angle_grinder_over_tools"
+    assert out["assignment_reason"] == "prefer_angle_grinder_over_nested_child"
+
+
+def test_manual_overlap_prefers_grinder():
+    out = assign_gaze_to_detections(
+        55,
+        55,
+        has_gaze_coordinates=True,
+        in_frame=True,
+        out_of_frame=False,
+        association_status="matched",
+        frame_processed=True,
+        detections=[
+            _det(0, 0, 0, 200, 200, "Angle Grinder", score=0.4),
+            _det(1, 40, 40, 80, 80, "Manual", score=0.9),
+        ],
+        prefer_nested_parent=True,
+    )
+    assert out["assignment_status"] == "assigned"
+    assert out["selected_normalized_label"] == "Angle Grinder"
+    assert out["assignment_reason"] == "prefer_angle_grinder_over_nested_child"
 
 
 def test_tools_near_expanded_grinder():
@@ -221,7 +241,7 @@ def test_tools_near_expanded_grinder():
     )
     assert out["assignment_status"] == "assigned"
     assert out["selected_normalized_label"] == "Angle Grinder"
-    assert out["assignment_reason"] == "nested_tools_under_angle_grinder"
+    assert out["assignment_reason"] == "nested_child_under_angle_grinder"
 
 
 def test_nested_parent_disabled_keeps_tools():

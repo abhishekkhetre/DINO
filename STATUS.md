@@ -32,8 +32,8 @@ Config: `configs/batch_sam3_dense_5.yaml` → tool-free `prompts_assembly_aoi.tx
 
 ## Current goal
 
-Inspect remaining ~9% errors on `AA05ED02_03` (likely Manual), then scale smoke
-batch beyond 5 videos / restore safer Tools prompts later.
+Remaining 03 errors are **AG→Manual** (20/212). Prefer Manual nested under AG
+on re-assign; optionally raise `instruction manual` detect threshold. Then scale.
 
 ## Not yet
 
