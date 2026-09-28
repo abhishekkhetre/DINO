@@ -270,6 +270,7 @@ def run_assign(config_path: str | Path) -> dict[str, Any]:
         score_threshold=float(asg_cfg.get("score_threshold", cfg.get("detector", {}).get("score_threshold", 0.3))),
         require_normalized_label=bool(asg_cfg.get("require_normalized_label", False)),
         prefer_nested_parent=bool(asg_cfg.get("prefer_nested_parent", False)),
+        nested_parent_expand_px=float(asg_cfg.get("nested_parent_expand_px", 80.0)),
     )
     assignments.to_csv(out_dir / "gaze_assignments.csv", index=False)
     status_counts = assignments["assignment_status"].value_counts(dropna=False).to_dict()

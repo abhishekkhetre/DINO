@@ -33,10 +33,10 @@ detector:
     grinder: 0.25
     electric grinder: 0.25
     disk grinder: 0.25
-    screwdriver: 0.60
-    wrench: 0.55
+    tool: 0.45
+    tools: 0.45
   load_from_hf: true
-  text_concepts_file: "metaSAM3/prompts_pilot_concepts.txt"
+  text_concepts_file: "metaSAM3/prompts_assembly_aoi.txt"
   class_map_file: "configs/class_definitions.yaml"
   resolution: 1008
 
@@ -45,6 +45,7 @@ assignment:
   overlap_policy: ambiguous
   require_normalized_label: false
   prefer_nested_parent: true
+  nested_parent_expand_px: 80
 
 sequences:
   movement_type: Fixation

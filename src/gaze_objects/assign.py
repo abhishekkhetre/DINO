@@ -19,8 +19,8 @@ ASSIGNMENT_STATUSES = (
     "frame_not_processed",
 )
 
-# When gaze lands only on a child tool box that sits inside a parent AOI box,
-# prefer the parent (Tobii AOIs are often broad work regions).
+# When gaze lands only on a child tool box that sits inside / near a parent AOI
+# box, prefer the parent (Tobii AOIs are often broad work regions).
 NESTED_CHILD_TO_PARENT = {
     "Tools": "Angle Grinder",
 }
@@ -52,6 +52,31 @@ def _box_center_in(inner: dict[str, Any], outer: dict[str, Any]) -> bool:
     )
 
 
+def _boxes_overlap(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    x0 = max(float(a["x_min"]), float(b["x_min"]))
+    y0 = max(float(a["y_min"]), float(b["y_min"]))
+    x1 = min(float(a["x_max"]), float(b["x_max"]))
+    y1 = min(float(a["y_max"]), float(b["y_max"]))
+    return (x1 > x0) and (y1 > y0)
+
+
+def _point_in_expanded_box(
+    x: float,
+    y: float,
+    det: dict[str, Any],
+    expand_px: float,
+) -> bool:
+    pad = max(0.0, float(expand_px))
+    return point_in_box(
+        x,
+        y,
+        float(det["x_min"]) - pad,
+        float(det["y_min"]) - pad,
+        float(det["x_max"]) + pad,
+        float(det["y_max"]) + pad,
+    )
+
+
 def _passes_det_filters(
     det: dict[str, Any],
     *,
@@ -65,17 +90,14 @@ def _passes_det_filters(
     return True
 
 
-def _find_nested_parent(
-    child: dict[str, Any],
+def _parent_dets(
+    parent_lab: str,
     detections: Iterable[dict[str, Any]],
     *,
     score_threshold: float,
     require_normalized_label: bool,
-) -> dict[str, Any] | None:
-    parent_lab = NESTED_CHILD_TO_PARENT.get(_norm_label(child) or "")
-    if not parent_lab:
-        return None
-    parents: list[dict[str, Any]] = []
+) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
     for det in detections:
         if not _passes_det_filters(
             det,
@@ -83,13 +105,46 @@ def _find_nested_parent(
             require_normalized_label=require_normalized_label,
         ):
             continue
-        if _norm_label(det) != parent_lab:
-            continue
-        if _box_center_in(child, det):
-            parents.append(det)
+        if _norm_label(det) == parent_lab:
+            out.append(det)
+    return out
+
+
+def _find_nested_parent(
+    child: dict[str, Any],
+    detections: Iterable[dict[str, Any]],
+    *,
+    gaze_x: float,
+    gaze_y: float,
+    score_threshold: float,
+    require_normalized_label: bool,
+    expand_px: float,
+) -> dict[str, Any] | None:
+    parent_lab = NESTED_CHILD_TO_PARENT.get(_norm_label(child) or "")
+    if not parent_lab:
+        return None
+    parents = _parent_dets(
+        parent_lab,
+        detections,
+        score_threshold=score_threshold,
+        require_normalized_label=require_normalized_label,
+    )
     if not parents:
         return None
-    return max(parents, key=lambda d: float(d.get("score", 0.0)))
+
+    # Prefer geometric nesting, then overlap, then gaze near expanded parent.
+    nested = [p for p in parents if _box_center_in(child, p)]
+    if nested:
+        return max(nested, key=lambda d: float(d.get("score", 0.0)))
+
+    overlapping = [p for p in parents if _boxes_overlap(child, p)]
+    if overlapping:
+        return max(overlapping, key=lambda d: float(d.get("score", 0.0)))
+
+    near = [p for p in parents if _point_in_expanded_box(gaze_x, gaze_y, p, expand_px)]
+    if near:
+        return max(near, key=lambda d: float(d.get("score", 0.0)))
+    return None
 
 
 def _fill_assigned(base: dict[str, Any], chosen: dict[str, Any], reason: str) -> dict[str, Any]:
@@ -115,6 +170,7 @@ def assign_gaze_to_detections(
     score_threshold: float = 0.3,
     require_normalized_label: bool = False,
     prefer_nested_parent: bool = False,
+    nested_parent_expand_px: float = 80.0,
 ) -> dict[str, Any]:
     """
     Baseline assignment for one gaze sample.
@@ -123,7 +179,7 @@ def assign_gaze_to_detections(
     Exactly one containing candidate -> assigned.
     None -> no_detected_target (only if frame was processed and gaze eligible).
     Several -> ambiguous (no automatic nearest/largest/smallest choice), unless
-    ``prefer_nested_parent`` resolves Tools nested under Angle Grinder.
+    ``prefer_nested_parent`` resolves Tools under / near Angle Grinder.
     """
     base = {
         "selected_detection_id": None,
@@ -162,6 +218,7 @@ def assign_gaze_to_detections(
         return base
 
     dets = list(detections)
+    gx, gy = float(gaze_x), float(gaze_y)
     candidates: list[dict[str, Any]] = []
     for det in dets:
         if not _passes_det_filters(
@@ -171,8 +228,8 @@ def assign_gaze_to_detections(
         ):
             continue
         if point_in_box(
-            float(gaze_x),
-            float(gaze_y),
+            gx,
+            gy,
             float(det["x_min"]),
             float(det["y_min"]),
             float(det["x_max"]),
@@ -199,12 +256,11 @@ def assign_gaze_to_detections(
             chosen = max(candidates, key=lambda d: float(d.get("score", 0.0)))
             return _fill_assigned(base, chosen, "same_normalized_label_highest_score")
 
+        # Gaze in both Tools and Angle Grinder → prefer the broader Tobii AOI.
         if prefer_nested_parent and unique_norms == {"Tools", "Angle Grinder"}:
-            tools = [c for c in candidates if _norm_label(c) == "Tools"]
             grinders = [c for c in candidates if _norm_label(c) == "Angle Grinder"]
-            if any(_box_center_in(t, g) for t in tools for g in grinders):
-                chosen = max(grinders, key=lambda d: float(d.get("score", 0.0)))
-                return _fill_assigned(base, chosen, "nested_tools_under_angle_grinder")
+            chosen = max(grinders, key=lambda d: float(d.get("score", 0.0)))
+            return _fill_assigned(base, chosen, "prefer_angle_grinder_over_tools")
 
         base["assignment_status"] = "ambiguous"
         base["assignment_reason"] = "multiple_boxes_contain_gaze"
@@ -215,8 +271,11 @@ def assign_gaze_to_detections(
         parent = _find_nested_parent(
             chosen,
             dets,
+            gaze_x=gx,
+            gaze_y=gy,
             score_threshold=score_threshold,
             require_normalized_label=require_normalized_label,
+            expand_px=nested_parent_expand_px,
         )
         if parent is not None:
             return _fill_assigned(base, parent, "nested_tools_under_angle_grinder")
@@ -230,6 +289,7 @@ def assign_table(
     score_threshold: float = 0.3,
     require_normalized_label: bool = False,
     prefer_nested_parent: bool = False,
+    nested_parent_expand_px: float = 80.0,
     frame_id_col: str = "frame_index",
 ) -> pd.DataFrame:
     """
@@ -265,6 +325,7 @@ def assign_table(
             score_threshold=score_threshold,
             require_normalized_label=require_normalized_label,
             prefer_nested_parent=prefer_nested_parent,
+            nested_parent_expand_px=nested_parent_expand_px,
         )
         records.append(
             {

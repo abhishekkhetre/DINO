@@ -1,0 +1,12 @@
+# Assembly AOI concepts — no hand-tool prompts.
+# Screwdriver/wrench were stealing Angle Grinder AOI gaze (AA05ED02_03).
+# Use when Tobii AOIs are Angle Grinder / Manual / Boxes / Tools-as-region
+# rather than fine-grained implements.
+angle grinder
+grinder
+electric grinder
+disk grinder
+instruction manual
+storage box
+tool
+tools

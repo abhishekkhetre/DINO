@@ -23,18 +23,19 @@ Config: `configs/batch_sam3_dense_5.yaml` → `outputs/batch_sam3_dense_5/batch_
 | AM07AM07_01 | 150 | 2972 | 0.997 | 319 | 39 | 22 | 12 |
 | AA05ED02_01 | 150 | 1934 | 0.972 | 327 | 52 | 15 | 6 |
 | AA05ED02_02 | 150 | 1391 | 1.000 | 341 | 60 | 19 | 4 |
-| AA05ED02_03 | 150 | 1481 | **0.443** | 318 | 45 | 13 | 5 |
+| AA05ED02_03 | 150 | 1481 | **0.443 → 0.482** | 318→342 | 45 | 13 | 5 |
 | AA05ED02_04 | 150 | 1829 | 1.000 | 411 | 68 | 16 | 7 |
 
 - **5/5 ok**, 0 errors
-- Outlier: `AA05ED02_03` conditional accuracy ~44% (others ≥97%)
-- Labelled-fixation yield still modest (quality gates): ~15–22 labelled / 39–68 fixations
+- `AA05ED02_03` failure = **Angle Grinder → screwdriver (Tools)** (165 rows); nested-parent
+  re-assign alone only +4pp (no grinder box around many screwdrivers).
+- Fix in flight: drop screwdriver/wrench prompts (`prompts_assembly_aoi.txt`) + stronger
+  nested/near parent assign → **requires re-detect**.
 
 ## Current goal
 
-Re-run assign/evaluate on the 5-video batch with **nested Tools→Angle Grinder**
-(`prefer_nested_parent`) + higher screwdriver detect threshold; confirm
-`AA05ED02_03` conditional accuracy recovers.
+Re-detect + re-assign the 5-video batch with assembly AOI prompts; confirm
+`AA05ED02_03` conditional accuracy recovers toward the other recordings.
 
 ## Not yet
 
