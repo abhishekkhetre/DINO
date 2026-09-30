@@ -77,6 +77,34 @@ def test_build_fixation_and_sequences():
     assert int(seq.iloc[0]["n_fixations"]) == 1
 
 
+def test_empty_fixation_table_has_attended_status():
+    assignments = pd.DataFrame(
+        {
+            "source_row_id": [1, 2],
+            "assignment_status": ["assigned", "assigned"],
+            "selected_normalized_label": ["Manual", "Manual"],
+            "selected_score": [0.8, 0.7],
+        }
+    )
+    associations = pd.DataFrame(
+        {
+            "source_row_id": [1, 2],
+            "eye_movement_type": ["Saccade", "Saccade"],
+            "eye_movement_type_index": [1, 2],
+            "gaze_event_duration_raw": [10, 10],
+            "recording_time_s_provisional": [1.0, 1.1],
+            "video_time_s": [1.0, 1.1],
+        }
+    )
+    fix = build_fixation_table(assignments, associations)
+    assert fix.empty
+    assert "attended_status" in fix.columns
+    gated = apply_fixation_quality_gates(fix, min_assigned_samples=2, min_label_fraction=0.5)
+    assert "attended_status" in gated.columns
+    seq = build_attention_sequences(gated)
+    assert seq.empty
+
+
 def test_quality_gates_demote_weak_fixations():
     fix = pd.DataFrame(
         [

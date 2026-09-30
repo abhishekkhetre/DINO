@@ -92,6 +92,30 @@ def _series_numeric(frame: pd.DataFrame, column: str) -> pd.Series:
     return pd.to_numeric(frame[column], errors="coerce")
 
 
+FIXATION_TABLE_COLUMNS = [
+    "fixation_index",
+    "eye_movement_type",
+    "recording_start_s",
+    "recording_end_s",
+    "video_start_s",
+    "video_end_s",
+    "gaze_event_duration_raw",
+    "attended_label",
+    "attended_status",
+    "n_samples",
+    "n_assigned",
+    "n_ambiguous",
+    "n_labelled_assigned",
+    "label_support",
+    "label_fraction",
+    "mean_score",
+]
+
+
+def _empty_fixation_table() -> pd.DataFrame:
+    return pd.DataFrame(columns=FIXATION_TABLE_COLUMNS)
+
+
 def build_fixation_table(
     assignments: pd.DataFrame,
     associations: pd.DataFrame,
@@ -124,6 +148,9 @@ def build_fixation_table(
     asg_slim = asg.drop(columns=overlap)
     merged = asg_slim.merge(assoc[keep_cols], on="source_row_id", how="left", validate="one_to_one")
 
+    if "eye_movement_type" not in merged.columns:
+        return _empty_fixation_table()
+
     fix = merged[merged["eye_movement_type"] == movement_type].copy()
     fix["eye_movement_type_index"] = pd.to_numeric(
         fix["eye_movement_type_index"], errors="coerce"
@@ -149,6 +176,8 @@ def build_fixation_table(
                 **label_info,
             }
         )
+    if not records:
+        return _empty_fixation_table()
     return pd.DataFrame.from_records(records)
 
 
@@ -166,6 +195,9 @@ def apply_fixation_quality_gates(
     """
     out = fixation_table.copy()
     if out.empty:
+        for col in FIXATION_TABLE_COLUMNS:
+            if col not in out.columns:
+                out[col] = pd.Series(dtype=object)
         out["attended_label_candidate"] = pd.Series(dtype=object)
         out["passes_quality_gate"] = pd.Series(dtype=bool)
         return out
@@ -295,6 +327,13 @@ def run_sequences(config_path: str | Path) -> dict[str, Any]:
     fixations.to_csv(out_dir / "fixation_attended_objects.csv", index=False)
     sequences.to_csv(out_dir / "attention_sequences.csv", index=False)
 
+    if "attended_status" not in fixations.columns:
+        fixations = _empty_fixation_table()
+        fixations = apply_fixation_quality_gates(
+            fixations,
+            min_assigned_samples=min_assigned_samples,
+            min_label_fraction=min_label_fraction,
+        )
     labelled = fixations[fixations["attended_status"] == "labelled"]
     weak = fixations[fixations["attended_status"] == "below_quality_gate"]
     label_counts = (
