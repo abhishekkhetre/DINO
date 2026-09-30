@@ -5,27 +5,21 @@ Last updated: 2026-09-30.
 ## Completed
 
 ### Full corpus dense SAM3 batch
-Config: `configs/batch_sam3_dense_all.yaml`  
-QC: `outputs/batch_sam3_dense/batch_qc_summary.csv`
+290/291 ok (1 faulty TSV quarantined). Median conditional accuracy **1.0**.
 
-| metric | value |
-|--------|------:|
-| n_recordings | 291 |
-| n_ok | **290** |
-| n_error | **1** (`NN08WE29_01_fehlerhaft` — no Eye Tracker rows; quarantine) |
-| cond_acc mean / median | ~0.94 / 1.0 |
-| cond_acc < 0.80 | 21 |
-
-Empty-fixation Stage E crash fixed; 3 former errors now `ok` with `conditional_accuracy=NaN` (no labelled assigned samples in 30–60s clip).
+### Low-acc tail (21 recordings) — confusion patterns
+1. **AG → Manual** (dominant): Manual boxes steal Angle Grinder gaze  
+   (`LE07UF1_*`, `ER10WE06_06`, `KJ03JM25_06`, `KI05KO01_02`, …).
+2. **Tools → Manual/Boxes/AG**: Tobii Tools AOI with **no Tools detector**  
+   (tool prompts removed on purpose). Expected until Tools coverage returns.
+3. **Boxes ↔ AG**: smaller secondary confusion.
 
 ## Current goal
-
-Triage the **21 recordings with cond_acc &lt; 0.80** (confusion matrices); decide
-prompt/assign fixes vs accept as hard scenes. Then dwell/sequence analysis on the
-usable corpus.
+- Score QC with `evaluation.ignore_reference_labels: [Tools]`.
+- Raise `instruction manual` detect threshold to 0.70; re-detect only AG→Manual
+  heavy outliers (not full 291).
+- Skip `*fehlerhaft*` in discover.
 
 ## Not yet
-
 - Safe Tools AOI detector coverage
 - Process-step / dwell-transition analysis
-- Exclude `*_fehlerhaft` from discover/batch by default

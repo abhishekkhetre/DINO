@@ -17,6 +17,8 @@ def test_discover_recording_pairs(tmp_path: Path):
     (tmp_path / "BB02_data_export.tsv").write_text("x\n", encoding="utf-8")
     (tmp_path / "BB02 scenevideo.mp4").write_bytes(b"0")
     (tmp_path / "CC03_data_export.tsv").write_text("x\n", encoding="utf-8")  # no video
+    (tmp_path / "XX_fehlerhaft_data_export.tsv").write_text("x\n", encoding="utf-8")
+    (tmp_path / "XX_fehlerhaft_scenevideo.mp4").write_bytes(b"0")
 
     pairs = discover_recording_pairs(tmp_path)
     ids = [p["id"] for p in pairs]

@@ -31,6 +31,8 @@ def _safe_label(value: Any) -> str | None:
 def evaluate_assignments(
     assignments: pd.DataFrame,
     reference: pd.DataFrame,
+    *,
+    ignore_reference_labels: list[str] | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     """
     Join model assignments to reference AOI labels on source_row_id.
@@ -39,6 +41,9 @@ def evaluate_assignments(
     - overall metrics over eligible labelled observations
     - accuracy conditional on making an assignment
     AOI labels are reference annotations, not absolute ground truth.
+
+    ``ignore_reference_labels`` drops those Tobii AOIs from scoring (e.g. Tools
+    when the detector has no safe Tools concepts).
     """
     ref = reference.copy()
     asg = assignments.copy()
@@ -68,8 +73,11 @@ def evaluate_assignments(
     merged["pred_label"] = merged["pred_label"].map(_safe_label)
     merged["ref_label"] = merged["selected_reference_label"].map(_safe_label)
 
+    ignored = {str(x).strip() for x in (ignore_reference_labels or []) if str(x).strip()}
     # Denominator policies
     has_ref = merged["ref_label"].notna() & (merged["reference_status"] == "single_hit")
+    if ignored:
+        has_ref = has_ref & ~merged["ref_label"].isin(ignored)
     is_assigned = merged["assignment_status"] == "assigned"
     frame_ready = merged["assignment_status"].isin(
         ["assigned", "no_detected_target", "ambiguous"]
@@ -137,11 +145,13 @@ def evaluate_assignments(
         "metrics_conditional_on_assignment": _agree(assigned_and_labelled),
         "per_class_assigned_and_labelled": per_class,
         "confusion_assigned_and_labelled": confusion,
+        "ignore_reference_labels": sorted(ignored),
         "notes": [
             "AOI reference labels are not absolute ground truth.",
             "eligible_labelled = single-hit AOI AND assignment_status in {assigned, no_detected_target, ambiguous}.",
             "conditional_on_assignment = single-hit AOI AND status==assigned (abstentions excluded).",
             "COCO-pretrained DINO labels may not match study AOIs; low agreement is informative, not final.",
+            "ignore_reference_labels excluded from scoring denominators when set.",
         ],
     }
 
@@ -178,7 +188,13 @@ def run_evaluate(config_path: str | Path) -> dict[str, Any]:
     reference = extract_reference_labels(df, meta["discovered"], eye_only=True)
     reference.to_csv(out_dir / "reference_labels_eval.csv", index=False)
 
-    review, summary = evaluate_assignments(assignments, reference)
+    eval_cfg = cfg.get("evaluation") or {}
+    ignore_refs = list(eval_cfg.get("ignore_reference_labels") or [])
+    review, summary = evaluate_assignments(
+        assignments,
+        reference,
+        ignore_reference_labels=ignore_refs,
+    )
     review.to_csv(out_dir / "evaluation_joined.csv", index=False)
     write_json(out_dir / "evaluation_summary.json", summary)
     return summary

@@ -40,6 +40,9 @@ def discover_recording_pairs(data_dir: str | Path) -> list[dict[str, str]]:
         stem = tsv.name[: -len("_data_export.tsv")]
         if stem in seen:
             continue
+        # Tobii "fehlerhaft" = faulty export; skip by default.
+        if "fehlerhaft" in stem.lower():
+            continue
         parent = tsv.parent
         candidates = [
             parent / f"{stem}_scenevideo.mp4",

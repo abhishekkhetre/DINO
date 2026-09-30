@@ -53,7 +53,8 @@ defaults:
       grinder: 0.25
       electric grinder: 0.25
       disk grinder: 0.25
-      instruction manual: 0.60
+      # AG→Manual is the main corpus failure mode; keep Manual stricter than AG.
+      instruction manual: 0.70
     load_from_hf: true
     text_concepts_file: "metaSAM3/prompts_assembly_aoi.txt"
     class_map_file: "configs/class_definitions.yaml"
@@ -65,6 +66,11 @@ defaults:
     require_normalized_label: false
     prefer_nested_parent: true
     nested_parent_expand_px: 80
+
+  # Tools AOI has no detector concepts in assembly prompts — exclude from QC scoring.
+  evaluation:
+    ignore_reference_labels:
+      - Tools
 
   sequences:
     movement_type: Fixation
