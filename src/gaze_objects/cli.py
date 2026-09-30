@@ -255,6 +255,14 @@ def cmd_rebuild_qc(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_aggregate_sequences(args: argparse.Namespace) -> int:
+    from gaze_objects.aggregate import aggregate_sequences_from_output_root
+
+    summary = aggregate_sequences_from_output_root(args.output_root)
+    print(json.dumps(summary, indent=2, default=str))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="gaze_objects", description="Gaze-to-object pipeline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -316,6 +324,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_rqc.add_argument("--output-root", required=True)
     p_rqc.set_defaults(func=cmd_rebuild_qc)
+
+    p_agg = sub.add_parser(
+        "aggregate-sequences",
+        help="Build corpus gaze-order strings and transitions from attention_sequences.csv",
+    )
+    p_agg.add_argument("--output-root", required=True)
+    p_agg.set_defaults(func=cmd_aggregate_sequences)
 
     return parser
 
