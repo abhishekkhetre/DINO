@@ -1,45 +1,34 @@
 # Status
 
-Last updated: 2026-09-24.
+Last updated: 2026-09-30.
 
 ## Completed
 
-### Stage A — TSV audit
-Reproducible on AM07; SHA-256 and Section 7 counts matched.
+### Full corpus dense SAM3 batch
+290/291 ok · Tools-excluded mean ~0.96 / median **1.0**.
 
-### Stage B — sync + overlay
-- Pilot overlay generated and **visually verified against Tobii**.
-- Sync config marked `verified`.
+### AG→Manual targeted re-detect (11 IDs, Manual thr 0.70)
+| recording | before → after |
+|-----------|----------------|
+| LE07UF1_08 | 0.79 → **0.97** |
+| LE07UF1_01 | 0.37 → **0.70** |
+| ER08ER23_03 | 0.39 → **0.65** |
+| KJ03JM25_08 | 0.68 → **0.76** |
+| AL07EJ17_05 | 0.72 → **0.78** |
+| LE07UF1_04 | 0.75 → 0.77 |
+| LE07UF1_06 | 0.22 → 0.27 |
+| KI05KO01_02 | 0.39 → 0.42 |
+| KJ03JM25_06 | 0.04 → 0.04 (stuck) |
+| ER10WE06_06 | 0.18 → 0.18 (stuck) |
+| LE07UF1_05 | 0.67 → 0.66 |
 
-### Workstation GPU stack (Ubuntu)
-- RTX 3080 Ti; conda `dino_gpu` (Grounding) and conda `sam3` (Meta SAM 3).
-- GroundingDINO + IDEA-Research DINO previously validated.
-
-### Stage C/D — AM07 pilots (same 30–60 s, 60 frames)
-
-| Backend | Detections | Assigned / ambiguous | Conditional AOI accuracy |
-| --- | ---: | --- | ---: |
-| COCO IDEA-DINO | 135 | — | **0%** |
-| Grounding DINO (raw) | 597 | 112 / 82 | **~55%** (60/109) |
-| SAM 3 (thr 0.30, +tool) | 1938 | 16 / 219 | unusable (almost all ambiguous) |
-| **SAM 3 tuned (thr 0.55, no tool)** | **512** | **150 / 9** | **~91.5%** (130/142) |
-| **SAM 3 v2 (grinder synonyms)** | **1198** | **95 / 129** | **~95.5%** (85/89); Angle Grinder recall 0.8 |
-| **SAM 3 v2 + same-AOI assign** | 1198 | **145 / 79** | **~97.1%** (132/136); Angle Grinder recall **0.94** |
-
-SAM 3 tuned: Boxes/Tools perfect; Manual strong; **Angle Grinder → all called Manual** (12/12).  
-SAM 3 v2: Angle Grinder recovered; synonym overlaps raised ambiguous until same-AOI merge.
-
-### Pipeline package
-- Detectors: `mock`, `idea_dino`, `grounding_dino`, **`sam3`**.
-- Stage E: `gaze_objects.cli sequences` (fixation majority → attention runs).
+Helped several; two hard Manual-over-AG scenes unchanged.
 
 ## Current goal
-
-Run Stage E on AM07 SAM3 v2 outputs (no re-detect):
-`python -m gaze_objects.cli sequences --config configs/am07_stage_c_sam3.yaml`
+1. `rebuild-qc` to restore full corpus CSV (subset run overwrote it).
+2. Accept remaining hard outliers OR drop `instruction manual` on those IDs only.
+3. Move to dwell/sequence analysis on the usable majority.
 
 ## Not yet
-
-- Batch / full ~400 recordings
-- Second-recording SAM3 validation
-- Gaze-in-mask / video tracker upgrades
+- Safe Tools AOI detector coverage
+- Process-step / dwell-transition analysis
