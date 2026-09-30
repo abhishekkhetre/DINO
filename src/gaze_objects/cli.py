@@ -239,6 +239,22 @@ def cmd_batch(args: argparse.Namespace) -> int:
     return 0 if summary.get("n_error", 0) == 0 else 2
 
 
+def cmd_rebuild_qc(args: argparse.Namespace) -> int:
+    from gaze_objects.batch import rebuild_qc_from_output_root
+
+    summary = rebuild_qc_from_output_root(args.output_root)
+    print(json.dumps(
+        {
+            "n_recordings": summary.get("n_recordings"),
+            "n_ok": summary.get("n_ok"),
+            "n_error": summary.get("n_error"),
+            "qc_csv": summary.get("qc_csv"),
+        },
+        indent=2,
+    ))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="gaze_objects", description="Gaze-to-object pipeline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -293,6 +309,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_batch.add_argument("--config", required=True)
     p_batch.set_defaults(func=cmd_batch)
+
+    p_rqc = sub.add_parser(
+        "rebuild-qc",
+        help="Rebuild batch_qc_summary.csv by scanning per-recording outputs",
+    )
+    p_rqc.add_argument("--output-root", required=True)
+    p_rqc.set_defaults(func=cmd_rebuild_qc)
 
     return parser
 

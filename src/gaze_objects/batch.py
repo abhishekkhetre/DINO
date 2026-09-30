@@ -253,22 +253,101 @@ def run_one_recording(
     return row
 
 
-def _write_batch_qc(out_root: Path, rows: list[dict[str, Any]], stages: list[str]) -> dict[str, Any]:
-    """Persist QC CSV + summary (safe to call after each recording)."""
-    qc = pd.DataFrame.from_records(rows)
+def _write_batch_qc(
+    out_root: Path,
+    rows: list[dict[str, Any]],
+    stages: list[str],
+    *,
+    merge_existing: bool = True,
+) -> dict[str, Any]:
+    """Persist QC CSV + summary (safe to call after each recording).
+
+    When ``merge_existing`` is True, update rows by ``recording_id`` in any
+    existing ``batch_qc_summary.csv`` so subset re-runs do not wipe the corpus QC.
+    """
     qc_path = out_root / "batch_qc_summary.csv"
+    new_df = pd.DataFrame.from_records(rows)
+    if merge_existing and qc_path.is_file() and "recording_id" in new_df.columns:
+        old = pd.read_csv(qc_path)
+        if "recording_id" in old.columns and len(old):
+            updated_ids = set(new_df["recording_id"].astype(str))
+            keep = old[~old["recording_id"].astype(str).isin(updated_ids)]
+            qc = pd.concat([keep, new_df], ignore_index=True)
+        else:
+            qc = new_df
+    else:
+        qc = new_df
+    if "recording_id" in qc.columns:
+        qc = qc.sort_values("recording_id").reset_index(drop=True)
     qc.to_csv(qc_path, index=False)
+
+    records = qc.to_dict(orient="records")
     summary = {
-        "n_recordings": int(len(rows)),
-        "n_ok": int(sum(1 for r in rows if r["status"] == "ok")),
-        "n_error": int(sum(1 for r in rows if r["status"] != "ok")),
+        "n_recordings": int(len(records)),
+        "n_ok": int(sum(1 for r in records if r.get("status") == "ok")),
+        "n_error": int(sum(1 for r in records if r.get("status") != "ok")),
         "stages": stages,
         "output_root": str(out_root),
         "qc_csv": str(qc_path),
-        "recordings": rows,
+        "recordings": records,
     }
     write_json(out_root / "batch_summary.json", summary)
     return summary
+
+
+def rebuild_qc_from_output_root(out_root: str | Path) -> dict[str, Any]:
+    """Rebuild corpus QC by scanning per-recording summaries under ``out_root``."""
+    root = Path(out_root)
+    if not root.is_dir():
+        raise FileNotFoundError(f"output_root not found: {root}")
+
+    rows: list[dict[str, Any]] = []
+    for sub in sorted(root.iterdir()):
+        if not sub.is_dir():
+            continue
+        rec_id = sub.name
+        err_path = sub / "batch_error.txt"
+        det_path = sub / "detect_summary.json"
+        eval_path = sub / "evaluation_summary.json"
+        seq_path = sub / "sequences_summary.json"
+        cfg_path = sub / "run_config.yaml"
+
+        row: dict[str, Any] = {
+            "recording_id": rec_id,
+            "tsv_path": None,
+            "video_path": None,
+            "output_dir": str(sub),
+            "status": "ok",
+            "error": None,
+        }
+        if cfg_path.is_file():
+            cfg = _load_yaml(cfg_path)
+            row["tsv_path"] = cfg.get("tsv_path")
+            row["video_path"] = cfg.get("video_path")
+
+        if err_path.is_file() and not eval_path.is_file():
+            row["status"] = "error"
+            row["error"] = err_path.read_text(encoding="utf-8").splitlines()[0][:500]
+        elif not det_path.is_file() and not eval_path.is_file():
+            continue
+
+        if det_path.is_file():
+            det = json.loads(det_path.read_text(encoding="utf-8"))
+            row["n_frames_processed"] = det.get("n_frames_processed")
+            row["n_detections"] = det.get("n_detections")
+        if eval_path.is_file():
+            ev = json.loads(eval_path.read_text(encoding="utf-8"))
+            m = ev.get("metrics_conditional_on_assignment") or {}
+            row["conditional_accuracy"] = m.get("accuracy")
+            row["conditional_n"] = m.get("n")
+        if seq_path.is_file():
+            seq = json.loads(seq_path.read_text(encoding="utf-8"))
+            row["n_fixations"] = seq.get("n_fixations")
+            row["n_fixations_labelled"] = seq.get("n_fixations_labelled")
+            row["n_sequences"] = seq.get("n_sequences")
+        rows.append(row)
+
+    return _write_batch_qc(root, rows, stages=[], merge_existing=False)
 
 
 def run_batch(config_path: str | Path) -> dict[str, Any]:
@@ -294,7 +373,7 @@ def run_batch(config_path: str | Path) -> dict[str, Any]:
             f"[batch] ({i}/{len(recordings)}) done  {recording['id']} status={row['status']}",
             flush=True,
         )
-        summary = _write_batch_qc(out_root, rows, stages)
+        summary = _write_batch_qc(out_root, rows, stages, merge_existing=True)
         if row["status"] != "ok" and not continue_on_error:
             break
 

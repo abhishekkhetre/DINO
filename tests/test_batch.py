@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from gaze_objects.batch import (
+    _write_batch_qc,
     build_recording_config,
     discover_recording_pairs,
     resolve_batch_recordings,
@@ -119,3 +120,27 @@ def test_resolve_all_pairs(tmp_path: Path):
     }
     recs = resolve_batch_recordings(cfg)
     assert [r["id"] for r in recs] == ["AM07AM07_01", "AA05ED02_01", "ZZ99ZZ99_01"]
+
+
+def test_qc_merge_updates_without_wiping(tmp_path: Path):
+    out = tmp_path / "batch"
+    out.mkdir()
+    _write_batch_qc(
+        out,
+        [
+            {"recording_id": "A", "status": "ok", "conditional_accuracy": 1.0},
+            {"recording_id": "B", "status": "ok", "conditional_accuracy": 0.5},
+        ],
+        stages=["evaluate"],
+        merge_existing=False,
+    )
+    summary = _write_batch_qc(
+        out,
+        [{"recording_id": "B", "status": "ok", "conditional_accuracy": 0.9}],
+        stages=["evaluate"],
+        merge_existing=True,
+    )
+    assert summary["n_recordings"] == 2
+    by_id = {r["recording_id"]: r for r in summary["recordings"]}
+    assert by_id["A"]["conditional_accuracy"] == 1.0
+    assert by_id["B"]["conditional_accuracy"] == 0.9
