@@ -28,12 +28,20 @@ def prepare_eye_tracker_table(
     as a hypothesis until verified against export settings / video.
     """
     eye = df[df["Sensor"] == "Eye Tracker"].copy()
+    if eye.empty:
+        raise ValueError("No Eye Tracker rows in TSV; cannot prepare gaze table.")
     width = media_width
     height = media_height
     if width is None:
-        width = float(pd.to_numeric(eye["Recording media width"], errors="coerce").dropna().iloc[0])
+        widths = pd.to_numeric(eye["Recording media width"], errors="coerce").dropna()
+        if widths.empty:
+            raise ValueError("Recording media width missing/empty in Eye Tracker rows.")
+        width = float(widths.iloc[0])
     if height is None:
-        height = float(pd.to_numeric(eye["Recording media height"], errors="coerce").dropna().iloc[0])
+        heights = pd.to_numeric(eye["Recording media height"], errors="coerce").dropna()
+        if heights.empty:
+            raise ValueError("Recording media height missing/empty in Eye Tracker rows.")
+        height = float(heights.iloc[0])
 
     x = pd.to_numeric(eye["Gaze point X"], errors="coerce")
     y = pd.to_numeric(eye["Gaze point Y"], errors="coerce")

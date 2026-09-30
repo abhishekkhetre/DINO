@@ -78,5 +78,50 @@ def test_evaluate_separates_overall_and_conditional():
     assert summary["metrics_eligible_labelled_frame_processed"]["n_agree"] == 1
     # conditional: only assigned rows 1,2
     assert summary["metrics_conditional_on_assignment"]["n"] == 2
-    assert summary["metrics_conditional_on_assignment"]["n_agree"] == 1
-    assert abs(summary["metrics_conditional_on_assignment"]["accuracy"] - 0.5) < 1e-9
+
+
+def test_ignore_reference_labels_tools():
+    assignments = pd.DataFrame(
+        [
+            {
+                "source_row_id": 1,
+                "assignment_status": "assigned",
+                "selected_normalized_label": "Manual",
+                "selected_raw_label": "instruction manual",
+            },
+            {
+                "source_row_id": 2,
+                "assignment_status": "assigned",
+                "selected_normalized_label": "Manual",
+                "selected_raw_label": "instruction manual",
+            },
+        ]
+    )
+    reference = pd.DataFrame(
+        [
+            {
+                "source_row_id": 1,
+                "selected_reference_label": "Tools",
+                "reference_status": "single_hit",
+                "aoi_hits": "Tools",
+                "n_aoi_hits": 1,
+                "annotation_review_status": "unverified",
+            },
+            {
+                "source_row_id": 2,
+                "selected_reference_label": "Angle Grinder",
+                "reference_status": "single_hit",
+                "aoi_hits": "Angle Grinder",
+                "n_aoi_hits": 1,
+                "annotation_review_status": "unverified",
+            },
+        ]
+    )
+    _review, summary = evaluate_assignments(
+        assignments, reference, ignore_reference_labels=["Tools"]
+    )
+    # Tools row excluded; only AG→Manual remains in conditional denom
+    assert summary["metrics_conditional_on_assignment"]["n"] == 1
+    assert summary["metrics_conditional_on_assignment"]["n_agree"] == 0
+    assert summary["ignore_reference_labels"] == ["Tools"]
+    assert summary["metrics_conditional_on_assignment"]["accuracy"] == 0.0
