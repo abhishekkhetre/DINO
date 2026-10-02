@@ -202,6 +202,11 @@ def _build_detector(cfg: dict[str, Any]):
             checkpoint_path=det_cfg.get("checkpoint_path") or det_cfg.get("checkpoint"),
             load_from_hf=bool(det_cfg.get("load_from_hf", True)),
             class_map_file=det_cfg.get("class_map_file"),
+            label_map_mode=str(
+                det_cfg.get("label_map_mode")
+                or cfg.get("assignment", {}).get("label_map_mode")
+                or "study_aoi"
+            ),
             resolution=int(det_cfg.get("resolution", 1008)),
         )
         return "sam3", detector
@@ -300,19 +305,27 @@ def run_assign(config_path: str | Path) -> dict[str, Any]:
 
     detections = pd.read_csv(det_path)
     asg_cfg = cfg.get("assignment", {})
+    det_cfg = cfg.get("detector") or {}
+    label_map_mode = str(
+        asg_cfg.get("label_map_mode")
+        or det_cfg.get("label_map_mode")
+        or "study_aoi"
+    )
     assignments = assign_table(
         joined,
         detections,
-        score_threshold=float(asg_cfg.get("score_threshold", cfg.get("detector", {}).get("score_threshold", 0.3))),
+        score_threshold=float(asg_cfg.get("score_threshold", det_cfg.get("score_threshold", 0.3))),
         require_normalized_label=bool(asg_cfg.get("require_normalized_label", False)),
         prefer_nested_parent=bool(asg_cfg.get("prefer_nested_parent", False)),
         nested_parent_expand_px=float(asg_cfg.get("nested_parent_expand_px", 80.0)),
+        label_map_mode=label_map_mode,
     )
     assignments.to_csv(out_dir / "gaze_assignments.csv", index=False)
     status_counts = assignments["assignment_status"].value_counts(dropna=False).to_dict()
     summary = {
         "n_gaze_rows": int(len(assignments)),
         "status_counts": {str(k): int(v) for k, v in status_counts.items()},
+        "label_map_mode": label_map_mode,
         "output_dir": str(out_dir),
     }
     write_json(out_dir / "assign_summary.json", summary)

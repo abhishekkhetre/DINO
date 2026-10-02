@@ -293,6 +293,7 @@ def assign_table(
     require_normalized_label: bool = False,
     prefer_nested_parent: bool = False,
     nested_parent_expand_px: float = 80.0,
+    label_map_mode: str = "study_aoi",
     frame_id_col: str = "frame_index",
 ) -> pd.DataFrame:
     """
@@ -307,10 +308,10 @@ def assign_table(
             fi = int(row[frame_id_col])
             processed_frames.add(fi)
             det = row.to_dict()
-            # Re-apply current phrase→AOI map so map fixes work without re-detect.
+            # Re-apply current phrase→label map so map fixes work without re-detect.
             raw = det.get("raw_label")
             if raw is not None and str(raw).strip():
-                det["normalized_label"] = normalize_label(str(raw))
+                det["normalized_label"] = normalize_label(str(raw), mode=label_map_mode)
             by_frame.setdefault(fi, []).append(det)
 
     records = []
