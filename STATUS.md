@@ -1,45 +1,22 @@
 # Status
 
-Last updated: 2026-09-24.
+Last updated: 2026-10-02.
 
-## Completed
+## Approaches
 
-### Stage A — TSV audit
-Reproducible on AM07; SHA-256 and Section 7 counts matched.
+### 1) Study AOI (done)
+Tobii-aligned labels (Angle Grinder / Manual / Boxes / Tools), trimmed then full-video.
 
-### Stage B — sync + overlay
-- Pilot overlay generated and **visually verified against Tobii**.
-- Sync config marked `verified`.
+### 2) Fine SAM3 objects (current)
+Full-video sequences using **SAM3 object names** (not limited to Tobii AOIs):
+`instruction manual`, `angle grinder`, `grinding disc`, `screwdriver`, `wrench`,
+`pliers`, `hex key`, `hammer`, `storage box`.
 
-### Workstation GPU stack (Ubuntu)
-- RTX 3080 Ti; conda `dino_gpu` (Grounding) and conda `sam3` (Meta SAM 3).
-- GroundingDINO + IDEA-Research DINO previously validated.
+Avoid AG part prompts that confuse (side handle, guard, …).
 
-### Stage C/D — AM07 pilots (same 30–60 s, 60 frames)
-
-| Backend | Detections | Assigned / ambiguous | Conditional AOI accuracy |
-| --- | ---: | --- | ---: |
-| COCO IDEA-DINO | 135 | — | **0%** |
-| Grounding DINO (raw) | 597 | 112 / 82 | **~55%** (60/109) |
-| SAM 3 (thr 0.30, +tool) | 1938 | 16 / 219 | unusable (almost all ambiguous) |
-| **SAM 3 tuned (thr 0.55, no tool)** | **512** | **150 / 9** | **~91.5%** (130/142) |
-| **SAM 3 v2 (grinder synonyms)** | **1198** | **95 / 129** | **~95.5%** (85/89); Angle Grinder recall 0.8 |
-| **SAM 3 v2 + same-AOI assign** | 1198 | **145 / 79** | **~97.1%** (132/136); Angle Grinder recall **0.94** |
-
-SAM 3 tuned: Boxes/Tools perfect; Manual strong; **Angle Grinder → all called Manual** (12/12).  
-SAM 3 v2: Angle Grinder recovered; synonym overlaps raised ambiguous until same-AOI merge.
-
-### Pipeline package
-- Detectors: `mock`, `idea_dino`, `grounding_dino`, **`sam3`**.
-- Stage E: `gaze_objects.cli sequences` (fixation majority → attention runs).
+Config: `configs/batch_sam3_full_fine.yaml`  
+Output: `outputs/batch_sam3_full_fine/`  
+Aggregate: `corpus_sequence_strings.csv` → e.g. `angle grinder > screwdriver > instruction manual`
 
 ## Current goal
-
-Run Stage E on AM07 SAM3 v2 outputs (no re-detect):
-`python -m gaze_objects.cli sequences --config configs/am07_stage_c_sam3.yaml`
-
-## Not yet
-
-- Batch / full ~400 recordings
-- Second-recording SAM3 validation
-- Gaze-in-mask / video tracker upgrades
+Run full Tobii_Data corpus with fine labels; aggregate gaze-order sequences.

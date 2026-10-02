@@ -62,6 +62,7 @@ class Sam3Detector:
         load_from_hf: bool = True,
         class_map_file: str | Path | None = None,
         resolution: int = 1008,
+        label_map_mode: str = "study_aoi",
     ) -> None:
         self.device = device
         self.score_threshold = float(score_threshold)
@@ -78,6 +79,7 @@ class Sam3Detector:
         self.load_from_hf = bool(load_from_hf)
         self.class_defs = load_class_definitions(class_map_file)
         self.resolution = int(resolution)
+        self.label_map_mode = str(label_map_mode or "study_aoi")
         self.model = None
         self.processor = None
 
@@ -174,7 +176,9 @@ class Sam3Detector:
                                 y_max=y_max,
                                 raw_label=concept,
                                 normalized_label=normalize_label(
-                                    concept, self.class_defs
+                                    concept,
+                                    self.class_defs,
+                                    mode=self.label_map_mode,
                                 ),
                                 score=score,
                                 model_provenance={

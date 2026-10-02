@@ -23,6 +23,35 @@ def _load_yaml(path: str | Path) -> dict[str, Any]:
         return yaml.safe_load(handle)
 
 
+def resolve_clip_window(eye: pd.DataFrame, cfg: dict[str, Any]) -> tuple[float, float, str]:
+    """
+    Resolve recording-time clip bounds.
+
+    ``clip.mode: full`` (or missing end with mode full) uses the Eye Tracker
+    timestamp span. Explicit ``recording_start_s`` / ``recording_end_s`` still
+    supported for trimmed pilots.
+    """
+    clip = cfg.get("clip") or {}
+    mode = str(clip.get("mode", "range")).strip().lower()
+    times = pd.to_numeric(eye["recording_time_s_provisional"], errors="coerce").dropna()
+    if times.empty:
+        raise ValueError("No valid recording_time_s_provisional in Eye Tracker rows.")
+
+    data_start = float(times.min())
+    data_end = float(times.max())
+
+    if mode in {"full", "entire", "all"}:
+        rec_start = float(clip["recording_start_s"]) if clip.get("recording_start_s") is not None else data_start
+        rec_end = float(clip["recording_end_s"]) if clip.get("recording_end_s") is not None else data_end
+        return rec_start, rec_end, "full"
+
+    if clip.get("recording_start_s") is None or clip.get("recording_end_s") is None:
+        raise ValueError(
+            "clip.recording_start_s and clip.recording_end_s are required unless clip.mode=full"
+        )
+    return float(clip["recording_start_s"]), float(clip["recording_end_s"]), "range"
+
+
 def build_synced_gaze(cfg: dict[str, Any]) -> tuple[pd.DataFrame, dict[str, Any]]:
     df, meta = read_tsv(cfg["tsv_path"], compute_hash=bool(cfg.get("compute_hash", True)))
     eye = prepare_eye_tracker_table(
@@ -38,9 +67,7 @@ def build_synced_gaze(cfg: dict[str, Any]) -> tuple[pd.DataFrame, dict[str, Any]
         video_start_recording_s=float(cfg.get("video_start_recording_s", 0.0)),
         time_mapping_status=cfg.get("time_mapping_status", "provisional"),
     )
-    clip = cfg.get("clip", {})
-    rec_start = float(clip["recording_start_s"])
-    rec_end = float(clip["recording_end_s"])
+    rec_start, rec_end, clip_mode = resolve_clip_window(eye, cfg)
     eye_clip = eye[
         (eye["recording_time_s_provisional"] >= rec_start)
         & (eye["recording_time_s_provisional"] <= rec_end)
@@ -83,6 +110,9 @@ def build_synced_gaze(cfg: dict[str, Any]) -> tuple[pd.DataFrame, dict[str, Any]
         "mapping": mapping.to_dict(),
         "video_start_clip": video_start_clip,
         "video_end_clip": video_end_clip,
+        "recording_start_s": rec_start,
+        "recording_end_s": rec_end,
+        "clip_mode": clip_mode,
     }
     return joined, ctx
 
@@ -103,7 +133,8 @@ def select_frame_indices(joined: pd.DataFrame, cfg: dict[str, Any]) -> list[int]
     frames = sorted({int(v) for v in matched["frame_index"].tolist()})
     if stride > 1:
         frames = frames[::stride]
-    if max_frames is not None:
+    # null / absent max_frames => no cap (needed for full-video runs)
+    if max_frames is not None and str(max_frames).strip().lower() not in {"", "null", "none"}:
         frames = frames[: int(max_frames)]
     return frames
 
@@ -171,6 +202,11 @@ def _build_detector(cfg: dict[str, Any]):
             checkpoint_path=det_cfg.get("checkpoint_path") or det_cfg.get("checkpoint"),
             load_from_hf=bool(det_cfg.get("load_from_hf", True)),
             class_map_file=det_cfg.get("class_map_file"),
+            label_map_mode=str(
+                det_cfg.get("label_map_mode")
+                or cfg.get("assignment", {}).get("label_map_mode")
+                or "study_aoi"
+            ),
             resolution=int(det_cfg.get("resolution", 1008)),
         )
         return "sam3", detector
@@ -235,6 +271,11 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
     detections_df.to_csv(out_dir / "detections.csv", index=False)
     summary = {
         "backend": backend,
+        "clip_mode": ctx.get("clip_mode"),
+        "recording_start_s": ctx.get("recording_start_s"),
+        "recording_end_s": ctx.get("recording_end_s"),
+        "video_start_clip": ctx.get("video_start_clip"),
+        "video_end_clip": ctx.get("video_end_clip"),
         "n_selected_frames": len(frame_ids),
         "n_frames_processed": n_frames,
         "n_detections": int(len(detections_df)),
@@ -264,17 +305,27 @@ def run_assign(config_path: str | Path) -> dict[str, Any]:
 
     detections = pd.read_csv(det_path)
     asg_cfg = cfg.get("assignment", {})
+    det_cfg = cfg.get("detector") or {}
+    label_map_mode = str(
+        asg_cfg.get("label_map_mode")
+        or det_cfg.get("label_map_mode")
+        or "study_aoi"
+    )
     assignments = assign_table(
         joined,
         detections,
-        score_threshold=float(asg_cfg.get("score_threshold", cfg.get("detector", {}).get("score_threshold", 0.3))),
+        score_threshold=float(asg_cfg.get("score_threshold", det_cfg.get("score_threshold", 0.3))),
         require_normalized_label=bool(asg_cfg.get("require_normalized_label", False)),
+        prefer_nested_parent=bool(asg_cfg.get("prefer_nested_parent", False)),
+        nested_parent_expand_px=float(asg_cfg.get("nested_parent_expand_px", 80.0)),
+        label_map_mode=label_map_mode,
     )
     assignments.to_csv(out_dir / "gaze_assignments.csv", index=False)
     status_counts = assignments["assignment_status"].value_counts(dropna=False).to_dict()
     summary = {
         "n_gaze_rows": int(len(assignments)),
         "status_counts": {str(k): int(v) for k, v in status_counts.items()},
+        "label_map_mode": label_map_mode,
         "output_dir": str(out_dir),
     }
     write_json(out_dir / "assign_summary.json", summary)
