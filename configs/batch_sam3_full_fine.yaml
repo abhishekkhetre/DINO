@@ -43,8 +43,9 @@ defaults:
     backend: sam3
     device: cuda
     label_map_mode: fine
-    # 1008 + masks OOMs on RTX 3080 Ti (12GB), especially with a second GPU process
-    resolution: 768
+    # 768 is NOT divisible by SAM3 patch_size=14 → bare AssertionError on first frame.
+    # 784 = 14*56; safer on 12GB than default 1008.
+    resolution: 784
     # Sam3Processor always materializes pred_masks — must stay true.
     # Masks are dropped after boxes are copied to CPU.
     enable_segmentation: true

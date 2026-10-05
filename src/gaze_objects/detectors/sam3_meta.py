@@ -63,7 +63,7 @@ def _cuda_mem_mib() -> tuple[float, float, float] | None:
 def assert_cuda_headroom(min_free_gib: float = 6.0) -> None:
     """Fail fast when another process has drained the GPU (common OOM cause).
 
-    SAM3 weights alone take ~3.3 GiB at res 768; inference needs several more
+    SAM3 weights alone take ~3.3–4 GiB at res 784; inference needs several more
     GiB of free headroom. On a 12GB card that means roughly one Python job.
     """
     import torch
@@ -136,6 +136,12 @@ class Sam3Detector:
         self.load_from_hf = bool(load_from_hf)
         self.class_defs = load_class_definitions(class_map_file)
         self.resolution = int(resolution)
+        # SAM3 ViT patch_size=14 — non-multiples raise bare AssertionError in rope/pos.
+        if self.resolution % 14 != 0:
+            raise ValueError(
+                f"sam3 detector.resolution={self.resolution} must be a multiple of 14 "
+                f"(SAM3 patch size). Use 700, 784, 840, 896, or 1008."
+            )
         self.label_map_mode = str(label_map_mode or "study_aoi")
         # Sam3Processor._forward_grounding always reads pred_masks — keep True.
         # We discard masks after copying boxes to CPU to limit peak VRAM.

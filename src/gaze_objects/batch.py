@@ -245,10 +245,16 @@ def run_one_recording(
         row["n_fixations_labelled"] = _safe_get(seq_summary, "n_fixations_labelled")
         row["n_sequences"] = _safe_get(seq_summary, "n_sequences")
     except Exception as exc:  # noqa: BLE001 — batch must continue
+        tb = traceback.format_exc()
+        msg = str(exc).strip() or "(no message)"
+        # Bare asserts (common in SAM3) print as "AssertionError:" — include last frame.
+        last_frames = [ln for ln in tb.strip().splitlines() if ln.strip()][-4:]
         row["status"] = "error"
-        row["error"] = f"{type(exc).__name__}: {exc}"
+        row["error"] = f"{type(exc).__name__}: {msg}"
+        if type(exc) is AssertionError and not str(exc).strip():
+            row["error"] += " | " + " || ".join(last_frames)
         (out_dir / "batch_error.txt").write_text(
-            row["error"] + "\n\n" + traceback.format_exc(), encoding="utf-8"
+            row["error"] + "\n\n" + tb, encoding="utf-8"
         )
         # Failed detect may leave SAM3 weights in this process's CUDA cache.
         try:
