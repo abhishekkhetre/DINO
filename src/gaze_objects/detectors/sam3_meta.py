@@ -63,7 +63,7 @@ def _cuda_mem_mib() -> tuple[float, float, float] | None:
 def assert_cuda_headroom(min_free_gib: float = 6.0) -> None:
     """Fail fast when another process has drained the GPU (common OOM cause).
 
-    SAM3 weights alone take ~3.3–4 GiB at res 784; inference needs several more
+    SAM3 weights alone take ~3.4 GiB at res 1008; inference needs several more
     GiB of free headroom. On a 12GB card that means roughly one Python job.
     """
     import torch
@@ -136,11 +136,14 @@ class Sam3Detector:
         self.load_from_hf = bool(load_from_hf)
         self.class_defs = load_class_definitions(class_map_file)
         self.resolution = int(resolution)
-        # SAM3 ViT patch_size=14 — non-multiples raise bare AssertionError in rope/pos.
-        if self.resolution % 14 != 0:
+        # Stock facebook/sam3 ViT is built with img_size=1008 and RoPE freqs for that
+        # size. Sam3Processor.resolution must match or reshape_for_broadcast asserts.
+        if self.resolution != 1008:
             raise ValueError(
-                f"sam3 detector.resolution={self.resolution} must be a multiple of 14 "
-                f"(SAM3 patch size). Use 700, 784, 840, 896, or 1008."
+                f"sam3 detector.resolution={self.resolution} is unsupported. "
+                "Meta's image model is built for img_size=1008 only; other sizes "
+                "break RoPE (vitdet.reshape_for_broadcast AssertionError). "
+                "Use resolution: 1008 and free VRAM by running a single GPU job."
             )
         self.label_map_mode = str(label_map_mode or "study_aoi")
         # Sam3Processor._forward_grounding always reads pred_masks — keep True.

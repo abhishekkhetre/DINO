@@ -12,68 +12,43 @@ Full-video sequences using **SAM3 object names** (not limited to Tobii AOIs):
 `instruction manual`, `angle grinder`, `grinding disc`, `screwdriver`, `wrench`,
 `pliers`, `hex key`, `hammer`, `storage box`.
 
-Avoid AG part prompts that confuse (side handle, guard, …).
-
 Config: `configs/batch_sam3_full_fine.yaml`  
 Output: `outputs/batch_sam3_full_fine/`  
-Aggregate: `corpus_sequence_strings.csv` → e.g. `angle grinder > screwdriver > instruction manual`
+Aggregate: `corpus_sequence_strings.csv`
 
-## Current goal
-Run full Tobii_Data corpus with fine labels; aggregate gaze-order sequences.
+## Why recent errors kept shifting (root causes)
 
-## CUDA OOM on 12GB (2026-10-05)
+| Symptom | Real cause | Fix |
+| --- | --- | --- |
+| CUDA OOM, ~7 GiB held by another PID | Two SAM3 batches on one 12GB GPU | Kill all other Type-C python; one batch only |
+| Crash right after `model ready` with empty assert / `pred_masks` | `enable_segmentation: false` — Sam3Processor always needs masks | Keep segmentation on; drop masks after boxes |
+| `vitdet.reshape_for_broadcast` AssertionError | `resolution` ≠ **1008** — RoPE freqs are baked for ViT `img_size=1008` | **Always `resolution: 1008`** (768/784 are invalid) |
 
-`batch_qc_summary` all-error with ~7 GiB held by a second process + 3.7 GiB in the
-batch worker is expected: two SAM3 jobs cannot share one RTX 3080 Ti.
+Lowering resolution does **not** save VRAM here — it hard-crashes. VRAM is managed by: single process, lean 9-concept prompts, stride 8, unload between recordings.
 
-Fixes on branch `cursor/sam3-fine-labels-full-e54c`:
-- `resolution: 784` (must be multiple of SAM3 patch_size=14; 768 caused bare AssertionError)
-- `enable_segmentation: true` (required — Sam3Processor always reads `pred_masks`;
-  masks are discarded after boxes are copied to CPU)
-- lean prompt list (9 concepts; dropped synonym/disc duplicates)
-- `stride: 8`
-- CUDA free-VRAM preflight (≥**6** GiB) before model load
-- unload + empty_cache after every detect (success or fail)
-- batch log prints the exception text on `status=error`
-- progress prints every 10 frames
-
-### Critical: only ONE `python` Type-C process
-
-If `nvidia-smi` shows a `python` row with several GiB (e.g. PID 414229 @ 6436 MiB),
-that is a leftover batch. Kill it **and** the current failing batch before restart:
+## Workstation resume
 
 ```bash
-nvidia-smi
-# kill BOTH old and new batch PIDs, e.g.:
-kill 414229 921706
-# wait until only Xorg/gnome/firefox remain, then:
-nvidia-smi   # Memory-Usage should be ~600–800 MiB, not ~7 GiB
-```
+pkill -f 'gaze_objects.cli batch' || true
+sleep 2
+nvidia-smi   # ~600–800 MiB; no Type-C python
 
-### Workstation resume (one GPU process only)
-
-```bash
-cd /path/to/repo
-git pull origin cursor/sam3-fine-labels-full-e54c
+cd ~/KHETRE/DINO_KHETRE/DINO
 conda activate sam3
+git pull origin cursor/sam3-fine-labels-full-e54c
 
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=src:$PYTHONPATH
+find outputs/batch_sam3_full_fine -name batch_error.txt -delete 2>/dev/null
 
-# Failed OOMs leave batch_error.txt but no detections.csv → skip_if_done will retry.
-find outputs/batch_sam3_full_fine -name batch_error.txt -delete
-
-nohup python -m gaze_objects.cli batch \
-  --config configs/batch_sam3_full_fine.yaml \
+nohup python -m gaze_objects.cli batch --config configs/batch_sam3_full_fine.yaml \
   > outputs/batch_sam3_full_fine/batch_run.log 2>&1 &
-
 tail -f outputs/batch_sam3_full_fine/batch_run.log
-# Healthy start: free≈10 GiB before load, then [detect] 1/N frames …
+# Expect: resolution=1008 → model ready → [detect] 1/N frames …
 ```
 
-When QC shows mostly `ok`:
+Aggregate when QC is mostly ok:
 
 ```bash
-python -m gaze_objects.cli aggregate-sequences \
-  --output-root outputs/batch_sam3_full_fine
+python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_full_fine
 ```
