@@ -210,7 +210,7 @@ def _build_detector(cfg: dict[str, Any]):
             resolution=int(det_cfg.get("resolution", 1008)),
             # Boxes-only by default — masks are unused by assign and OOM on 12GB GPUs.
             enable_segmentation=bool(det_cfg.get("enable_segmentation", False)),
-            min_free_vram_gib=float(det_cfg.get("min_free_vram_gib", 4.0)),
+            min_free_vram_gib=float(det_cfg.get("min_free_vram_gib", 6.0)),
         )
         return "sam3", detector
     raise ValueError(f"Unknown detector.backend: {backend}")
@@ -261,31 +261,44 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
                 print(f"[detect] {n_frames}/{n_target} frames", flush=True)
     else:
         assert detector is not None
-        print("[detect] loading model…", flush=True)
-        detector.load()
-        print("[detect] model ready", flush=True)
-        for frame_index, _pts, video_time_s, frame in iter_frames_with_time(
-            cfg["video_path"],
-            start_s=ctx["video_start_clip"],
-            end_s=ctx["video_end_clip"],
-            normalize_pts_to_first=True,
-        ):
-            if frame_index not in want:
-                continue
-            frame_key = f"f{frame_index}"
-            dets: list[Detection] = detector.detect_frame(frame, frame_key)
-            for d in dets:
-                row = d.to_row()
-                row["frame_index"] = frame_index
-                row["video_time_s"] = video_time_s
-                rows.append(row)
-            n_frames += 1
-            if n_frames == 1 or n_frames % 10 == 0 or n_frames == n_target:
-                print(
-                    f"[detect] {n_frames}/{n_target} frames "
-                    f"(frame_index={frame_index}, dets_so_far={len(rows)})",
-                    flush=True,
-                )
+        try:
+            print("[detect] loading model…", flush=True)
+            detector.load()
+            print("[detect] model ready", flush=True)
+            for frame_index, _pts, video_time_s, frame in iter_frames_with_time(
+                cfg["video_path"],
+                start_s=ctx["video_start_clip"],
+                end_s=ctx["video_end_clip"],
+                normalize_pts_to_first=True,
+            ):
+                if frame_index not in want:
+                    continue
+                frame_key = f"f{frame_index}"
+                dets: list[Detection] = detector.detect_frame(frame, frame_key)
+                for d in dets:
+                    row = d.to_row()
+                    row["frame_index"] = frame_index
+                    row["video_time_s"] = video_time_s
+                    rows.append(row)
+                n_frames += 1
+                if n_frames == 1 or n_frames % 10 == 0 or n_frames == n_target:
+                    print(
+                        f"[detect] {n_frames}/{n_target} frames "
+                        f"(frame_index={frame_index}, dets_so_far={len(rows)})",
+                        flush=True,
+                    )
+        finally:
+            # Always free GPU weights between recordings (success or OOM).
+            unload = getattr(detector, "unload", None)
+            if callable(unload):
+                unload()
+            else:
+                try:
+                    from gaze_objects.detectors.sam3_meta import release_cuda_memory
+
+                    release_cuda_memory()
+                except Exception:  # noqa: BLE001
+                    pass
 
     detections_df = pd.DataFrame(rows)
     detections_df.to_csv(out_dir / "detections.csv", index=False)

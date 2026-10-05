@@ -46,7 +46,8 @@ defaults:
     # 1008 + masks OOMs on RTX 3080 Ti (12GB), especially with a second GPU process
     resolution: 768
     enable_segmentation: false
-    min_free_vram_gib: 4.0
+    # Need ~6 GiB free *before* load (model ~3.3 GiB + activations). Catches dual jobs.
+    min_free_vram_gib: 6.0
     score_threshold: 0.50
     score_threshold_by_concept:
       angle grinder: 0.25

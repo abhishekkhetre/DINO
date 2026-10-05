@@ -60,8 +60,12 @@ def _cuda_mem_mib() -> tuple[float, float, float] | None:
     return free_b / (1024**2), total_b / (1024**2), allocated_b / (1024**2)
 
 
-def assert_cuda_headroom(min_free_gib: float = 4.0) -> None:
-    """Fail fast when another process has drained the GPU (common OOM cause)."""
+def assert_cuda_headroom(min_free_gib: float = 6.0) -> None:
+    """Fail fast when another process has drained the GPU (common OOM cause).
+
+    SAM3 weights alone take ~3.3 GiB at res 768; inference needs several more
+    GiB of free headroom. On a 12GB card that means roughly one Python job.
+    """
     import torch
 
     if not torch.cuda.is_available():
@@ -78,10 +82,26 @@ def assert_cuda_headroom(min_free_gib: float = 4.0) -> None:
     )
     if free_gib < min_free_gib:
         raise RuntimeError(
-            f"CUDA only has {free_gib:.2f} GiB free (need ≥{min_free_gib:.1f} GiB). "
-            "Kill other GPU Python processes (nvidia-smi), then re-run a single batch. "
-            "Dual batches on a 12GB card will OOM."
+            f"CUDA only has {free_gib:.2f} GiB free (need ≥{min_free_gib:.1f} GiB "
+            "before load). Another process is likely holding the GPU — run "
+            "`nvidia-smi`, kill every other `python` PID (Type C), then start "
+            "exactly one batch. Dual SAM3 jobs on a 12GB card will OOM."
         )
+
+
+def release_cuda_memory() -> None:
+    """Best-effort free of cached CUDA blocks (call after unloading a model)."""
+    import gc
+
+    gc.collect()
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+    except Exception:  # noqa: BLE001 — cleanup must never raise
+        pass
 
 
 class Sam3Detector:
@@ -99,7 +119,7 @@ class Sam3Detector:
         resolution: int = 1008,
         label_map_mode: str = "study_aoi",
         enable_segmentation: bool = False,
-        min_free_vram_gib: float = 4.0,
+        min_free_vram_gib: float = 6.0,
     ) -> None:
         self.device = device
         self.score_threshold = float(score_threshold)
@@ -175,6 +195,20 @@ class Sam3Detector:
                     f"resolution={self.resolution} concepts={len(self.concepts)} "
                     f"free={free_mib:.0f}MiB allocated={allocated_mib:.0f}MiB "
                     f"total={total_mib:.0f}MiB",
+                    flush=True,
+                )
+
+    def unload(self) -> None:
+        """Drop model/processor references and release CUDA cache."""
+        self.processor = None
+        self.model = None
+        if self.device.startswith("cuda"):
+            release_cuda_memory()
+            mem = _cuda_mem_mib()
+            if mem is not None:
+                free_mib, _total_mib, allocated_mib = mem
+                print(
+                    f"[sam3] unloaded free={free_mib:.0f}MiB allocated={allocated_mib:.0f}MiB",
                     flush=True,
                 )
 

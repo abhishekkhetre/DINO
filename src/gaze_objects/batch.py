@@ -250,6 +250,13 @@ def run_one_recording(
         (out_dir / "batch_error.txt").write_text(
             row["error"] + "\n\n" + traceback.format_exc(), encoding="utf-8"
         )
+        # Failed detect may leave SAM3 weights in this process's CUDA cache.
+        try:
+            from gaze_objects.detectors.sam3_meta import release_cuda_memory
+
+            release_cuda_memory()
+        except Exception:  # noqa: BLE001
+            pass
     return row
 
 
@@ -369,6 +376,13 @@ def run_batch(config_path: str | Path) -> dict[str, Any]:
         print(f"[batch] ({i}/{len(recordings)}) start {recording['id']}", flush=True)
         row = run_one_recording(rec_cfg, stages=stages, skip_if_done=skip_if_done)
         rows.append(row)
+        # Keep allocator free between recordings even after skip_if_done paths.
+        try:
+            from gaze_objects.detectors.sam3_meta import release_cuda_memory
+
+            release_cuda_memory()
+        except Exception:  # noqa: BLE001
+            pass
         print(
             f"[batch] ({i}/{len(recordings)}) done  {recording['id']} status={row['status']}",
             flush=True,

@@ -31,8 +31,22 @@ Fixes on branch `cursor/sam3-fine-labels-full-e54c`:
 - `resolution: 768` (was 1008)
 - lean prompt list (9 concepts; dropped synonym/disc duplicates)
 - `stride: 8`
-- CUDA free-VRAM preflight (≥4 GiB) before model load
+- CUDA free-VRAM preflight (≥**6** GiB) before model load
+- unload + empty_cache after every detect (success or fail)
 - progress prints every 10 frames
+
+### Critical: only ONE `python` Type-C process
+
+If `nvidia-smi` shows a `python` row with several GiB (e.g. PID 414229 @ 6436 MiB),
+that is a leftover batch. Kill it **and** the current failing batch before restart:
+
+```bash
+nvidia-smi
+# kill BOTH old and new batch PIDs, e.g.:
+kill 414229 921706
+# wait until only Xorg/gnome/firefox remain, then:
+nvidia-smi   # Memory-Usage should be ~600–800 MiB, not ~7 GiB
+```
 
 ### Workstation resume (one GPU process only)
 
@@ -41,22 +55,18 @@ cd /path/to/repo
 git pull origin cursor/sam3-fine-labels-full-e54c
 conda activate sam3
 
-# See who owns the GPU; kill peers (keep one shell)
-nvidia-smi
-# e.g. kill <pid> for other python/batch jobs
-
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=src:$PYTHONPATH
 
 # Failed OOMs leave batch_error.txt but no detections.csv → skip_if_done will retry.
-# Optional cleanup of error markers:
 find outputs/batch_sam3_full_fine -name batch_error.txt -delete
 
 nohup python -m gaze_objects.cli batch \
   --config configs/batch_sam3_full_fine.yaml \
-  > logs/batch_sam3_full_fine.log 2>&1 &
+  > outputs/batch_sam3_full_fine/batch_run.log 2>&1 &
 
-tail -f logs/batch_sam3_full_fine.log
+tail -f outputs/batch_sam3_full_fine/batch_run.log
+# Healthy start: free≈10 GiB before load, then [detect] 1/N frames …
 ```
 
 When QC shows mostly `ok`:
