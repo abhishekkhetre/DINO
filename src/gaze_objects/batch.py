@@ -384,7 +384,8 @@ def run_batch(config_path: str | Path) -> dict[str, Any]:
         except Exception:  # noqa: BLE001
             pass
         print(
-            f"[batch] ({i}/{len(recordings)}) done  {recording['id']} status={row['status']}",
+            f"[batch] ({i}/{len(recordings)}) done  {recording['id']} status={row['status']}"
+            + (f" error={row['error']}" if row.get("error") else ""),
             flush=True,
         )
         summary = _write_batch_qc(out_root, rows, stages, merge_existing=True)

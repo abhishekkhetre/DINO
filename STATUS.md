@@ -27,12 +27,14 @@ Run full Tobii_Data corpus with fine labels; aggregate gaze-order sequences.
 batch worker is expected: two SAM3 jobs cannot share one RTX 3080 Ti.
 
 Fixes on branch `cursor/sam3-fine-labels-full-e54c`:
-- `enable_segmentation: false` (boxes only — assign never used masks)
+- `enable_segmentation: true` (required — Sam3Processor always reads `pred_masks`;
+  masks are discarded after boxes are copied to CPU)
 - `resolution: 768` (was 1008)
 - lean prompt list (9 concepts; dropped synonym/disc duplicates)
 - `stride: 8`
 - CUDA free-VRAM preflight (≥**6** GiB) before model load
 - unload + empty_cache after every detect (success or fail)
+- batch log prints the exception text on `status=error`
 - progress prints every 10 frames
 
 ### Critical: only ONE `python` Type-C process

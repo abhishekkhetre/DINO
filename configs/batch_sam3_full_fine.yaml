@@ -45,7 +45,9 @@ defaults:
     label_map_mode: fine
     # 1008 + masks OOMs on RTX 3080 Ti (12GB), especially with a second GPU process
     resolution: 768
-    enable_segmentation: false
+    # Sam3Processor always materializes pred_masks — must stay true.
+    # Masks are dropped after boxes are copied to CPU.
+    enable_segmentation: true
     # Need ~6 GiB free *before* load (model ~3.3 GiB + activations). Catches dual jobs.
     min_free_vram_gib: 6.0
     score_threshold: 0.50

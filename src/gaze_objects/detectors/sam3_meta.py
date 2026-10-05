@@ -118,7 +118,7 @@ class Sam3Detector:
         class_map_file: str | Path | None = None,
         resolution: int = 1008,
         label_map_mode: str = "study_aoi",
-        enable_segmentation: bool = False,
+        enable_segmentation: bool = True,
         min_free_vram_gib: float = 6.0,
     ) -> None:
         self.device = device
@@ -137,7 +137,8 @@ class Sam3Detector:
         self.class_defs = load_class_definitions(class_map_file)
         self.resolution = int(resolution)
         self.label_map_mode = str(label_map_mode or "study_aoi")
-        # Gaze assign uses boxes only; masks burn VRAM on 12GB cards.
+        # Sam3Processor._forward_grounding always reads pred_masks — keep True.
+        # We discard masks after copying boxes to CPU to limit peak VRAM.
         self.enable_segmentation = bool(enable_segmentation)
         self.min_free_vram_gib = float(min_free_vram_gib)
         self.model = None
@@ -242,9 +243,14 @@ class Sam3Detector:
                     state = self.processor.set_text_prompt(prompt=concept, state=state)
                     boxes = state.get("boxes")
                     scores = state.get("scores")
+                    # Drop full-res masks immediately — assign uses boxes only.
+                    if self.device.startswith("cuda"):
+                        for key in ("masks", "masks_logits"):
+                            if key in state:
+                                state[key] = None
                     if boxes is None or scores is None or len(boxes) == 0:
                         if self.device.startswith("cuda"):
-                            for key in ("boxes", "scores", "masks"):
+                            for key in ("boxes", "scores", "masks", "masks_logits"):
                                 state[key] = None
                         continue
 
@@ -252,9 +258,10 @@ class Sam3Detector:
                     scores_np = scores.detach().float().cpu().numpy()
                     # Release GPU tensors before the next concept forward.
                     if self.device.startswith("cuda"):
-                        for key in ("boxes", "scores", "masks"):
+                        for key in ("boxes", "scores", "masks", "masks_logits"):
                             state[key] = None
                         del boxes, scores
+                        torch.cuda.empty_cache()
                     for j in range(len(boxes_np)):
                         score = float(scores_np[j])
                         if score < concept_thr:

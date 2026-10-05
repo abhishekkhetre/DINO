@@ -208,8 +208,8 @@ def _build_detector(cfg: dict[str, Any]):
                 or "study_aoi"
             ),
             resolution=int(det_cfg.get("resolution", 1008)),
-            # Boxes-only by default — masks are unused by assign and OOM on 12GB GPUs.
-            enable_segmentation=bool(det_cfg.get("enable_segmentation", False)),
+            # Sam3Processor requires the segmentation head (pred_masks).
+            enable_segmentation=bool(det_cfg.get("enable_segmentation", True)),
             min_free_vram_gib=float(det_cfg.get("min_free_vram_gib", 6.0)),
         )
         return "sam3", detector
