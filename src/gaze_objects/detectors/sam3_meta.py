@@ -49,6 +49,41 @@ def load_text_concepts(
     return list(DEFAULT_CONCEPTS)
 
 
+def _cuda_mem_mib() -> tuple[float, float, float] | None:
+    """Return (free_MiB, total_MiB, allocated_MiB) or None if CUDA unavailable."""
+    import torch
+
+    if not torch.cuda.is_available():
+        return None
+    free_b, total_b = torch.cuda.mem_get_info()
+    allocated_b = torch.cuda.memory_allocated()
+    return free_b / (1024**2), total_b / (1024**2), allocated_b / (1024**2)
+
+
+def assert_cuda_headroom(min_free_gib: float = 4.0) -> None:
+    """Fail fast when another process has drained the GPU (common OOM cause)."""
+    import torch
+
+    if not torch.cuda.is_available():
+        return
+    mem = _cuda_mem_mib()
+    if mem is None:
+        return
+    free_mib, total_mib, allocated_mib = mem
+    free_gib = free_mib / 1024.0
+    print(
+        f"[sam3] CUDA mem free={free_mib:.0f}MiB "
+        f"total={total_mib:.0f}MiB allocated={allocated_mib:.0f}MiB",
+        flush=True,
+    )
+    if free_gib < min_free_gib:
+        raise RuntimeError(
+            f"CUDA only has {free_gib:.2f} GiB free (need ≥{min_free_gib:.1f} GiB). "
+            "Kill other GPU Python processes (nvidia-smi), then re-run a single batch. "
+            "Dual batches on a 12GB card will OOM."
+        )
+
+
 class Sam3Detector:
     def __init__(
         self,
@@ -63,6 +98,8 @@ class Sam3Detector:
         class_map_file: str | Path | None = None,
         resolution: int = 1008,
         label_map_mode: str = "study_aoi",
+        enable_segmentation: bool = False,
+        min_free_vram_gib: float = 4.0,
     ) -> None:
         self.device = device
         self.score_threshold = float(score_threshold)
@@ -80,6 +117,9 @@ class Sam3Detector:
         self.class_defs = load_class_definitions(class_map_file)
         self.resolution = int(resolution)
         self.label_map_mode = str(label_map_mode or "study_aoi")
+        # Gaze assign uses boxes only; masks burn VRAM on 12GB cards.
+        self.enable_segmentation = bool(enable_segmentation)
+        self.min_free_vram_gib = float(min_free_vram_gib)
         self.model = None
         self.processor = None
 
@@ -89,6 +129,7 @@ class Sam3Detector:
                 concept.strip().lower(), self.score_threshold
             )
         )
+
     def load(self) -> None:
         import torch
         from sam3.model_builder import build_sam3_image_model
@@ -105,13 +146,14 @@ class Sam3Detector:
         if self.device.startswith("cuda"):
             torch.backends.cuda.matmul.allow_tf32 = True
             torch.backends.cudnn.allow_tf32 = True
+            assert_cuda_headroom(self.min_free_vram_gib)
 
         self.model = build_sam3_image_model(
             device=self.device,
             eval_mode=True,
             checkpoint_path=self.checkpoint_path,
             load_from_HF=self.load_from_hf and self.checkpoint_path is None,
-            enable_segmentation=True,
+            enable_segmentation=self.enable_segmentation,
         )
         self.processor = Sam3Processor(
             self.model,
@@ -123,6 +165,18 @@ class Sam3Detector:
                 or [self.score_threshold]
             ),
         )
+        if self.device.startswith("cuda"):
+            torch.cuda.empty_cache()
+            mem = _cuda_mem_mib()
+            if mem is not None:
+                free_mib, total_mib, allocated_mib = mem
+                print(
+                    f"[sam3] model loaded segmentation={self.enable_segmentation} "
+                    f"resolution={self.resolution} concepts={len(self.concepts)} "
+                    f"free={free_mib:.0f}MiB allocated={allocated_mib:.0f}MiB "
+                    f"total={total_mib:.0f}MiB",
+                    flush=True,
+                )
 
     def detect_frame(self, frame_bgr: np.ndarray, frame_key: str) -> list[Detection]:
         if self.model is None or self.processor is None:
@@ -155,10 +209,18 @@ class Sam3Detector:
                     boxes = state.get("boxes")
                     scores = state.get("scores")
                     if boxes is None or scores is None or len(boxes) == 0:
+                        if self.device.startswith("cuda"):
+                            for key in ("boxes", "scores", "masks"):
+                                state[key] = None
                         continue
 
                     boxes_np = boxes.detach().float().cpu().numpy()
                     scores_np = scores.detach().float().cpu().numpy()
+                    # Release GPU tensors before the next concept forward.
+                    if self.device.startswith("cuda"):
+                        for key in ("boxes", "scores", "masks"):
+                            state[key] = None
+                        del boxes, scores
                     for j in range(len(boxes_np)):
                         score = float(scores_np[j])
                         if score < concept_thr:
@@ -192,4 +254,7 @@ class Sam3Detector:
                             )
                         )
                         det_i += 1
+
+        if self.device.startswith("cuda"):
+            torch.cuda.empty_cache()
         return dets

@@ -208,6 +208,9 @@ def _build_detector(cfg: dict[str, Any]):
                 or "study_aoi"
             ),
             resolution=int(det_cfg.get("resolution", 1008)),
+            # Boxes-only by default — masks are unused by assign and OOM on 12GB GPUs.
+            enable_segmentation=bool(det_cfg.get("enable_segmentation", False)),
+            min_free_vram_gib=float(det_cfg.get("min_free_vram_gib", 4.0)),
         )
         return "sam3", detector
     raise ValueError(f"Unknown detector.backend: {backend}")
@@ -226,6 +229,13 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
     want = set(frame_ids)
     rows: list[dict[str, Any]] = []
     n_frames = 0
+    n_target = len(frame_ids)
+    print(
+        f"[detect] backend={backend} frames={n_target} "
+        f"clip={ctx.get('clip_mode')} "
+        f"rec=[{ctx.get('recording_start_s')}, {ctx.get('recording_end_s')}]",
+        flush=True,
+    )
 
     if backend == "mock":
         from gaze_objects.detectors.mock import mock_detect_frame
@@ -247,9 +257,13 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
                 row["video_time_s"] = video_time_s
                 rows.append(row)
             n_frames += 1
+            if n_frames == 1 or n_frames % 25 == 0 or n_frames == n_target:
+                print(f"[detect] {n_frames}/{n_target} frames", flush=True)
     else:
         assert detector is not None
+        print("[detect] loading model…", flush=True)
         detector.load()
+        print("[detect] model ready", flush=True)
         for frame_index, _pts, video_time_s, frame in iter_frames_with_time(
             cfg["video_path"],
             start_s=ctx["video_start_clip"],
@@ -266,6 +280,12 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
                 row["video_time_s"] = video_time_s
                 rows.append(row)
             n_frames += 1
+            if n_frames == 1 or n_frames % 10 == 0 or n_frames == n_target:
+                print(
+                    f"[detect] {n_frames}/{n_target} frames "
+                    f"(frame_index={frame_index}, dets_so_far={len(rows)})",
+                    flush=True,
+                )
 
     detections_df = pd.DataFrame(rows)
     detections_df.to_csv(out_dir / "detections.csv", index=False)

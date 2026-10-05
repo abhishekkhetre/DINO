@@ -1,16 +1,9 @@
 # Fine-grained SAM3 concepts for gaze-order analysis (not limited to Tobii AOIs).
-# Design rules:
-# - Keep instruction manual.
-# - Whole angle grinder + distinct grinding/cutting disc only (no side-handle / guard /
-#   housing-part prompts that steal gaze from the whole device).
-# - Named hand tools stay separate (screwdriver, wrench, …) for sequence strings.
-# - Storage box for containers.
+# Lean set — each concept is a full forward pass (VRAM-sensitive on 12GB GPUs).
+# Whole AG + distinct disc only (no side-handle / guard / housing parts).
 instruction manual
 angle grinder
-grinder
-electric grinder
 grinding disc
-cutting disc
 storage box
 screwdriver
 wrench
