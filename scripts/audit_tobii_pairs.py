@@ -4,12 +4,18 @@
 from __future__ import annotations
 
 import argparse
+import csv
 from pathlib import Path
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-dir", required=True)
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="Optional dir for recording_ids.txt + recording_pairs.csv (paired only)",
+    )
     args = parser.parse_args()
     root = Path(args.data_dir).expanduser().resolve()
     if not root.is_dir():
@@ -36,7 +42,7 @@ def main() -> int:
         if video is None:
             unpaired_tsv.append(tsv)
         else:
-            paired.append((tsv, video))
+            paired.append((stem, tsv, video))
 
     video_stems = set()
     for v in videos:
@@ -58,6 +64,10 @@ def main() -> int:
     print(f"TSV without video:      {len(unpaired_tsv)}")
     print(f"video stems w/o TSV:    {len(unpaired_video_stems)}")
     print()
+    print("--- all paired recording ids ---")
+    for stem, _tsv, _video in paired:
+        print(stem)
+    print()
     print("--- first 20 TSV without matching scenevideo ---")
     for p in unpaired_tsv[:20]:
         print(p.relative_to(root))
@@ -69,6 +79,30 @@ def main() -> int:
         print(s)
     if len(unpaired_video_stems) > 20:
         print(f"... +{len(unpaired_video_stems) - 20} more")
+
+    if args.out:
+        out = Path(args.out)
+        out.mkdir(parents=True, exist_ok=True)
+        ids_path = out / "recording_ids.txt"
+        csv_path = out / "recording_pairs.csv"
+        ids_path.write_text(
+            "\n".join(stem for stem, _, _ in paired) + ("\n" if paired else ""),
+            encoding="utf-8",
+        )
+        with csv_path.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=["id", "tsv_path", "video_path"])
+            writer.writeheader()
+            for stem, tsv, video in paired:
+                writer.writerow(
+                    {
+                        "id": stem,
+                        "tsv_path": str(tsv.resolve()),
+                        "video_path": str(video.resolve()),
+                    }
+                )
+        print()
+        print(f"Wrote {len(paired)} ids → {ids_path}")
+        print(f"Wrote pairs CSV → {csv_path}")
     return 0
 
 

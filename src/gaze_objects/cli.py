@@ -226,7 +226,28 @@ def cmd_discover_pairs(args: argparse.Namespace) -> int:
     pairs = discover_recording_pairs(args.data_dir)
     if args.limit is not None:
         pairs = pairs[: int(args.limit)]
-    print(json.dumps(pairs, indent=2))
+
+    ids = [p["id"] for p in pairs]
+    if args.out:
+        out = Path(args.out)
+        out.mkdir(parents=True, exist_ok=True)
+        ids_path = out / "recording_ids.txt"
+        csv_path = out / "recording_pairs.csv"
+        ids_path.write_text("\n".join(ids) + ("\n" if ids else ""), encoding="utf-8")
+        import csv
+
+        with csv_path.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=["id", "tsv_path", "video_path"])
+            writer.writeheader()
+            writer.writerows(pairs)
+        print(f"Wrote {len(ids)} ids → {ids_path}", flush=True)
+        print(f"Wrote pairs CSV → {csv_path}", flush=True)
+
+    if args.ids_only:
+        for rec_id in ids:
+            print(rec_id)
+    else:
+        print(json.dumps(pairs, indent=2))
     print(f"n_pairs={len(pairs)}", file=sys.stderr)
     return 0
 
@@ -309,6 +330,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_disc.add_argument("--data-dir", required=True)
     p_disc.add_argument("--limit", type=int, default=None)
+    p_disc.add_argument(
+        "--ids-only",
+        action="store_true",
+        help="Print one recording id per line (participant video stems)",
+    )
+    p_disc.add_argument(
+        "--out",
+        default=None,
+        help="Directory to write recording_ids.txt and recording_pairs.csv",
+    )
     p_disc.set_defaults(func=cmd_discover_pairs)
 
     p_batch = sub.add_parser(
