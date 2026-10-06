@@ -107,6 +107,35 @@ def aggregate_sequences_from_output_root(output_root: str | Path) -> dict[str, A
     strings.to_csv(strings_path, index=False)
     transitions.to_csv(transitions_path, index=False)
 
+    # One-row-per-recording results table (QC metrics + gaze-order string).
+    results_path = root / "corpus_results.csv"
+    qc_path = root / "batch_qc_summary.csv"
+    results = strings.copy()
+    if qc_path.is_file() and len(results):
+        qc = pd.read_csv(qc_path)
+        if "recording_id" in qc.columns:
+            keep = [
+                c
+                for c in (
+                    "recording_id",
+                    "status",
+                    "n_frames_processed",
+                    "n_detections",
+                    "n_fixations",
+                    "n_fixations_labelled",
+                    "n_sequences",
+                    "conditional_accuracy",
+                    "conditional_n",
+                    "error",
+                )
+                if c in qc.columns
+            ]
+            results = qc[keep].merge(results, on="recording_id", how="outer", suffixes=("", "_agg"))
+            # Prefer QC n_sequences when both present.
+            if "n_sequences_agg" in results.columns:
+                results = results.drop(columns=["n_sequences_agg"])
+    results.to_csv(results_path, index=False)
+
     summary = {
         "n_recordings_with_sequences": int(len(strings)),
         "n_recordings_nonempty": int((strings["n_sequences"] > 0).sum()) if len(strings) else 0,
@@ -115,6 +144,7 @@ def aggregate_sequences_from_output_root(output_root: str | Path) -> dict[str, A
         "corpus_attention_sequences_csv": str(events_path),
         "corpus_sequence_strings_csv": str(strings_path),
         "corpus_transitions_csv": str(transitions_path),
+        "corpus_results_csv": str(results_path),
         "example_sequence_strings": strings.loc[strings["sequence_string"] != "", "sequence_string"]
         .head(10)
         .tolist()
@@ -122,9 +152,11 @@ def aggregate_sequences_from_output_root(output_root: str | Path) -> dict[str, A
         else [],
         "top_transitions": transitions.head(20).to_dict(orient="records") if len(transitions) else [],
         "notes": [
-            "sequence_string = ordered attended AOI labels across Stage E sequences (e.g. Angle Grinder > Manual > Boxes).",
+            "sequence_string = ordered attended labels across Stage E sequences "
+            "(fine mode: screwdriver / angle grinder / …; AOI mode: Angle Grinder / Manual / …).",
             "Only labelled fixations that pass quality gates enter sequences.",
             "Unlabelled gaps break runs; they do not appear as tokens in the string.",
+            "corpus_results.csv joins batch_qc_summary with sequence_string (one row per recording).",
         ],
     }
     write_json(root / "corpus_sequences_summary.json", summary)

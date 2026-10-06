@@ -69,3 +69,36 @@ def test_aggregate_sequences_from_output_root(tmp_path: Path):
     assert by_id["REC_B"] == "Manual > Boxes > Manual"
     transitions = pd.read_csv(tmp_path / "corpus_transitions.csv")
     assert len(transitions) >= 2
+    results = pd.read_csv(tmp_path / "corpus_results.csv")
+    assert set(results.recording_id) >= {"REC_A", "REC_B"}
+    assert "sequence_string" in results.columns
+
+
+def test_aggregate_merges_qc_into_corpus_results(tmp_path: Path):
+    a = tmp_path / "REC_A"
+    a.mkdir()
+    pd.DataFrame(
+        {
+            "sequence_id": [1, 2],
+            "attended_label": ["screwdriver", "angle grinder"],
+        }
+    ).to_csv(a / "attention_sequences.csv", index=False)
+    pd.DataFrame(
+        {
+            "recording_id": ["REC_A"],
+            "status": ["ok"],
+            "n_frames_processed": [10],
+            "n_detections": [20],
+            "n_fixations": [5],
+            "n_fixations_labelled": [4],
+            "n_sequences": [2],
+        }
+    ).to_csv(tmp_path / "batch_qc_summary.csv", index=False)
+
+    aggregate_sequences_from_output_root(tmp_path)
+    results = pd.read_csv(tmp_path / "corpus_results.csv")
+    row = results.iloc[0]
+    assert row["recording_id"] == "REC_A"
+    assert row["status"] == "ok"
+    assert row["sequence_string"] == "screwdriver > angle grinder"
+    assert int(row["n_fixations_labelled"]) == 4

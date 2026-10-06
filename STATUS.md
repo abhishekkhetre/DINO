@@ -1,54 +1,52 @@
 # Status
 
-Last updated: 2026-10-05.
+Last updated: 2026-10-06.
 
-## Approaches
+## Fine SAM3 batch — DONE on workstation
 
-### 1) Study AOI (done)
-Tobii-aligned labels (Angle Grinder / Manual / Boxes / Tools), trimmed then full-video.
+`outputs/batch_sam3_full_fine/` finished **290/290 ok** (detect → assign → sequences).
 
-### 2) Fine SAM3 objects (current)
-Full-video sequences using **SAM3 object names** (not limited to Tobii AOIs):
-`instruction manual`, `angle grinder`, `grinding disc`, `screwdriver`, `wrench`,
-`pliers`, `hex key`, `hammer`, `storage box`.
+| Metric | Value |
+| --- | --- |
+| Recordings | 290 |
+| Errors | 0 |
+| Frames processed | ~192k |
+| Detections | ~1.27M |
+| Fixations | ~126k |
+| Fixations labelled | ~26k |
+| Sequences | ~18k |
 
-Config: `configs/batch_sam3_full_fine.yaml`  
-Output: `outputs/batch_sam3_full_fine/`  
-Aggregate: `corpus_sequence_strings.csv`
+`conditional_accuracy` is empty on purpose — this run did **not** evaluate against Tobii AOIs
+(fine labels ≠ AOI names).
 
-## Why recent errors kept shifting (root causes)
+## Same deliverable as previous corpus (next step)
 
-| Symptom | Real cause | Fix |
-| --- | --- | --- |
-| CUDA OOM, ~7 GiB held by another PID | Two SAM3 batches on one 12GB GPU | Kill all other Type-C python; one batch only |
-| Crash right after `model ready` with empty assert / `pred_masks` | `enable_segmentation: false` — Sam3Processor always needs masks | Keep segmentation on; drop masks after boxes |
-| `vitdet.reshape_for_broadcast` AssertionError | `resolution` ≠ **1008** — RoPE freqs are baked for ViT `img_size=1008` | **Always `resolution: 1008`** (768/784 are invalid) |
-
-Lowering resolution does **not** save VRAM here — it hard-crashes. VRAM is managed by: single process, lean 9-concept prompts, stride 8, unload between recordings.
-
-## Workstation resume
+On the workstation, build the corpus tables (like the earlier AOI sequence export):
 
 ```bash
-pkill -f 'gaze_objects.cli batch' || true
-sleep 2
-nvidia-smi   # ~600–800 MiB; no Type-C python
-
 cd ~/KHETRE/DINO_KHETRE/DINO
 conda activate sam3
 git pull origin cursor/sam3-fine-labels-full-e54c
-
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTHONPATH=src:$PYTHONPATH
-find outputs/batch_sam3_full_fine -name batch_error.txt -delete 2>/dev/null
 
-nohup python -m gaze_objects.cli batch --config configs/batch_sam3_full_fine.yaml \
-  > outputs/batch_sam3_full_fine/batch_run.log 2>&1 &
-tail -f outputs/batch_sam3_full_fine/batch_run.log
-# Expect: resolution=1008 → model ready → [detect] 1/N frames …
+python -m gaze_objects.cli aggregate-sequences \
+  --output-root outputs/batch_sam3_full_fine
 ```
 
-Aggregate when QC is mostly ok:
+Writes under `outputs/batch_sam3_full_fine/`:
+
+| File | What |
+| --- | --- |
+| `corpus_sequence_strings.csv` | one gaze-order string per ID (e.g. `angle grinder > screwdriver > …`) |
+| `corpus_transitions.csv` | from→to transition counts |
+| `corpus_attention_sequences.csv` | all sequence rows |
+| `corpus_results.csv` | QC metrics + sequence_string (one row per recording) |
+| `corpus_sequences_summary.json` | counts + top transitions |
+
+IDs only:
 
 ```bash
-python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_full_fine
+python -m gaze_objects.cli discover-pairs \
+  --data-dir /home/ifab-agiprobotw-0001/KHETRE/Tobii_Data \
+  --ids-only --out outputs/tobii_inventory
 ```
