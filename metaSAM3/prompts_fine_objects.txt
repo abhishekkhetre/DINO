@@ -1,0 +1,12 @@
+# Fine-grained SAM3 concepts for gaze-order analysis (not limited to Tobii AOIs).
+# Lean set — each concept is a full forward pass (VRAM-sensitive on 12GB GPUs).
+# Whole AG + distinct disc only (no side-handle / guard / housing parts).
+instruction manual
+angle grinder
+grinding disc
+storage box
+screwdriver
+wrench
+pliers
+hex key
+hammer
