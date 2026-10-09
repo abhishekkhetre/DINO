@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Iterable
 
 import pandas as pd
 
 from gaze_objects.detectors.label_map import normalize_label
+from gaze_objects.masks import (
+    attach_masks_to_detections,
+    load_detection_masks,
+    point_in_mask,
+)
 
 
 ASSIGNMENT_STATUSES = (
@@ -30,6 +36,44 @@ NESTED_CHILD_TO_PARENT = {
 def point_in_box(x: float, y: float, x_min: float, y_min: float, x_max: float, y_max: float) -> bool:
     """Inclusive min, exclusive max — consistent with in-frame gaze policy."""
     return (x >= x_min) and (x < x_max) and (y >= y_min) and (y < y_max)
+
+
+def gaze_hits_detection(
+    x: float,
+    y: float,
+    det: dict[str, Any],
+    *,
+    hit_test: str = "box",
+) -> bool:
+    """
+    Test whether gaze hits a detection.
+
+    ``hit_test``:
+      - ``box``: axis-aligned box (default / legacy)
+      - ``mask``: binary silhouette when present, else fall back to box
+    """
+    mode = str(hit_test or "box").strip().lower()
+    if mode == "mask":
+        mask = det.get("mask")
+        if mask is not None:
+            return point_in_mask(x, y, mask)
+        # Fallback keeps pipeline usable if masks were not saved.
+        return point_in_box(
+            x,
+            y,
+            float(det["x_min"]),
+            float(det["y_min"]),
+            float(det["x_max"]),
+            float(det["y_max"]),
+        )
+    return point_in_box(
+        x,
+        y,
+        float(det["x_min"]),
+        float(det["y_min"]),
+        float(det["x_max"]),
+        float(det["y_max"]),
+    )
 
 
 def _norm_label(det: dict[str, Any]) -> str | None:
@@ -172,11 +216,13 @@ def assign_gaze_to_detections(
     require_normalized_label: bool = False,
     prefer_nested_parent: bool = False,
     nested_parent_expand_px: float = 80.0,
+    hit_test: str = "box",
 ) -> dict[str, Any]:
     """
     Baseline assignment for one gaze sample.
 
-    Candidate boxes must pass score_threshold (and optional label requirement).
+    Candidates must pass score_threshold (and optional label requirement) and
+    contain the gaze under ``hit_test`` (``box`` or ``mask``).
     Exactly one containing candidate -> assigned.
     None -> no_detected_target (only if frame was processed and gaze eligible).
     Several -> ambiguous (no automatic nearest/largest/smallest choice), unless
@@ -191,6 +237,7 @@ def assign_gaze_to_detections(
         "n_candidates": 0,
         "assignment_status": None,
         "assignment_reason": None,
+        "hit_test": str(hit_test or "box"),
     }
 
     if association_status != "matched":
@@ -228,23 +275,19 @@ def assign_gaze_to_detections(
             require_normalized_label=require_normalized_label,
         ):
             continue
-        if point_in_box(
-            gx,
-            gy,
-            float(det["x_min"]),
-            float(det["y_min"]),
-            float(det["x_max"]),
-            float(det["y_max"]),
-        ):
+        if gaze_hits_detection(gx, gy, det, hit_test=hit_test):
             candidates.append(det)
 
     ids = [str(d["detection_id"]) for d in candidates]
     base["candidate_detection_ids"] = ids
     base["n_candidates"] = len(candidates)
+    hit_mode = str(hit_test or "box").strip().lower()
 
     if len(candidates) == 0:
         base["assignment_status"] = "no_detected_target"
-        base["assignment_reason"] = "no_box_contains_gaze"
+        base["assignment_reason"] = (
+            "no_mask_contains_gaze" if hit_mode == "mask" else "no_box_contains_gaze"
+        )
         return base
 
     if len(candidates) > 1:
@@ -266,7 +309,9 @@ def assign_gaze_to_detections(
                 return _fill_assigned(base, chosen, "prefer_angle_grinder_over_nested_child")
 
         base["assignment_status"] = "ambiguous"
-        base["assignment_reason"] = "multiple_boxes_contain_gaze"
+        base["assignment_reason"] = (
+            "multiple_masks_contain_gaze" if hit_mode == "mask" else "multiple_boxes_contain_gaze"
+        )
         return base
 
     chosen = candidates[0]
@@ -282,7 +327,8 @@ def assign_gaze_to_detections(
         )
         if parent is not None:
             return _fill_assigned(base, parent, "nested_child_under_angle_grinder")
-    return _fill_assigned(base, chosen, "single_containing_box")
+    reason = "single_containing_mask" if hit_mode == "mask" else "single_containing_box"
+    return _fill_assigned(base, chosen, reason)
 
 
 def assign_table(
@@ -295,12 +341,20 @@ def assign_table(
     nested_parent_expand_px: float = 80.0,
     label_map_mode: str = "study_aoi",
     frame_id_col: str = "frame_index",
+    hit_test: str = "box",
+    masks_dir: str | Path | None = None,
 ) -> pd.DataFrame:
     """
     Assign each gaze row using detections grouped by frame_index.
 
     ``gaze_frame_df`` should already include association + eligibility columns.
+    When ``hit_test='mask'``, load ``detection_masks.npz`` from ``masks_dir``
+    (defaults to same folder as detections if paths are relative via caller).
     """
+    masks_by_id: dict[str, Any] = {}
+    if str(hit_test or "box").strip().lower() == "mask" and masks_dir is not None:
+        masks_by_id = load_detection_masks(masks_dir)
+
     processed_frames = set()
     by_frame: dict[int, list[dict[str, Any]]] = {}
     if len(detections_df):
@@ -313,6 +367,10 @@ def assign_table(
             if raw is not None and str(raw).strip():
                 det["normalized_label"] = normalize_label(str(raw), mode=label_map_mode)
             by_frame.setdefault(fi, []).append(det)
+
+    if masks_by_id:
+        for fi, dets in list(by_frame.items()):
+            by_frame[fi] = attach_masks_to_detections(dets, masks_by_id)
 
     records = []
     for _, g in gaze_frame_df.iterrows():
@@ -330,6 +388,7 @@ def assign_table(
             require_normalized_label=require_normalized_label,
             prefer_nested_parent=prefer_nested_parent,
             nested_parent_expand_px=nested_parent_expand_px,
+            hit_test=hit_test,
         )
         records.append(
             {

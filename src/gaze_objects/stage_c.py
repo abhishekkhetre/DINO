@@ -211,6 +211,13 @@ def _build_detector(cfg: dict[str, Any]):
             # Sam3Processor requires the segmentation head (pred_masks).
             enable_segmentation=bool(det_cfg.get("enable_segmentation", True)),
             min_free_vram_gib=float(det_cfg.get("min_free_vram_gib", 6.0)),
+            keep_masks=bool(
+                det_cfg.get(
+                    "keep_masks",
+                    str((cfg.get("assignment") or {}).get("hit_test", "box")).lower()
+                    == "mask",
+                )
+            ),
         )
         return "sam3", detector
     raise ValueError(f"Unknown detector.backend: {backend}")
@@ -228,6 +235,7 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
 
     want = set(frame_ids)
     rows: list[dict[str, Any]] = []
+    masks_by_id: dict[str, Any] = {}
     n_frames = 0
     n_target = len(frame_ids)
     print(
@@ -256,6 +264,8 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
                 row["frame_index"] = frame_index
                 row["video_time_s"] = video_time_s
                 rows.append(row)
+                if getattr(d, "mask", None) is not None:
+                    masks_by_id[d.detection_id] = d.mask
             n_frames += 1
             if n_frames == 1 or n_frames % 25 == 0 or n_frames == n_target:
                 print(f"[detect] {n_frames}/{n_target} frames", flush=True)
@@ -280,6 +290,8 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
                     row["frame_index"] = frame_index
                     row["video_time_s"] = video_time_s
                     rows.append(row)
+                    if getattr(d, "mask", None) is not None:
+                        masks_by_id[d.detection_id] = d.mask
                 n_frames += 1
                 if n_frames == 1 or n_frames % 10 == 0 or n_frames == n_target:
                     print(
@@ -302,6 +314,9 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
 
     detections_df = pd.DataFrame(rows)
     detections_df.to_csv(out_dir / "detections.csv", index=False)
+    from gaze_objects.masks import save_detection_masks
+
+    masks_path = save_detection_masks(out_dir, masks_by_id)
     summary = {
         "backend": backend,
         "clip_mode": ctx.get("clip_mode"),
@@ -312,6 +327,8 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
         "n_selected_frames": len(frame_ids),
         "n_frames_processed": n_frames,
         "n_detections": int(len(detections_df)),
+        "n_masks_saved": int(len(masks_by_id)),
+        "masks_archive": str(masks_path) if masks_path else None,
         "frame_indices": frame_ids,
         "time_mapping": ctx["mapping"],
         "output_dir": str(out_dir),
@@ -344,6 +361,7 @@ def run_assign(config_path: str | Path) -> dict[str, Any]:
         or det_cfg.get("label_map_mode")
         or "study_aoi"
     )
+    hit_test = str(asg_cfg.get("hit_test", "box"))
     assignments = assign_table(
         joined,
         detections,
@@ -352,6 +370,8 @@ def run_assign(config_path: str | Path) -> dict[str, Any]:
         prefer_nested_parent=bool(asg_cfg.get("prefer_nested_parent", False)),
         nested_parent_expand_px=float(asg_cfg.get("nested_parent_expand_px", 80.0)),
         label_map_mode=label_map_mode,
+        hit_test=hit_test,
+        masks_dir=out_dir,
     )
     assignments.to_csv(out_dir / "gaze_assignments.csv", index=False)
     status_counts = assignments["assignment_status"].value_counts(dropna=False).to_dict()
@@ -359,6 +379,7 @@ def run_assign(config_path: str | Path) -> dict[str, Any]:
         "n_gaze_rows": int(len(assignments)),
         "status_counts": {str(k): int(v) for k, v in status_counts.items()},
         "label_map_mode": label_map_mode,
+        "hit_test": hit_test,
         "output_dir": str(out_dir),
     }
     write_json(out_dir / "assign_summary.json", summary)

@@ -204,6 +204,76 @@ def cmd_assign(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sam_overlay(args: argparse.Namespace) -> int:
+    """Detect (with masks) → assign (mask hit-test) → SAM+gaze illustration video."""
+    import pandas as pd
+
+    from gaze_objects.audit import write_json
+    from gaze_objects.io import read_tsv
+    from gaze_objects.masks import load_detection_masks
+    from gaze_objects.stage_c import run_assign, run_detect
+    from gaze_objects.video import inspect_video
+    from gaze_objects.visualize import write_sam_gaze_overlay
+
+    cfg = _load_config(args.config)
+    out_dir = Path(cfg["output_dir"])
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Force mask path for this command unless config already set.
+    det = cfg.setdefault("detector", {})
+    asg = cfg.setdefault("assignment", {})
+    det["keep_masks"] = True
+    det["enable_segmentation"] = True
+    asg["hit_test"] = str(asg.get("hit_test", "mask"))
+
+    # Persist forced settings into run_config for reproducibility.
+    run_cfg_path = out_dir / "sam_overlay_run_config.yaml"
+    import yaml
+
+    run_cfg_path.write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
+
+    print("[sam-overlay] detect…", flush=True)
+    det_summary = run_detect(run_cfg_path)
+    print("[sam-overlay] assign (hit_test=mask)…", flush=True)
+    asg_summary = run_assign(run_cfg_path)
+
+    detections = pd.read_csv(out_dir / "detections.csv")
+    assignments = pd.read_csv(out_dir / "gaze_assignments.csv")
+    masks = load_detection_masks(out_dir)
+
+    _, meta = read_tsv(cfg["tsv_path"], compute_hash=False)
+    vinfo = inspect_video(cfg["video_path"], max_pts_samples=int(cfg.get("max_pts_samples", 2000)))
+    start_s = float(det_summary.get("video_start_clip", 0.0))
+    end_s = float(det_summary.get("video_end_clip", start_s + 30.0))
+    out_mp4 = out_dir / str(cfg.get("overlay_filename", "sam_gaze_overlay.mp4"))
+
+    print("[sam-overlay] rendering video…", flush=True)
+    overlay_stats = write_sam_gaze_overlay(
+        cfg["video_path"],
+        detections=detections,
+        assignments=assignments,
+        masks_by_id=masks,
+        out_path=out_mp4,
+        src_width=int(meta["media_width"]),
+        src_height=int(meta["media_height"]),
+        start_s=start_s,
+        end_s=end_s,
+        video_fps_hint=vinfo.average_fps,
+        gaze_radius=int(cfg.get("overlay_gaze_radius", 28)),
+    )
+    summary = {
+        "detect": det_summary,
+        "assign": asg_summary,
+        "overlay": overlay_stats,
+        "n_masks_loaded": len(masks),
+        "hit_test": asg.get("hit_test"),
+    }
+    write_json(out_dir / "sam_overlay_summary.json", summary)
+    print(json.dumps({"overlay": overlay_stats, "n_masks": len(masks)}, indent=2))
+    print(f"Wrote {out_mp4}", flush=True)
+    return 0
+
+
 def cmd_evaluate(args: argparse.Namespace) -> int:
     from gaze_objects.evaluate import run_evaluate
 
@@ -312,6 +382,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_asg = sub.add_parser("assign", help="Stage C: assign gaze to cached detections")
     p_asg.add_argument("--config", required=True)
     p_asg.set_defaults(func=cmd_assign)
+
+    p_sam_ov = sub.add_parser(
+        "sam-overlay",
+        help="Detect+mask-assign+render SAM/gaze illustration video for one clip",
+    )
+    p_sam_ov.add_argument("--config", required=True)
+    p_sam_ov.set_defaults(func=cmd_sam_overlay)
 
     p_eval = sub.add_parser("evaluate", help="Stage D: compare assignments to AOI reference labels")
     p_eval.add_argument("--config", required=True)

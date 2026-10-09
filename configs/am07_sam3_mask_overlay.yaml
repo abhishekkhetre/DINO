@@ -1,0 +1,66 @@
+# One-video SAM mask + gaze illustration (AM07, 30–60 s).
+# Pipeline: detect (keep masks) → assign (hit_test=mask) → sam_gaze_overlay.mp4
+#
+# Workstation:
+#   conda activate sam3
+#   export PYTHONPATH=src:$PYTHONPATH
+#   python -m gaze_objects.cli sam-overlay --config configs/am07_sam3_mask_overlay.yaml
+#
+# Output: outputs/am07_sam3_mask_overlay/sam_gaze_overlay.mp4
+
+participant_id: AM07AM07
+recording_id: "Recording 50"
+
+tsv_path: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data/AM07AM07_01_data_export.tsv"
+video_path: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data/AM07AM07_01_scenevideo.mp4"
+output_dir: "outputs/am07_sam3_mask_overlay"
+
+timestamp_unit: milliseconds
+timestamp_unit_status: verified
+video_start_recording_s: 0.0
+time_mapping_status: verified
+max_abs_residual_s: 0.05
+compute_hash: false
+
+clip:
+  recording_start_s: 30.0
+  recording_end_s: 60.0
+
+frame_selection:
+  mode: unique_matched_frames
+  stride: 3
+  max_frames: 80
+
+detector:
+  backend: sam3
+  device: cuda
+  label_map_mode: fine
+  resolution: 1008
+  enable_segmentation: true
+  keep_masks: true
+  min_free_vram_gib: 6.0
+  score_threshold: 0.50
+  score_threshold_by_concept:
+    angle grinder: 0.25
+    grinding disc: 0.40
+    instruction manual: 0.55
+    screwdriver: 0.45
+    wrench: 0.45
+    pliers: 0.45
+    hex key: 0.45
+    hammer: 0.45
+    storage box: 0.45
+  load_from_hf: true
+  text_concepts_file: "metaSAM3/prompts_fine_objects.txt"
+  class_map_file: "configs/class_definitions.yaml"
+
+assignment:
+  hit_test: mask
+  score_threshold: 0.25
+  overlap_policy: ambiguous
+  require_normalized_label: false
+  prefer_nested_parent: false
+  label_map_mode: fine
+
+overlay_filename: sam_gaze_overlay.mp4
+overlay_gaze_radius: 28

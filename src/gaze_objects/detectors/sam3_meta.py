@@ -120,6 +120,7 @@ class Sam3Detector:
         label_map_mode: str = "study_aoi",
         enable_segmentation: bool = True,
         min_free_vram_gib: float = 6.0,
+        keep_masks: bool = False,
     ) -> None:
         self.device = device
         self.score_threshold = float(score_threshold)
@@ -147,9 +148,12 @@ class Sam3Detector:
             )
         self.label_map_mode = str(label_map_mode or "study_aoi")
         # Sam3Processor._forward_grounding always reads pred_masks — keep True.
-        # We discard masks after copying boxes to CPU to limit peak VRAM.
         self.enable_segmentation = bool(enable_segmentation)
         self.min_free_vram_gib = float(min_free_vram_gib)
+        # When True, copy binary masks to CPU on each Detection for gaze-in-mask.
+        self.keep_masks = bool(keep_masks)
+        if self.keep_masks and not self.enable_segmentation:
+            raise ValueError("keep_masks=True requires enable_segmentation=True")
         self.model = None
         self.processor = None
 
@@ -252,11 +256,7 @@ class Sam3Detector:
                     state = self.processor.set_text_prompt(prompt=concept, state=state)
                     boxes = state.get("boxes")
                     scores = state.get("scores")
-                    # Drop full-res masks immediately — assign uses boxes only.
-                    if self.device.startswith("cuda"):
-                        for key in ("masks", "masks_logits"):
-                            if key in state:
-                                state[key] = None
+                    masks = state.get("masks")
                     if boxes is None or scores is None or len(boxes) == 0:
                         if self.device.startswith("cuda"):
                             for key in ("boxes", "scores", "masks", "masks_logits"):
@@ -265,11 +265,17 @@ class Sam3Detector:
 
                     boxes_np = boxes.detach().float().cpu().numpy()
                     scores_np = scores.detach().float().cpu().numpy()
+                    masks_np = None
+                    if self.keep_masks and masks is not None:
+                        masks_np = masks.detach().cpu().numpy()
+                        # (N,1,H,W) or (N,H,W) → per-instance HxW
+                        if masks_np.ndim == 4:
+                            masks_np = masks_np[:, 0]
                     # Release GPU tensors before the next concept forward.
                     if self.device.startswith("cuda"):
                         for key in ("boxes", "scores", "masks", "masks_logits"):
                             state[key] = None
-                        del boxes, scores
+                        del boxes, scores, masks
                         torch.cuda.empty_cache()
                     for j in range(len(boxes_np)):
                         score = float(scores_np[j])
@@ -278,6 +284,9 @@ class Sam3Detector:
                         x_min, y_min, x_max, y_max = [
                             float(v) for v in boxes_np[j].tolist()
                         ]
+                        mask_j = None
+                        if masks_np is not None and j < len(masks_np):
+                            mask_j = (masks_np[j] > 0).astype(np.uint8)
                         dets.append(
                             Detection(
                                 detection_id=f"{frame_key}_sam3_{det_i}",
@@ -293,6 +302,7 @@ class Sam3Detector:
                                     mode=self.label_map_mode,
                                 ),
                                 score=score,
+                                mask=mask_j,
                                 model_provenance={
                                     "backend": "sam3",
                                     "model_name": "facebook/sam3",
@@ -300,6 +310,7 @@ class Sam3Detector:
                                     or "huggingface:facebook/sam3",
                                     "text_concept": concept,
                                     "score_threshold": concept_thr,
+                                    "has_mask": mask_j is not None,
                                 },
                             )
                         )

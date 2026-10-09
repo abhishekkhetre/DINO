@@ -47,8 +47,9 @@ defaults:
     # Hard requirement: Meta SAM3 ViT img_size / RoPE is 1008. Do not change.
     resolution: 1008
     # Sam3Processor always materializes pred_masks — must stay true.
-    # Masks are dropped after boxes are copied to CPU.
+    # keep_masks=true saves silhouettes for gaze-in-mask assign (heavier disk I/O).
     enable_segmentation: true
+    keep_masks: true
     # Need ~6 GiB free *before* load. Catches a second python still on the GPU.
     min_free_vram_gib: 6.0
     score_threshold: 0.50
@@ -67,6 +68,8 @@ defaults:
     class_map_file: "configs/class_definitions.yaml"
 
   assignment:
+    # Gaze must land on SAM silhouette (falls back to box if mask missing).
+    hit_test: mask
     score_threshold: 0.25
     overlap_policy: ambiguous
     require_normalized_label: false
