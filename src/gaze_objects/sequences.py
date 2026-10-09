@@ -236,6 +236,9 @@ def build_attention_sequences(fixation_table: pd.DataFrame) -> pd.DataFrame:
                 "video_start_s",
                 "video_end_s",
                 "total_gaze_event_duration_raw",
+                "mean_fixation_duration_raw",
+                "median_fixation_duration_raw",
+                "fixation_durations_raw",
             ]
         )
 
@@ -252,9 +255,13 @@ def build_attention_sequences(fixation_table: pd.DataFrame) -> pd.DataFrame:
             return
         seq_id += 1
         durations = [
-            r["gaze_event_duration_raw"]
+            float(r["gaze_event_duration_raw"])
             for r in buf
             if r.get("gaze_event_duration_raw") is not None
+            and not (
+                isinstance(r["gaze_event_duration_raw"], float)
+                and pd.isna(r["gaze_event_duration_raw"])
+            )
         ]
         sequences.append(
             {
@@ -268,6 +275,16 @@ def build_attention_sequences(fixation_table: pd.DataFrame) -> pd.DataFrame:
                 "video_start_s": buf[0].get("video_start_s"),
                 "video_end_s": buf[-1].get("video_end_s"),
                 "total_gaze_event_duration_raw": float(sum(durations)) if durations else None,
+                "mean_fixation_duration_raw": (
+                    float(sum(durations) / len(durations)) if durations else None
+                ),
+                "median_fixation_duration_raw": (
+                    float(pd.Series(durations).median()) if durations else None
+                ),
+                # Pipe-separated per-fixation durations in sequence order (Tobii raw units).
+                "fixation_durations_raw": (
+                    "|".join(f"{d:g}" for d in durations) if durations else None
+                ),
             }
         )
         buf = []

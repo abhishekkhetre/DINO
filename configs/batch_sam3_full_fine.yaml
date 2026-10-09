@@ -56,7 +56,6 @@ defaults:
     score_threshold_by_concept:
       # Synonyms share this gate via canonical label lookup in Sam3Detector.
       angle grinder: 0.12
-      grinding disc: 0.35
       instruction manual: 0.55
       screwdriver: 0.45
       wrench: 0.50

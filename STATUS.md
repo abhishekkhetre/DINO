@@ -47,7 +47,8 @@ Shows: SAM colored masks + boxes, large gaze crosshair, **green HIT ring** when 
 ### Prompt / threshold notes (2026-10-09)
 - **AM07 t≈34s screenshot:** AG clearly in hands under gaze; CSV had **zero** AG dets before ~77s (51/1844 frames later, mean score 0.35). Banner `gaze (frame_not_processed)` = that frame was not a gaze-assign sample — other masks still draw via carry-forward; AG was simply never detected.
 - **Fix:** AG prompts first (`power tool`, `disk grinder`, …); gate **0.12**; min box area 0.8% of frame to cut corner FPs; magenta overlay. **Must re-run** `sam-overlay` (old mp4 / detections.csv are from the weak-prompt run).
-- **Pliers FPs:** removed `pliers` / `hex key` / `hammer` from prompts.
+- **Pliers / grinding disc FPs:** removed `pliers` / `hex key` / `hammer` / `grinding disc` from prompts (not reliably in kit; polluted output sheets).
+- **Sequence durations:** `attention_sequences` / corpus sheets now include `mean_fixation_duration_raw`, `median_fixation_duration_raw`, and `fixation_durations_raw` (pipe-separated) alongside the total.
 
 Quick label count after a run:
 ```bash

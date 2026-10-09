@@ -26,4 +26,5 @@ def test_fine_prompts_cover_grinder_and_drop_phantom_tools():
     assert "hex key" not in concepts
     assert "hammer" not in concepts
     assert "cutting disc" not in concepts
+    assert "grinding disc" not in concepts
     assert len(concepts) <= 12

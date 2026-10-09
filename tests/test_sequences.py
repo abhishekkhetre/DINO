@@ -75,6 +75,38 @@ def test_build_fixation_and_sequences():
     assert len(seq) == 3
     assert list(seq["attended_label"]) == ["Manual", "Tools", "Manual"]
     assert int(seq.iloc[0]["n_fixations"]) == 1
+    assert "mean_fixation_duration_raw" in seq.columns
+    assert "fixation_durations_raw" in seq.columns
+    # Multi-fixation sequence: stitch two Manuals with same label consecutively
+    # by using a table that already has two labelled fixations in a row longer.
+    multi = pd.DataFrame(
+        [
+            {
+                "fixation_index": 1,
+                "attended_label": "screwdriver",
+                "gaze_event_duration_raw": 100.0,
+                "recording_start_s": 1.0,
+                "recording_end_s": 1.1,
+                "video_start_s": 1.0,
+                "video_end_s": 1.1,
+            },
+            {
+                "fixation_index": 2,
+                "attended_label": "screwdriver",
+                "gaze_event_duration_raw": 200.0,
+                "recording_start_s": 1.2,
+                "recording_end_s": 1.4,
+                "video_start_s": 1.2,
+                "video_end_s": 1.4,
+            },
+        ]
+    )
+    multi_seq = build_attention_sequences(multi)
+    assert len(multi_seq) == 1
+    assert float(multi_seq.iloc[0]["total_gaze_event_duration_raw"]) == 300.0
+    assert float(multi_seq.iloc[0]["mean_fixation_duration_raw"]) == 150.0
+    assert float(multi_seq.iloc[0]["median_fixation_duration_raw"]) == 150.0
+    assert multi_seq.iloc[0]["fixation_durations_raw"] == "100|200"
 
 
 def test_empty_fixation_table_has_attended_status():
