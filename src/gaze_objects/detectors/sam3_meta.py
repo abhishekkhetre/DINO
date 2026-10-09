@@ -50,8 +50,11 @@ def load_text_concepts(
 
 
 def _cuda_mem_mib() -> tuple[float, float, float] | None:
-    """Return (free_MiB, total_MiB, allocated_MiB) or None if CUDA unavailable."""
-    import torch
+    """Return (free_MiB, total_MiB, allocated_MiB) or None if CUDA/torch unavailable."""
+    try:
+        import torch
+    except ImportError:
+        return None
 
     if not torch.cuda.is_available():
         return None
@@ -165,9 +168,16 @@ class Sam3Detector:
         )
 
     def load(self) -> None:
-        import torch
-        from sam3.model_builder import build_sam3_image_model
-        from sam3.model.sam3_image_processor import Sam3Processor
+        try:
+            import torch
+            from sam3.model_builder import build_sam3_image_model
+            from sam3.model.sam3_image_processor import Sam3Processor
+        except ImportError as exc:
+            raise ImportError(
+                "SAM3 detect needs the `sam3` conda env (torch + sam3). "
+                "Run: conda activate sam3 && export PYTHONPATH=src:$PYTHONPATH "
+                f"(original error: {exc})"
+            ) from exc
 
         if self.device.startswith("cuda") and not torch.cuda.is_available():
             raise RuntimeError(
