@@ -50,22 +50,25 @@ detector:
   min_free_vram_gib: 6.0
   score_threshold: 0.50
   score_threshold_by_concept:
-    # Lower AG gate — egocentric / partial views often score ~0.2–0.35
-    angle grinder: 0.18
-    electric grinder: 0.18
-    grinder: 0.18
-    grinding disc: 0.40
+    # Handheld / egocentric AG often scores ~0.12–0.35 (AM07 miss at t≈34s).
+    # Synonyms (power tool, disk grinder, …) share this gate via canonical lookup.
+    angle grinder: 0.12
+    grinding disc: 0.35
     instruction manual: 0.55
     screwdriver: 0.45
     wrench: 0.50
     storage box: 0.45
+  # Drop tiny corner FPs that appear when the AG gate is this low (~0.8% of frame).
+  min_box_area_frac_by_concept:
+    angle grinder: 0.008
   load_from_hf: true
   text_concepts_file: "metaSAM3/prompts_fine_objects.txt"
   class_map_file: "configs/class_definitions.yaml"
 
 assignment:
   hit_test: mask
-  score_threshold: 0.25
+  # Below detector AG gate so sparse low-score grinders still assign on gaze.
+  score_threshold: 0.12
   overlap_policy: ambiguous
   require_normalized_label: false
   prefer_nested_parent: false

@@ -124,6 +124,7 @@ class Sam3Detector:
         enable_segmentation: bool = True,
         min_free_vram_gib: float = 6.0,
         keep_masks: bool = False,
+        min_box_area_frac_by_concept: dict[str, float] | None = None,
     ) -> None:
         self.device = device
         self.score_threshold = float(score_threshold)
@@ -157,15 +158,40 @@ class Sam3Detector:
         self.keep_masks = bool(keep_masks)
         if self.keep_masks and not self.enable_segmentation:
             raise ValueError("keep_masks=True requires enable_segmentation=True")
+        # Drop tiny boxes for low-threshold concepts (AG corner FPs).
+        # Keys match concept text or canonical fine label (e.g. "angle grinder").
+        self.min_box_area_frac_by_concept = {
+            str(k).strip().lower(): float(v)
+            for k, v in (min_box_area_frac_by_concept or {}).items()
+        }
         self.model = None
         self.processor = None
 
-    def _threshold_for(self, concept: str) -> float:
-        return float(
-            self.score_threshold_by_concept.get(
-                concept.strip().lower(), self.score_threshold
-            )
+    def _canonical_key(self, concept: str) -> str | None:
+        canon = normalize_label(
+            concept, self.class_defs, mode=self.label_map_mode
         )
+        if canon is None:
+            return None
+        return str(canon).strip().lower()
+
+    def _threshold_for(self, concept: str) -> float:
+        key = concept.strip().lower()
+        if key in self.score_threshold_by_concept:
+            return float(self.score_threshold_by_concept[key])
+        canon = self._canonical_key(concept)
+        if canon and canon in self.score_threshold_by_concept:
+            return float(self.score_threshold_by_concept[canon])
+        return float(self.score_threshold)
+
+    def _min_area_frac_for(self, concept: str) -> float:
+        key = concept.strip().lower()
+        if key in self.min_box_area_frac_by_concept:
+            return float(self.min_box_area_frac_by_concept[key])
+        canon = self._canonical_key(concept)
+        if canon and canon in self.min_box_area_frac_by_concept:
+            return float(self.min_box_area_frac_by_concept[canon])
+        return 0.0
 
     def load(self) -> None:
         try:
@@ -257,11 +283,14 @@ class Sam3Detector:
 
         dets: list[Detection] = []
         det_i = 0
+        frame_h, frame_w = int(frame_bgr.shape[0]), int(frame_bgr.shape[1])
+        frame_area = float(max(frame_h * frame_w, 1))
         with torch.inference_mode():
             with autocast_ctx:
                 state = self.processor.set_image(image_pil)
                 for concept in self.concepts:
                     concept_thr = self._threshold_for(concept)
+                    min_area_frac = self._min_area_frac_for(concept)
                     self.processor.reset_all_prompts(state)
                     state = self.processor.set_text_prompt(prompt=concept, state=state)
                     boxes = state.get("boxes")
@@ -294,6 +323,10 @@ class Sam3Detector:
                         x_min, y_min, x_max, y_max = [
                             float(v) for v in boxes_np[j].tolist()
                         ]
+                        if min_area_frac > 0.0:
+                            box_area = max(0.0, x_max - x_min) * max(0.0, y_max - y_min)
+                            if (box_area / frame_area) < min_area_frac:
+                                continue
                         mask_j = None
                         if masks_np is not None and j < len(masks_np):
                             mask_j = (masks_np[j] > 0).astype(np.uint8)

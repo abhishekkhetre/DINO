@@ -37,6 +37,13 @@ DEFAULT_PHRASE_TO_STUDY = {
     "electric grinder": "Angle Grinder",
     "disk grinder": "Angle Grinder",
     "disc grinder": "Angle Grinder",
+    "cordless grinder": "Angle Grinder",
+    "power tool": "Angle Grinder",
+    "angle grinder disc": "Angle Grinder",
+    "angle grinder handle": "Angle Grinder",
+    "angle grinder guard": "Angle Grinder",
+    "grinder disc": "Angle Grinder",
+    "grinder handle": "Angle Grinder",
     "instruction manual": "Manual",
     "manual": "Manual",
     "booklet": "Manual",
@@ -58,14 +65,22 @@ DEFAULT_PHRASE_TO_STUDY = {
 
 # Fine-grained SAM3 approach: keep object-level labels (not Tobii AOI collapse).
 # Synonyms only → stable canonical names for sequences.
-# Avoid ambiguous AG part prompts (side handle, guard, etc.) in the concept file.
+# Part / appearance phrases map to the whole AG — egocentric frames often
+# miss the bare "angle grinder" prompt when hands occlude the body.
 FINE_PHRASE_TO_CANONICAL = {
-    # whole device
+    # whole device (+ egocentric / appearance synonyms)
     "angle grinder": "angle grinder",
     "grinder": "angle grinder",
     "electric grinder": "angle grinder",
     "disk grinder": "angle grinder",
     "disc grinder": "angle grinder",
+    "cordless grinder": "angle grinder",
+    "power tool": "angle grinder",  # kit's only powered hand tool
+    "angle grinder disc": "angle grinder",
+    "angle grinder handle": "angle grinder",
+    "angle grinder guard": "angle grinder",
+    "grinder disc": "angle grinder",
+    "grinder handle": "angle grinder",
     # distinct consumable / disc (not housing parts)
     "grinding disc": "grinding disc",
     "cutting disc": "grinding disc",

@@ -19,6 +19,9 @@ def test_fine_keeps_tool_names():
 
 def test_fine_grinder_synonyms():
     assert normalize_fine_label("electric grinder") == "angle grinder"
+    assert normalize_fine_label("power tool") == "angle grinder"
+    assert normalize_fine_label("disk grinder") == "angle grinder"
+    assert normalize_fine_label("angle grinder handle") == "angle grinder"
     assert normalize_fine_label("grinding disc") == "grinding disc"
     assert normalize_fine_label("cutting disc") == "grinding disc"
     assert normalize_fine_label("instruction manual") == "instruction manual"

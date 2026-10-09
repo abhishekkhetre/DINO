@@ -218,6 +218,7 @@ def _build_detector(cfg: dict[str, Any]):
                     == "mask",
                 )
             ),
+            min_box_area_frac_by_concept=det_cfg.get("min_box_area_frac_by_concept"),
         )
         return "sam3", detector
     raise ValueError(f"Unknown detector.backend: {backend}")

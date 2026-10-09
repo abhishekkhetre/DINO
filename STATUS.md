@@ -45,8 +45,9 @@ ffmpeg -y -i outputs/am07_sam3_mask_overlay/sam_gaze_overlay.mp4 \
 Shows: SAM colored masks + boxes, large gaze crosshair, **green HIT ring** when gaze is on a labelled object, timestamp banner over the **entire** video.
 
 ### Prompt / threshold notes (2026-10-09)
-- **Angle grinder missing on AM07 overlay:** restored `grinder` / `electric grinder` synonyms and lowered AG score gate to **0.18** (egocentric views often score low).
-- **Pliers false positives:** removed `pliers`, `hex key`, `hammer` from `prompts_fine_objects.txt` (not in the kit). Re-run detect/overlay (and batch if you need clean corpus sheets).
+- **AM07 t≈34s screenshot:** AG clearly in hands under gaze; CSV had **zero** AG dets before ~77s (51/1844 frames later, mean score 0.35). Banner `gaze (frame_not_processed)` = that frame was not a gaze-assign sample — other masks still draw via carry-forward; AG was simply never detected.
+- **Fix:** AG prompts first (`power tool`, `disk grinder`, …); gate **0.12**; min box area 0.8% of frame to cut corner FPs; magenta overlay. **Must re-run** `sam-overlay` (old mp4 / detections.csv are from the weak-prompt run).
+- **Pliers FPs:** removed `pliers` / `hex key` / `hammer` from prompts.
 
 Quick label count after a run:
 ```bash
