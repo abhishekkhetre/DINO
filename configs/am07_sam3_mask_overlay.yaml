@@ -1,12 +1,20 @@
-# One-video SAM mask + gaze illustration (AM07, 30–60 s).
+# Full-recording SAM mask + gaze illustration (AM07).
 # Pipeline: detect (keep masks) → assign (hit_test=mask) → sam_gaze_overlay.mp4
+# Overlay covers the COMPLETE scene video (not a 30–60 s trim).
+# Output is re-encoded to H.264 for playback in normal players.
 #
 # Workstation:
 #   conda activate sam3
 #   export PYTHONPATH=src:$PYTHONPATH
+#   export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 #   python -m gaze_objects.cli sam-overlay --config configs/am07_sam3_mask_overlay.yaml
 #
 # Output: outputs/am07_sam3_mask_overlay/sam_gaze_overlay.mp4
+#
+# If an older mp4v file won't play, convert once:
+#   ffmpeg -y -i outputs/am07_sam3_mask_overlay/sam_gaze_overlay.mp4 \
+#     -c:v libx264 -pix_fmt yuv420p -movflags +faststart \
+#     outputs/am07_sam3_mask_overlay/sam_gaze_overlay_playable.mp4
 
 participant_id: AM07AM07
 recording_id: "Recording 50"
@@ -23,13 +31,14 @@ max_abs_residual_s: 0.05
 compute_hash: false
 
 clip:
-  recording_start_s: 30.0
-  recording_end_s: 60.0
+  mode: full
 
 frame_selection:
   mode: unique_matched_frames
-  stride: 3
-  max_frames: 80
+  # SAM detect every Nth matched frame; overlay still draws every video frame
+  # and carries the latest detections forward between samples.
+  stride: 5
+  # no max_frames → full recording
 
 detector:
   backend: sam3

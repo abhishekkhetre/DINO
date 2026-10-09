@@ -2,11 +2,95 @@
 
 from __future__ import annotations
 
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
+
+
+def _open_video_writer(
+    out_path: Path,
+    *,
+    fps: float,
+    width: int,
+    height: int,
+):
+    """Open a VideoWriter; prefer H.264, fall back to mp4v."""
+    import cv2
+
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    # Odd dimensions break many H.264 players — force even size at write time.
+    w = int(width) - (int(width) % 2)
+    h = int(height) - (int(height) % 2)
+    for fourcc_str in ("avc1", "H264", "X264", "mp4v"):
+        writer = cv2.VideoWriter(
+            str(out_path),
+            cv2.VideoWriter_fourcc(*fourcc_str),
+            float(fps),
+            (w, h),
+        )
+        if writer.isOpened():
+            return writer, fourcc_str, w, h
+        writer.release()
+    raise RuntimeError(f"Could not open VideoWriter for {out_path}")
+
+
+def transcode_to_h264(src: str | Path, dst: str | Path | None = None) -> Path:
+    """
+    Remux/transcode to widely playable H.264 + yuv420p via ffmpeg.
+
+    OpenCV ``mp4v`` files often fail in browsers / Windows players; this fixes them.
+    """
+    src = Path(src)
+    if dst is None:
+        dst = src.with_name(src.stem + "_h264.mp4")
+    else:
+        dst = Path(dst)
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        print("[overlay] ffmpeg not found — leaving OpenCV mp4 as-is", flush=True)
+        return src
+    cmd = [
+        ffmpeg,
+        "-y",
+        "-i",
+        str(src),
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-preset",
+        "veryfast",
+        "-crf",
+        "20",
+        "-movflags",
+        "+faststart",
+        "-an",
+        str(dst),
+    ]
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        print(
+            f"[overlay] ffmpeg transcode failed (code={proc.returncode}); "
+            f"keeping {src}\n{proc.stderr[-500:]}",
+            flush=True,
+        )
+        return src
+    # Replace original with playable file when writing beside it with temp name.
+    if dst.name.endswith("_h264.mp4") and src.suffix.lower() == ".mp4":
+        final = src
+        tmp = src.with_suffix(".mp4.bak_opencv")
+        src.rename(tmp)
+        dst.rename(final)
+        tmp.unlink(missing_ok=True)
+        print(f"[overlay] re-encoded for playback → {final}", flush=True)
+        return final
+    print(f"[overlay] wrote playable H.264 → {dst}", flush=True)
+    return dst
 
 
 # Distinct BGR colors for common fine / AOI labels.
@@ -139,6 +223,8 @@ def write_overlay_clip(
     }
 
     writer = None
+    write_w = write_h = 0
+    fourcc_used = "mp4v"
     n_written = 0
     n_with_gaze = 0
     for frame_index, _pts, video_time_s, frame in iter_frames_with_time(
@@ -147,12 +233,11 @@ def write_overlay_clip(
         if writer is None:
             h, w = frame.shape[:2]
             fps = video_fps_hint or 25.0
-            writer = cv2.VideoWriter(
-                str(out_path),
-                cv2.VideoWriter_fourcc(*"mp4v"),
-                fps,
-                (w, h),
+            writer, fourcc_used, write_w, write_h = _open_video_writer(
+                out_path, fps=fps, width=w, height=h
             )
+        if frame.shape[1] != write_w or frame.shape[0] != write_h:
+            frame = cv2.resize(frame, (write_w, write_h))
         row = by_frame.get(frame_index)
         if row is not None and pd.notna(row.gaze_x_px) and pd.notna(row.gaze_y_px):
             frame = draw_gaze_marker(
@@ -169,17 +254,18 @@ def write_overlay_clip(
             label = f"t={video_time_s:.3f}s gaze=({row.gaze_x_px:.0f},{row.gaze_y_px:.0f})"
         else:
             label = f"t={video_time_s:.3f}s no eligible gaze"
-        import cv2 as _cv2
 
-        _cv2.putText(frame, label, (20, 40), _cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        cv2.putText(frame, label, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         writer.write(frame)
         n_written += 1
 
     if writer is not None:
         writer.release()
 
+    playable = transcode_to_h264(out_path)
     return {
-        "out_path": str(out_path),
+        "out_path": str(playable),
+        "opencv_fourcc": fourcc_used,
         "frames_written": n_written,
         "frames_with_gaze": n_with_gaze,
         "start_s": start_s,
@@ -235,6 +321,8 @@ def write_sam_gaze_overlay(
             gaze_by_frame[int(fi)] = row.to_dict()
 
     writer = None
+    write_w = write_h = 0
+    fourcc_used = "mp4v"
     n_written = 0
     n_with_gaze = 0
     n_hits = 0
@@ -244,13 +332,10 @@ def write_sam_gaze_overlay(
         video_path, start_s=start_s, end_s=end_s, normalize_pts_to_first=True
     ):
         if writer is None:
-            h, w = frame.shape[:2]
+            h0, w0 = frame.shape[:2]
             fps = video_fps_hint or 25.0
-            writer = cv2.VideoWriter(
-                str(out_path),
-                cv2.VideoWriter_fourcc(*"mp4v"),
-                fps,
-                (w, h),
+            writer, fourcc_used, write_w, write_h = _open_video_writer(
+                out_path, fps=fps, width=w0, height=h0
             )
 
         # Carry forward last SAM detections between sparse detect frames.
@@ -259,6 +344,8 @@ def write_sam_gaze_overlay(
         dets = last_dets
 
         canvas = frame.copy()
+        if canvas.shape[1] != write_w or canvas.shape[0] != write_h:
+            canvas = cv2.resize(canvas, (write_w, write_h))
         h, w = canvas.shape[:2]
         sx = w / float(src_width)
         sy = h / float(src_height)
@@ -364,8 +451,10 @@ def write_sam_gaze_overlay(
     if writer is not None:
         writer.release()
 
+    playable = transcode_to_h264(out_path)
     return {
-        "out_path": str(out_path),
+        "out_path": str(playable),
+        "opencv_fourcc": fourcc_used,
         "frames_written": n_written,
         "frames_with_gaze": n_with_gaze,
         "frames_with_hit": n_hits,

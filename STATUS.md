@@ -16,7 +16,7 @@ Branch: `cursor/sam3-mask-assign-overlay-e54c`
 - Assign uses `hit_test: mask` (gaze on silhouette; falls back to box if mask missing)
 - Fine batch config updated to mask mode (re-run detect+assign needed for corpus)
 
-### One-video illustration (AM07 30–60 s)
+### One-video illustration (AM07 — full recording)
 
 ```bash
 cd ~/KHETRE/DINO_KHETRE/DINO
@@ -27,10 +27,19 @@ git pull
 export PYTHONPATH=src:$PYTHONPATH
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-# If Tobii files live next to the repo instead of Tobii_Data, edit paths in the yaml.
+# Full scene video (clip.mode=full). Clears old short clip outputs first if you want.
+rm -rf outputs/am07_sam3_mask_overlay
 python -m gaze_objects.cli sam-overlay --config configs/am07_sam3_mask_overlay.yaml
 ```
 
-Output: `outputs/am07_sam3_mask_overlay/sam_gaze_overlay.mp4`
+Output: `outputs/am07_sam3_mask_overlay/sam_gaze_overlay.mp4` (H.264, playable)
 
-Shows: SAM colored masks + boxes, large gaze crosshair, **green HIT ring** when gaze is on a labelled object, timestamp banner.
+If an older OpenCV `mp4v` file won't open:
+
+```bash
+ffmpeg -y -i outputs/am07_sam3_mask_overlay/sam_gaze_overlay.mp4 \
+  -c:v libx264 -pix_fmt yuv420p -movflags +faststart \
+  outputs/am07_sam3_mask_overlay/sam_gaze_overlay_playable.mp4
+```
+
+Shows: SAM colored masks + boxes, large gaze crosshair, **green HIT ring** when gaze is on a labelled object, timestamp banner over the **entire** video.
