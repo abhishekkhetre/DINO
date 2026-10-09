@@ -1,12 +1,15 @@
 # Fine-grained SAM3 concepts for gaze-order analysis (not limited to Tobii AOIs).
-# Lean set — each concept is a full forward pass (VRAM-sensitive on 12GB GPUs).
-# Whole AG + distinct disc only (no side-handle / guard / housing parts).
+# Keep the set small (one forward pass per line) for 12GB GPUs.
+#
+# Angle grinder: keep short synonyms — single phrase "angle grinder" often misses
+# egocentric / partial views (AM07 overlay had AG absent while other objects appeared).
+# Do NOT add pliers / hex key / hammer — they are not in this study setup and produced
+# false positives in the 290-video corpus.
 instruction manual
 angle grinder
+electric grinder
+grinder
 grinding disc
 storage box
 screwdriver
 wrench
-pliers
-hex key
-hammer

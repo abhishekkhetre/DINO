@@ -43,3 +43,16 @@ ffmpeg -y -i outputs/am07_sam3_mask_overlay/sam_gaze_overlay.mp4 \
 ```
 
 Shows: SAM colored masks + boxes, large gaze crosshair, **green HIT ring** when gaze is on a labelled object, timestamp banner over the **entire** video.
+
+### Prompt / threshold notes (2026-10-09)
+- **Angle grinder missing on AM07 overlay:** restored `grinder` / `electric grinder` synonyms and lowered AG score gate to **0.18** (egocentric views often score low).
+- **Pliers false positives:** removed `pliers`, `hex key`, `hammer` from `prompts_fine_objects.txt` (not in the kit). Re-run detect/overlay (and batch if you need clean corpus sheets).
+
+Quick label count after a run:
+```bash
+python - <<'PY'
+import pandas as pd
+d=pd.read_csv('outputs/am07_sam3_mask_overlay/detections.csv')
+print(d['raw_label'].value_counts())
+PY
+```

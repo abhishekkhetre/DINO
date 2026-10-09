@@ -54,14 +54,13 @@ defaults:
     min_free_vram_gib: 6.0
     score_threshold: 0.50
     score_threshold_by_concept:
-      angle grinder: 0.25
+      angle grinder: 0.18
+      electric grinder: 0.18
+      grinder: 0.18
       grinding disc: 0.40
       instruction manual: 0.55
       screwdriver: 0.45
-      wrench: 0.45
-      pliers: 0.45
-      hex key: 0.45
-      hammer: 0.45
+      wrench: 0.50
       storage box: 0.45
     load_from_hf: true
     text_concepts_file: "metaSAM3/prompts_fine_objects.txt"
