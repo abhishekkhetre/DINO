@@ -1,0 +1,16 @@
+# Fine-grained SAM3 concepts for gaze-order analysis (not limited to Tobii AOIs).
+# Keep the set small (one forward pass per line) for 12GB GPUs.
+#
+# Angle grinder first: handheld / egocentric views often miss the phrase
+# "angle grinder" alone. Short synonyms + "power tool" recover the device.
+# Do NOT add pliers / hex key / hammer / grinding disc — not reliably in the
+# kit and they produced false positives on output sheets.
+angle grinder
+electric grinder
+grinder
+disk grinder
+power tool
+instruction manual
+storage box
+screwdriver
+wrench

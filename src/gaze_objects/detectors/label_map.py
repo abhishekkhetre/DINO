@@ -1,4 +1,4 @@
-"""Map detector raw labels/phrases to study category IDs."""
+"""Map detector raw labels/phrases to study category IDs or fine SAM3 labels."""
 
 from __future__ import annotations
 
@@ -30,13 +30,20 @@ DEFAULT_COCO_TO_STUDY = {
     "hair drier": None,
 }
 
-# Grounding-DINO / prompt phrase heuristics (provisional).
+# Grounding-DINO / prompt phrase heuristics (provisional) → Tobii study AOIs.
 DEFAULT_PHRASE_TO_STUDY = {
     "angle grinder": "Angle Grinder",
     "grinder": "Angle Grinder",
     "electric grinder": "Angle Grinder",
     "disk grinder": "Angle Grinder",
     "disc grinder": "Angle Grinder",
+    "cordless grinder": "Angle Grinder",
+    "power tool": "Angle Grinder",
+    "angle grinder disc": "Angle Grinder",
+    "angle grinder handle": "Angle Grinder",
+    "angle grinder guard": "Angle Grinder",
+    "grinder disc": "Angle Grinder",
+    "grinder handle": "Angle Grinder",
     "instruction manual": "Manual",
     "manual": "Manual",
     "booklet": "Manual",
@@ -56,6 +63,56 @@ DEFAULT_PHRASE_TO_STUDY = {
     "pliers": "Tools",
 }
 
+# Fine-grained SAM3 approach: keep object-level labels (not Tobii AOI collapse).
+# Synonyms only → stable canonical names for sequences.
+# Part / appearance phrases map to the whole AG — egocentric frames often
+# miss the bare "angle grinder" prompt when hands occlude the body.
+FINE_PHRASE_TO_CANONICAL = {
+    # whole device (+ egocentric / appearance synonyms)
+    "angle grinder": "angle grinder",
+    "grinder": "angle grinder",
+    "electric grinder": "angle grinder",
+    "disk grinder": "angle grinder",
+    "disc grinder": "angle grinder",
+    "cordless grinder": "angle grinder",
+    "power tool": "angle grinder",  # kit's only powered hand tool
+    "angle grinder disc": "angle grinder",
+    "angle grinder handle": "angle grinder",
+    "angle grinder guard": "angle grinder",
+    "grinder disc": "angle grinder",
+    "grinder handle": "angle grinder",
+    # distinct consumable / disc (not housing parts)
+    "grinding disc": "grinding disc",
+    "cutting disc": "grinding disc",
+    "abrasive disc": "grinding disc",
+    # manual
+    "instruction manual": "instruction manual",
+    "manual": "instruction manual",
+    "booklet": "instruction manual",
+    "instructions": "instruction manual",
+    # containers
+    "storage box": "storage box",
+    "toolbox": "storage box",
+    "tool box": "storage box",
+    "box": "storage box",
+    "boxes": "storage box",
+    # hand tools (kept separate for gaze-order analysis)
+    "screwdriver": "screwdriver",
+    "phillips screwdriver": "screwdriver",
+    "flathead screwdriver": "screwdriver",
+    "wrench": "wrench",
+    "spanner": "wrench",
+    "open end wrench": "wrench",
+    "combination wrench": "wrench",
+    "allen key": "hex key",
+    "hex key": "hex key",
+    "hex wrench": "hex key",
+    "pliers": "pliers",
+    "needle nose pliers": "pliers",
+    "locking pliers": "pliers",
+    "hammer": "hammer",
+}
+
 
 def load_class_definitions(path: str | Path | None) -> dict[str, Any]:
     if path is None:
@@ -67,17 +124,45 @@ def load_class_definitions(path: str | Path | None) -> dict[str, Any]:
         return yaml.safe_load(handle) or {}
 
 
-def normalize_label(raw_label: str, class_defs: dict[str, Any] | None = None) -> str | None:
-    """
-    Map a raw detector label to a study AOI-style name when possible.
+def normalize_fine_label(raw_label: str) -> str | None:
+    """Map a SAM3 concept to a stable fine object name (not Tobii AOI)."""
+    if raw_label is None:
+        return None
+    text = str(raw_label).strip()
+    if not text:
+        return None
+    lower = text.lower()
+    if lower in FINE_PHRASE_TO_CANONICAL:
+        return FINE_PHRASE_TO_CANONICAL[lower]
+    for phrase, canon in FINE_PHRASE_TO_CANONICAL.items():
+        if phrase in lower:
+            return canon
+    # Unknown concept: keep cleaned raw text so sequences still work.
+    return lower
 
-    Returns None if no explicit mapping exists (keep raw_label separately).
+
+def normalize_label(
+    raw_label: str,
+    class_defs: dict[str, Any] | None = None,
+    *,
+    mode: str = "study_aoi",
+) -> str | None:
+    """
+    Map a raw detector label.
+
+    Modes:
+    - ``study_aoi`` (default): map to Tobii-style AOIs (Angle Grinder / Manual / …).
+    - ``fine`` / ``sam3`` / ``identity``: keep fine object labels for gaze-order analysis.
     """
     if raw_label is None:
         return None
     text = str(raw_label).strip()
     if not text:
         return None
+
+    mode_norm = str(mode or "study_aoi").strip().lower()
+    if mode_norm in {"fine", "sam3", "identity", "raw"}:
+        return normalize_fine_label(text)
 
     known = {"Angle Grinder", "Boxes", "Manual", "Tools"}
     if text in known:
