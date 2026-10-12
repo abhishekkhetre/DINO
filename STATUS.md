@@ -1,6 +1,8 @@
 # Status
 
-Last updated: 2026-10-09.
+Last updated: 2026-10-12.
+
+**Internship presentation brief (full narrative for slides):** [`docs/INTERNSHIP_PRESENTATION_BRIEF.md`](docs/INTERNSHIP_PRESENTATION_BRIEF.md)
 
 ## Fine SAM3 batch — COMPLETE (boxes era)
 
