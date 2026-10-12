@@ -1,25 +1,21 @@
-# Fine objects + coarse angle-grinder PARTS (AM07 / parts pilot).
-# One short noun phrase per line. Whole objects first, then parts.
+# Maximum kit-safe granular prompts for AM07 video verification (mask overlay).
+# No grinding disc — not present in the study videos.
+# Screws enabled for video check only (high FP risk; review overlay carefully).
+# One short noun phrase per line → one SAM3 forward pass each (~14 concepts).
 #
-# Parts stay as their own labels (not collapsed to "angle grinder").
-# Assign with prefer_smallest_containing so gaze on a handle picks the handle
-# over the whole-tool mask.
-#
-# Do NOT enable bare "screw" on the 290 batch until AM07 looks clean —
-# open-vocab screws false-fire on any small metal.
-# screw
-# machine screw
+# Whole angle grinder (synonyms) first, then coarse parts, then kit objects.
 angle grinder
 electric grinder
 grinder
-disk grinder
 power tool
 grinder body
 side handle
 grinder guard
-grinding disc
 battery pack
+screw
+machine screw
 instruction manual
 storage box
 screwdriver
+phillips screwdriver
 wrench

@@ -14,7 +14,7 @@ def test_fine_keeps_tool_names():
     assert normalize_label("screwdriver", mode="fine") == "screwdriver"
     assert normalize_label("wrench", mode="fine") == "wrench"
     assert normalize_label("hex key", mode="fine") == "hex key"
-    assert normalize_label("phillips screwdriver", mode="fine") == "screwdriver"
+    assert normalize_label("phillips screwdriver", mode="fine") == "phillips screwdriver"
 
 
 def test_fine_grinder_synonyms():

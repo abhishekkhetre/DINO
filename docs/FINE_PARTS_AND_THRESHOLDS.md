@@ -66,15 +66,26 @@ python -m gaze_objects.cli batch --config configs/batch_sam3_full_fine.yaml
 python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_full_fine
 ```
 
-**AM07 parts pilot (whole objects + coarse AG parts):**
+**AM07 granular VIDEO check (recommended next step on workstation):**
 
 ```bash
-rm -rf outputs/am07_sam3_parts_pilot
-python -m gaze_objects.cli sam-overlay --config configs/am07_sam3_parts_pilot.yaml
-# Check: side handle / guard / disc masks while holding the grinder
+conda activate sam3
+cd ~/KHETRE/DINO_KHETRE/DINO
+git pull origin cursor/fine-parts-thresholds-e54c
+export PYTHONPATH=src:$PYTHONPATH
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+python scripts/run_am07_granular_overlay.py
+# → outputs/am07_sam3_granular_overlay/sam_gaze_overlay.mp4
+```
+
+Labels: whole AG + `grinder body` / `side handle` / `grinder guard` / `battery pack` /
+`screw` + kit objects. **No grinding disc.** Orphan parts (no overlapping AG) are
+dropped. Gaze on AG+part prefers the **smaller** (part) mask.
+
+```bash
 python - <<'PY'
 import pandas as pd
-d=pd.read_csv('outputs/am07_sam3_parts_pilot/detections.csv')
+d=pd.read_csv('outputs/am07_sam3_granular_overlay/detections.csv')
 print(d['normalized_label'].value_counts())
 PY
 ```

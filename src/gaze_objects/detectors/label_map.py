@@ -113,8 +113,10 @@ FINE_PHRASE_TO_CANONICAL = {
     "boxes": "storage box",
     # hand tools (kept separate for gaze-order analysis)
     "screwdriver": "screwdriver",
-    "phillips screwdriver": "screwdriver",
-    "flathead screwdriver": "screwdriver",
+    # Keep subtypes distinct for granular video / psychology sheets.
+    "phillips screwdriver": "phillips screwdriver",
+    "flathead screwdriver": "flathead screwdriver",
+    "slotted screwdriver": "flathead screwdriver",
     "wrench": "wrench",
     "spanner": "wrench",
     "open end wrench": "wrench",

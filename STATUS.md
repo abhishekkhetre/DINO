@@ -5,7 +5,13 @@ Last updated: 2026-10-12.
 **Internship presentation brief (full narrative for slides):** [`docs/INTERNSHIP_PRESENTATION_BRIEF.md`](docs/INTERNSHIP_PRESENTATION_BRIEF.md)
 
 **Finer parts + reviewed thresholds:** [`docs/FINE_PARTS_AND_THRESHOLDS.md`](docs/FINE_PARTS_AND_THRESHOLDS.md)  
-AM07 parts pilot: `configs/am07_sam3_parts_pilot.yaml` + `metaSAM3/prompts_fine_parts.txt`
+
+**AM07 granular video check (no grinding disc):**
+```bash
+python scripts/run_am07_granular_overlay.py
+# → outputs/am07_sam3_granular_overlay/sam_gaze_overlay.mp4
+```
+Config: `configs/am07_sam3_granular_overlay.yaml` · prompts: `metaSAM3/prompts_fine_parts.txt`
 
 ## Fine SAM3 batch — COMPLETE (boxes era)
 

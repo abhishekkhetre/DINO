@@ -1,19 +1,13 @@
-# AM07 pilot — whole objects + coarse angle-grinder PARTS (mask assign + overlay).
-# See docs/FINE_PARTS_AND_THRESHOLDS.md for tier B vs screw-level limits.
-#
-# Workstation:
-#   conda activate sam3
-#   export PYTHONPATH=src:$PYTHONPATH
-#   export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-#   rm -rf outputs/am07_sam3_parts_pilot
-#   python -m gaze_objects.cli sam-overlay --config configs/am07_sam3_parts_pilot.yaml
+# Alias / lighter name for the granular video-check overlay.
+# Canonical config: configs/am07_sam3_granular_overlay.yaml
+# (kept so older docs still work)
 
 participant_id: AM07AM07
 recording_id: "Recording 50"
 
 tsv_path: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data/AM07AM07_01_data_export.tsv"
 video_path: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data/AM07AM07_01_scenevideo.mp4"
-output_dir: "outputs/am07_sam3_parts_pilot"
+output_dir: "outputs/am07_sam3_granular_overlay"
 
 timestamp_unit: milliseconds
 timestamp_unit_status: verified
@@ -39,24 +33,26 @@ detector:
   min_free_vram_gib: 6.0
   score_threshold: 0.50
   score_threshold_by_concept:
-    # Reviewed best (object-level) — see docs/FINE_PARTS_AND_THRESHOLDS.md
     angle grinder: 0.12
     instruction manual: 0.60
     screwdriver: 0.48
+    phillips screwdriver: 0.48
     wrench: 0.50
     storage box: 0.45
-    # Coarse parts — stricter than whole AG
     grinder body: 0.25
     side handle: 0.28
     grinder guard: 0.28
-    grinding disc: 0.32
     battery pack: 0.35
     screw: 0.40
+    machine screw: 0.40
   min_box_area_frac_by_concept:
     angle grinder: 0.008
-    grinding disc: 0.002
     side handle: 0.001
+    grinder guard: 0.001
+    battery pack: 0.002
     screw: 0.0003
+  require_parent_overlap_for_parts: true
+  parts_parent_expand_px: 48.0
   load_from_hf: true
   text_concepts_file: "metaSAM3/prompts_fine_parts.txt"
   class_map_file: "configs/class_definitions.yaml"
@@ -67,7 +63,6 @@ assignment:
   overlap_policy: ambiguous
   require_normalized_label: false
   prefer_nested_parent: false
-  # When gaze hits whole AG + a part, keep the smaller (part) mask.
   prefer_smallest_containing: true
   label_map_mode: fine
 

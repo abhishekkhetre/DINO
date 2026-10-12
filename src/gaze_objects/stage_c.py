@@ -314,6 +314,25 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
                     pass
 
     detections_df = pd.DataFrame(rows)
+    det_cfg = cfg.get("detector") or {}
+    parts_filter_stats: dict[str, Any] | None = None
+    if bool(det_cfg.get("require_parent_overlap_for_parts", False)) and len(detections_df):
+        from gaze_objects.parts_filter import filter_parts_requiring_parent
+
+        before_ids = set(detections_df["detection_id"].astype(str)) if "detection_id" in detections_df else set()
+        detections_df, parts_filter_stats = filter_parts_requiring_parent(
+            detections_df,
+            expand_px=float(det_cfg.get("parts_parent_expand_px", 40.0)),
+        )
+        after_ids = set(detections_df["detection_id"].astype(str)) if "detection_id" in detections_df else set()
+        for drop_id in before_ids - after_ids:
+            masks_by_id.pop(drop_id, None)
+        print(
+            f"[detect] parts parent-filter removed {parts_filter_stats.get('n_parts_removed', 0)} "
+            f"orphan part dets ({parts_filter_stats.get('n_out')}/{parts_filter_stats.get('n_in')} kept)",
+            flush=True,
+        )
+
     detections_df.to_csv(out_dir / "detections.csv", index=False)
     from gaze_objects.masks import save_detection_masks
 
@@ -330,6 +349,7 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
         "n_detections": int(len(detections_df)),
         "n_masks_saved": int(len(masks_by_id)),
         "masks_archive": str(masks_path) if masks_path else None,
+        "parts_parent_filter": parts_filter_stats,
         "frame_indices": frame_ids,
         "time_mapping": ctx["mapping"],
         "output_dir": str(out_dir),
