@@ -66,6 +66,10 @@ Full briefing for slides / colleagues (pipeline, results, chronology, run comman
 
 [`docs/INTERNSHIP_PRESENTATION_BRIEF.md`](docs/INTERNSHIP_PRESENTATION_BRIEF.md)
 
+Finer labelling (AG parts / screws limits) and reviewed score gates:
+
+[`docs/FINE_PARTS_AND_THRESHOLDS.md`](docs/FINE_PARTS_AND_THRESHOLDS.md)
+
 ## Notes
 
 - Timestamp units and video origin in configs are **provisional** until verified against Tobii playback.

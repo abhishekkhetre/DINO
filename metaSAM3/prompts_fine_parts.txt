@@ -1,0 +1,25 @@
+# Fine objects + coarse angle-grinder PARTS (AM07 / parts pilot).
+# One short noun phrase per line. Whole objects first, then parts.
+#
+# Parts stay as their own labels (not collapsed to "angle grinder").
+# Assign with prefer_smallest_containing so gaze on a handle picks the handle
+# over the whole-tool mask.
+#
+# Do NOT enable bare "screw" on the 290 batch until AM07 looks clean —
+# open-vocab screws false-fire on any small metal.
+# screw
+# machine screw
+angle grinder
+electric grinder
+grinder
+disk grinder
+power tool
+grinder body
+side handle
+grinder guard
+grinding disc
+battery pack
+instruction manual
+storage box
+screwdriver
+wrench

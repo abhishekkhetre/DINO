@@ -4,6 +4,9 @@ Last updated: 2026-10-12.
 
 **Internship presentation brief (full narrative for slides):** [`docs/INTERNSHIP_PRESENTATION_BRIEF.md`](docs/INTERNSHIP_PRESENTATION_BRIEF.md)
 
+**Finer parts + reviewed thresholds:** [`docs/FINE_PARTS_AND_THRESHOLDS.md`](docs/FINE_PARTS_AND_THRESHOLDS.md)  
+AM07 parts pilot: `configs/am07_sam3_parts_pilot.yaml` + `metaSAM3/prompts_fine_parts.txt`
+
 ## Fine SAM3 batch — COMPLETE (boxes era)
 
 Workstation corpus under `outputs/batch_sam3_full_fine/` / `output_SAM_labelled_290`:

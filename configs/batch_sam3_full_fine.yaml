@@ -54,10 +54,12 @@ defaults:
     min_free_vram_gib: 6.0
     score_threshold: 0.50
     score_threshold_by_concept:
-      # Synonyms share this gate via canonical label lookup in Sam3Detector.
+      # Reviewed best figures (AOI dense + fine AM07 evidence).
+      # See docs/FINE_PARTS_AND_THRESHOLDS.md
+      # Synonyms share gates via canonical label lookup in Sam3Detector.
       angle grinder: 0.12
-      instruction manual: 0.55
-      screwdriver: 0.45
+      instruction manual: 0.60
+      screwdriver: 0.48
       wrench: 0.50
       storage box: 0.45
     min_box_area_frac_by_concept:

@@ -76,15 +76,30 @@ FINE_PHRASE_TO_CANONICAL = {
     "disc grinder": "angle grinder",
     "cordless grinder": "angle grinder",
     "power tool": "angle grinder",  # kit's only powered hand tool
-    "angle grinder disc": "angle grinder",
-    "angle grinder handle": "angle grinder",
-    "angle grinder guard": "angle grinder",
-    "grinder disc": "angle grinder",
-    "grinder handle": "angle grinder",
-    # distinct consumable / disc (not housing parts)
+    # Coarse AG parts (tier B) — keep separate for psychology / assembly steps.
+    # Prefer these over the whole-tool mask via prefer_smallest_containing.
+    "grinder body": "grinder body",
+    "angle grinder body": "grinder body",
+    "side handle": "side handle",
+    "grinder side handle": "side handle",
+    "angle grinder handle": "side handle",
+    "grinder handle": "side handle",
+    "grinder guard": "grinder guard",
+    "angle grinder guard": "grinder guard",
+    "safety guard": "grinder guard",
+    "battery pack": "battery pack",
+    "grinder battery": "battery pack",
+    # Disc / consumable
     "grinding disc": "grinding disc",
     "cutting disc": "grinding disc",
     "abrasive disc": "grinding disc",
+    "angle grinder disc": "grinding disc",
+    "grinder disc": "grinding disc",
+    # Screws (tier C — pilot only; very FP-prone)
+    "screw": "screw",
+    "machine screw": "screw",
+    "bolt": "screw",
+
     # manual
     "instruction manual": "instruction manual",
     "manual": "instruction manual",

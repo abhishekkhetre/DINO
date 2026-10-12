@@ -370,6 +370,7 @@ def run_assign(config_path: str | Path) -> dict[str, Any]:
         require_normalized_label=bool(asg_cfg.get("require_normalized_label", False)),
         prefer_nested_parent=bool(asg_cfg.get("prefer_nested_parent", False)),
         nested_parent_expand_px=float(asg_cfg.get("nested_parent_expand_px", 80.0)),
+        prefer_smallest_containing=bool(asg_cfg.get("prefer_smallest_containing", False)),
         label_map_mode=label_map_mode,
         hit_test=hit_test,
         masks_dir=out_dir,

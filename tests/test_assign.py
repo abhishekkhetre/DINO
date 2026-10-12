@@ -315,3 +315,23 @@ def test_invalid_and_unmatched_and_unprocessed():
         )["assignment_status"]
         == "out_of_frame"
     )
+
+
+def test_prefer_smallest_containing_picks_part_over_whole_tool():
+    # Gaze inside both a large angle-grinder box and a small side-handle box.
+    whole = _det(0, 0, 0, 200, 200, label="angle grinder", score=0.9)
+    part = _det(1, 40, 40, 80, 90, label="side handle", score=0.5)
+    out = assign_gaze_to_detections(
+        50,
+        50,
+        has_gaze_coordinates=True,
+        in_frame=True,
+        out_of_frame=False,
+        association_status="matched",
+        frame_processed=True,
+        detections=[whole, part],
+        prefer_smallest_containing=True,
+    )
+    assert out["assignment_status"] == "assigned"
+    assert out["selected_normalized_label"] == "side handle"
+    assert out["assignment_reason"] == "prefer_smallest_containing"

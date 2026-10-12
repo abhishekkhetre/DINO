@@ -84,6 +84,12 @@ def _norm_label(det: dict[str, Any]) -> str | None:
     return text or None
 
 
+def _det_area(det: dict[str, Any]) -> float:
+    return max(0.0, float(det["x_max"]) - float(det["x_min"])) * max(
+        0.0, float(det["y_max"]) - float(det["y_min"])
+    )
+
+
 def _box_center_in(inner: dict[str, Any], outer: dict[str, Any]) -> bool:
     cx = (float(inner["x_min"]) + float(inner["x_max"])) / 2.0
     cy = (float(inner["y_min"]) + float(inner["y_max"])) / 2.0
@@ -216,6 +222,7 @@ def assign_gaze_to_detections(
     require_normalized_label: bool = False,
     prefer_nested_parent: bool = False,
     nested_parent_expand_px: float = 80.0,
+    prefer_smallest_containing: bool = False,
     hit_test: str = "box",
 ) -> dict[str, Any]:
     """
@@ -225,8 +232,9 @@ def assign_gaze_to_detections(
     contain the gaze under ``hit_test`` (``box`` or ``mask``).
     Exactly one containing candidate -> assigned.
     None -> no_detected_target (only if frame was processed and gaze eligible).
-    Several -> ambiguous (no automatic nearest/largest/smallest choice), unless
-    ``prefer_nested_parent`` resolves Tools under / near Angle Grinder.
+    Several -> ambiguous, unless:
+      - ``prefer_nested_parent`` resolves Tools under / near Angle Grinder, or
+      - ``prefer_smallest_containing`` picks the smallest box (parts over whole tool).
     """
     base = {
         "selected_detection_id": None,
@@ -308,6 +316,14 @@ def assign_gaze_to_detections(
                 chosen = max(grinders, key=lambda d: float(d.get("score", 0.0)))
                 return _fill_assigned(base, chosen, "prefer_angle_grinder_over_nested_child")
 
+        # Parts / nested fine labels: prefer the smallest containing detection.
+        if prefer_smallest_containing:
+            chosen = min(
+                candidates,
+                key=lambda d: (_det_area(d), -float(d.get("score", 0.0))),
+            )
+            return _fill_assigned(base, chosen, "prefer_smallest_containing")
+
         base["assignment_status"] = "ambiguous"
         base["assignment_reason"] = (
             "multiple_masks_contain_gaze" if hit_mode == "mask" else "multiple_boxes_contain_gaze"
@@ -339,6 +355,7 @@ def assign_table(
     require_normalized_label: bool = False,
     prefer_nested_parent: bool = False,
     nested_parent_expand_px: float = 80.0,
+    prefer_smallest_containing: bool = False,
     label_map_mode: str = "study_aoi",
     frame_id_col: str = "frame_index",
     hit_test: str = "box",
@@ -388,6 +405,7 @@ def assign_table(
             require_normalized_label=require_normalized_label,
             prefer_nested_parent=prefer_nested_parent,
             nested_parent_expand_px=nested_parent_expand_px,
+            prefer_smallest_containing=prefer_smallest_containing,
             hit_test=hit_test,
         )
         records.append(

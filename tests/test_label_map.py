@@ -21,8 +21,16 @@ def test_fine_grinder_synonyms():
     assert normalize_fine_label("electric grinder") == "angle grinder"
     assert normalize_fine_label("power tool") == "angle grinder"
     assert normalize_fine_label("disk grinder") == "angle grinder"
-    assert normalize_fine_label("angle grinder handle") == "angle grinder"
     assert normalize_fine_label("grinding disc") == "grinding disc"
     assert normalize_fine_label("cutting disc") == "grinding disc"
     assert normalize_fine_label("instruction manual") == "instruction manual"
     assert normalize_fine_label("storage box") == "storage box"
+
+
+def test_fine_grinder_parts_are_separate_labels():
+    assert normalize_fine_label("side handle") == "side handle"
+    assert normalize_fine_label("angle grinder handle") == "side handle"
+    assert normalize_fine_label("grinder guard") == "grinder guard"
+    assert normalize_fine_label("grinder body") == "grinder body"
+    assert normalize_fine_label("battery pack") == "battery pack"
+    assert normalize_fine_label("screw") == "screw"
