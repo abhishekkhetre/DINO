@@ -1,0 +1,77 @@
+# Full-recording SAM mask + gaze illustration (AM07).
+# Pipeline: detect (keep masks) → assign (hit_test=mask) → sam_gaze_overlay.mp4
+# Overlay covers the COMPLETE scene video (not a 30–60 s trim).
+# Output is re-encoded to H.264 for playback in normal players.
+#
+# Workstation:
+#   conda activate sam3
+#   export PYTHONPATH=src:$PYTHONPATH
+#   export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+#   python -m gaze_objects.cli sam-overlay --config configs/am07_sam3_mask_overlay.yaml
+#
+# Output: outputs/am07_sam3_mask_overlay/sam_gaze_overlay.mp4
+#
+# If an older mp4v file won't play, convert once:
+#   ffmpeg -y -i outputs/am07_sam3_mask_overlay/sam_gaze_overlay.mp4 \
+#     -c:v libx264 -pix_fmt yuv420p -movflags +faststart \
+#     outputs/am07_sam3_mask_overlay/sam_gaze_overlay_playable.mp4
+
+participant_id: AM07AM07
+recording_id: "Recording 50"
+
+tsv_path: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data/AM07AM07_01_data_export.tsv"
+video_path: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data/AM07AM07_01_scenevideo.mp4"
+output_dir: "outputs/am07_sam3_mask_overlay"
+
+timestamp_unit: milliseconds
+timestamp_unit_status: verified
+video_start_recording_s: 0.0
+time_mapping_status: verified
+max_abs_residual_s: 0.05
+compute_hash: false
+
+clip:
+  mode: full
+
+frame_selection:
+  mode: unique_matched_frames
+  # SAM detect every Nth matched frame; overlay still draws every video frame
+  # and carries the latest detections forward between samples.
+  stride: 5
+  # no max_frames → full recording
+
+detector:
+  backend: sam3
+  device: cuda
+  label_map_mode: fine
+  resolution: 1008
+  enable_segmentation: true
+  keep_masks: true
+  min_free_vram_gib: 6.0
+  score_threshold: 0.50
+  score_threshold_by_concept:
+    # Handheld / egocentric AG often scores ~0.12–0.35 (AM07 miss at t≈34s).
+    # Synonyms (power tool, disk grinder, …) share this gate via canonical lookup.
+    angle grinder: 0.12
+    instruction manual: 0.55
+    screwdriver: 0.45
+    wrench: 0.50
+    storage box: 0.45
+  # Drop tiny corner FPs that appear when the AG gate is this low (~0.8% of frame).
+  min_box_area_frac_by_concept:
+    angle grinder: 0.008
+  load_from_hf: true
+  text_concepts_file: "metaSAM3/prompts_fine_objects.txt"
+  class_map_file: "configs/class_definitions.yaml"
+
+assignment:
+  hit_test: mask
+  # Below detector AG gate so sparse low-score grinders still assign on gaze.
+  score_threshold: 0.12
+  overlap_policy: ambiguous
+  require_normalized_label: false
+  prefer_nested_parent: false
+  label_map_mode: fine
+
+overlay_filename: sam_gaze_overlay.mp4
+overlay_gaze_radius: 28

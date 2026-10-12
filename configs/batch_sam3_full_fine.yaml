@@ -1,0 +1,83 @@
+# Full-recording SAM3 batch — fine object labels (approach 2).
+# Sequences use SAM3 object names (screwdriver, angle grinder, …), not Tobii AOIs.
+# VRAM on RTX 3080 Ti (12GB): resolution MUST be 1008 (SAM3 backbone size).
+# Free headroom by: one GPU process only, lean prompts, stride 8, drop masks after boxes.
+# After batch:
+#   python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_full_fine
+
+data_dir: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data"
+output_root: "outputs/batch_sam3_full_fine"
+
+stages:
+  - detect
+  - assign
+  - sequences
+
+skip_if_done: true
+continue_on_error: true
+
+recordings:
+  - id: AM07AM07_01
+    tsv: AM07AM07_01_data_export.tsv
+    video: AM07AM07_01_scenevideo.mp4
+
+select:
+  mode: all
+
+defaults:
+  timestamp_unit: milliseconds
+  timestamp_unit_status: verified
+  video_start_recording_s: 0.0
+  time_mapping_status: verified
+  max_abs_residual_s: 0.05
+  compute_hash: false
+
+  clip:
+    mode: full
+
+  frame_selection:
+    mode: unique_matched_frames
+    # Higher stride = fewer frames = faster; VRAM is dominated by model+activations
+    stride: 8
+
+  detector:
+    backend: sam3
+    device: cuda
+    label_map_mode: fine
+    # Hard requirement: Meta SAM3 ViT img_size / RoPE is 1008. Do not change.
+    resolution: 1008
+    # Sam3Processor always materializes pred_masks — must stay true.
+    # keep_masks=true saves silhouettes for gaze-in-mask assign (heavier disk I/O).
+    enable_segmentation: true
+    keep_masks: true
+    # Need ~6 GiB free *before* load. Catches a second python still on the GPU.
+    min_free_vram_gib: 6.0
+    score_threshold: 0.50
+    score_threshold_by_concept:
+      # Synonyms share this gate via canonical label lookup in Sam3Detector.
+      angle grinder: 0.12
+      instruction manual: 0.55
+      screwdriver: 0.45
+      wrench: 0.50
+      storage box: 0.45
+    min_box_area_frac_by_concept:
+      angle grinder: 0.008
+    load_from_hf: true
+    text_concepts_file: "metaSAM3/prompts_fine_objects.txt"
+    class_map_file: "configs/class_definitions.yaml"
+
+  assignment:
+    # Gaze must land on SAM silhouette (falls back to box if mask missing).
+    hit_test: mask
+    score_threshold: 0.12
+    overlap_policy: ambiguous
+    require_normalized_label: false
+    # Do NOT collapse tools under angle grinder — fine sequences need tool names.
+    prefer_nested_parent: false
+    label_map_mode: fine
+
+  sequences:
+    movement_type: Fixation
+    label_policy: assigned_majority
+    min_assigned_samples: 2
+    min_label_fraction: 0.5

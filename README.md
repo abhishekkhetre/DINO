@@ -60,6 +60,12 @@ python -m pytest -q
 
 See `STATUS.md` for executed results and open items. See `PROJECT_CONTEXT.md` for confirmed vs provisional decisions.
 
+## Internship presentation brief
+
+Full briefing for slides / colleagues (pipeline, results, chronology, run commands):
+
+[`docs/INTERNSHIP_PRESENTATION_BRIEF.md`](docs/INTERNSHIP_PRESENTATION_BRIEF.md)
+
 ## Notes
 
 - Timestamp units and video origin in configs are **provisional** until verified against Tobii playback.
