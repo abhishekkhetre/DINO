@@ -15,16 +15,17 @@ def test_fine_prompts_cover_grinder_and_drop_phantom_tools():
     )
     assert "angle grinder" in concepts
     assert "power tool" in concepts
-    assert "disk grinder" in concepts
-    assert "electric grinder" in concepts or "grinder" in concepts
+    assert "electric grinder" in concepts
     assert "instruction manual" in concepts
     assert "screwdriver" in concepts
     # AG family first — recover handheld egocentric misses before other objects.
     assert concepts.index("angle grinder") < concepts.index("screwdriver")
-    # Not present in the assembly kit — caused false positives in corpus.
+    # Bare "grinder" flooded AM07; kit phantoms polluted sheets.
+    assert "grinder" not in concepts
+    assert "disk grinder" not in concepts
     assert "pliers" not in concepts
     assert "hex key" not in concepts
     assert "hammer" not in concepts
     assert "cutting disc" not in concepts
     assert "grinding disc" not in concepts
-    assert len(concepts) <= 12
+    assert len(concepts) <= 10

@@ -29,6 +29,16 @@ python scripts/run_am07_part_geometry.py
 # HIT banner shows e.g. screwdriver.tip
 ```
 
+### Full corpus MASK batch (CSV only — new root)
+```bash
+# NEW output root: outputs/batch_sam3_full_fine_mask
+bash scripts/run_batch_mask_csv.sh
+# monitor: tail -f outputs/batch_sam3_full_fine_mask/batch_run.log
+# when finished:
+python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_full_fine_mask
+```
+Config: `configs/batch_sam3_full_fine_mask.yaml` (hit_test=mask, part_geometry, cleaned prompts).
+
 ## Fine SAM3 batch — COMPLETE (boxes era)
 
 Workstation corpus under `outputs/batch_sam3_full_fine/` / `output_SAM_labelled_290`:
