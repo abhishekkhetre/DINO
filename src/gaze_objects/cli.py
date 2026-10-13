@@ -282,6 +282,101 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_refine_parts(args: argparse.Namespace) -> int:
+    """Re-assign + optional overlay/sequences using gaze-relative tip/handle/body.
+
+    Reuses existing detections.csv + detection_masks.npz — no SAM re-detect.
+    """
+    import pandas as pd
+    import yaml
+
+    from gaze_objects.audit import write_json
+    from gaze_objects.io import read_tsv
+    from gaze_objects.masks import load_detection_masks
+    from gaze_objects.stage_c import run_assign
+    from gaze_objects.sequences import run_sequences
+    from gaze_objects.video import inspect_video
+    from gaze_objects.visualize import write_sam_gaze_overlay, transcode_to_h264
+
+    cfg = _load_config(args.config)
+    out_dir = Path(cfg["output_dir"])
+    det_path = out_dir / "detections.csv"
+    if not det_path.is_file():
+        raise SystemExit(
+            f"Missing {det_path}. Run sam-overlay/detect first so masks exist."
+        )
+
+    asg = cfg.setdefault("assignment", {})
+    asg["hit_test"] = "mask"
+    asg["part_geometry"] = True
+    if args.part_sequences:
+        seq = cfg.setdefault("sequences", {})
+        seq["label_policy"] = "part_majority"
+
+    run_cfg_path = out_dir / "refine_parts_run_config.yaml"
+    run_cfg_path.write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
+
+    print("[refine-parts] assign with part_geometry…", flush=True)
+    asg_summary = run_assign(run_cfg_path)
+    assignments = pd.read_csv(out_dir / "gaze_assignments.csv")
+    n_parts = int(assignments["attended_part_label"].notna().sum()) if "attended_part_label" in assignments.columns else 0
+    print(f"[refine-parts] rows with part label: {n_parts}/{len(assignments)}", flush=True)
+    if n_parts and "attended_part_label" in assignments.columns:
+        print(assignments["attended_part_label"].value_counts().head(20).to_string(), flush=True)
+
+    seq_summary = None
+    if args.part_sequences:
+        print("[refine-parts] sequences (part_majority)…", flush=True)
+        seq_summary = run_sequences(run_cfg_path)
+
+    overlay_stats = None
+    if not args.skip_overlay:
+        detections = pd.read_csv(det_path)
+        masks = load_detection_masks(out_dir)
+        _, meta = read_tsv(cfg["tsv_path"], compute_hash=False)
+        vinfo = inspect_video(cfg["video_path"], max_pts_samples=int(cfg.get("max_pts_samples", 2000)))
+        # Prefer clip span from prior detect summary when present.
+        det_sum_path = out_dir / "detect_summary.json"
+        start_s, end_s = 0.0, None
+        if det_sum_path.is_file():
+            import json as _json
+
+            ds = _json.loads(det_sum_path.read_text(encoding="utf-8"))
+            start_s = float(ds.get("video_start_clip", 0.0))
+            end_s = float(ds.get("video_end_clip", start_s + 30.0))
+        if end_s is None:
+            end_s = float(vinfo.duration_s or 30.0)
+        out_mp4 = out_dir / str(cfg.get("overlay_filename", "sam_gaze_overlay_parts.mp4"))
+        if args.overlay_name:
+            out_mp4 = out_dir / args.overlay_name
+        print("[refine-parts] rendering overlay…", flush=True)
+        overlay_stats = write_sam_gaze_overlay(
+            cfg["video_path"],
+            detections=detections,
+            assignments=assignments,
+            masks_by_id=masks,
+            out_path=out_mp4,
+            src_width=int(meta["media_width"]),
+            src_height=int(meta["media_height"]),
+            start_s=start_s,
+            end_s=end_s,
+            video_fps_hint=vinfo.average_fps,
+            gaze_radius=int(cfg.get("overlay_gaze_radius", 28)),
+        )
+        transcode_to_h264(out_mp4)
+        print(f"[refine-parts] wrote {out_mp4}", flush=True)
+
+    summary = {
+        "assign": asg_summary,
+        "n_part_labels": n_parts,
+        "sequences": seq_summary,
+        "overlay": overlay_stats,
+    }
+    write_json(out_dir / "refine_parts_summary.json", summary)
+    print(json.dumps({"n_part_labels": n_parts, "overlay": overlay_stats}, indent=2, default=str))
+    return 0
+
+
 def cmd_sequences(args: argparse.Namespace) -> int:
     from gaze_objects.sequences import run_sequences
 
@@ -393,6 +488,28 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval = sub.add_parser("evaluate", help="Stage D: compare assignments to AOI reference labels")
     p_eval.add_argument("--config", required=True)
     p_eval.set_defaults(func=cmd_evaluate)
+
+    p_parts = sub.add_parser(
+        "refine-parts",
+        help="Gaze-relative tip/handle/body on existing masks (no re-detect) + optional overlay",
+    )
+    p_parts.add_argument("--config", required=True)
+    p_parts.add_argument(
+        "--skip-overlay",
+        action="store_true",
+        help="Only rewrite gaze_assignments.csv (no video)",
+    )
+    p_parts.add_argument(
+        "--part-sequences",
+        action="store_true",
+        help="Also build Stage E sequences using part_majority labels",
+    )
+    p_parts.add_argument(
+        "--overlay-name",
+        default="sam_gaze_overlay_parts.mp4",
+        help="Overlay filename under output_dir",
+    )
+    p_parts.set_defaults(func=cmd_refine_parts)
 
     p_seq = sub.add_parser(
         "sequences",

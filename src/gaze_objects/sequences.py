@@ -35,13 +35,20 @@ def majority_attended_label(
     Pick one attended label for a single Tobii fixation.
 
     assigned_majority: mode of selected_normalized_label among status==assigned.
+    part_majority: prefer attended_part_label (e.g. screwdriver.tip) when present,
+    else fall back to selected_normalized_label.
     Ties broken by higher sum(score), then label name.
     """
-    if label_policy != "assigned_majority":
+    if label_policy not in {"assigned_majority", "part_majority"}:
         raise ValueError(f"Unsupported sequences.label_policy: {label_policy}")
 
     assigned = fixation_rows[fixation_rows["assignment_status"] == "assigned"].copy()
-    labels = assigned["selected_normalized_label"].map(_safe_str)
+    if label_policy == "part_majority" and "attended_part_label" in assigned.columns:
+        parts = assigned["attended_part_label"].map(_safe_str)
+        base = assigned["selected_normalized_label"].map(_safe_str)
+        labels = parts.where(parts.notna(), base)
+    else:
+        labels = assigned["selected_normalized_label"].map(_safe_str)
     assigned = assigned.assign(_label=labels)
     assigned = assigned[assigned["_label"].notna()]
 

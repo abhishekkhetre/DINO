@@ -435,7 +435,11 @@ def write_sam_gaze_overlay(
             n_with_gaze += 1
             gx, gy = float(gaze["gaze_x_px"]), float(gaze["gaze_y_px"])
             hit = str(gaze.get("assignment_status", "")) == "assigned"
-            hit_label = gaze.get("selected_normalized_label") or gaze.get("selected_raw_label")
+            hit_label = (
+                gaze.get("attended_part_label")
+                or gaze.get("selected_normalized_label")
+                or gaze.get("selected_raw_label")
+            )
             if hit:
                 n_hits += 1
                 # Bright green outer ring when gaze is on a labelled object.

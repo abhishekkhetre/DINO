@@ -77,10 +77,17 @@ assignment:
   prefer_nested_parent: false
   prefer_smallest_containing: true
   label_map_mode: fine
+  # Gaze position → tip/handle/body on whole-object masks (no SAM part text).
+  part_geometry: true
+  part_objects:
+    - screwdriver
+    - wrench
+    - angle grinder
 
 sequences:
   movement_type: Fixation
-  label_policy: assigned_majority
+  # Use screwdriver.tip / angle_grinder.body etc. when part_geometry ran.
+  label_policy: part_majority
   min_assigned_samples: 2
   min_label_fraction: 0.5
 

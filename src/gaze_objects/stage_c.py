@@ -394,6 +394,8 @@ def run_assign(config_path: str | Path) -> dict[str, Any]:
         label_map_mode=label_map_mode,
         hit_test=hit_test,
         masks_dir=out_dir,
+        part_geometry=bool(asg_cfg.get("part_geometry", False)),
+        part_objects=asg_cfg.get("part_objects"),
     )
     assignments.to_csv(out_dir / "gaze_assignments.csv", index=False)
     status_counts = assignments["assignment_status"].value_counts(dropna=False).to_dict()

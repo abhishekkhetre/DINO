@@ -13,6 +13,7 @@ from gaze_objects.masks import (
     load_detection_masks,
     point_in_mask,
 )
+from gaze_objects.part_geometry import DEFAULT_PART_OBJECTS, classify_gaze_part
 
 
 ASSIGNMENT_STATUSES = (
@@ -360,6 +361,8 @@ def assign_table(
     frame_id_col: str = "frame_index",
     hit_test: str = "box",
     masks_dir: str | Path | None = None,
+    part_geometry: bool = False,
+    part_objects: list[str] | None = None,
 ) -> pd.DataFrame:
     """
     Assign each gaze row using detections grouped by frame_index.
@@ -408,6 +411,42 @@ def assign_table(
             prefer_smallest_containing=prefer_smallest_containing,
             hit_test=hit_test,
         )
+        part_fields = {
+            "part_label": None,
+            "part_zone": None,
+            "part_axis_t": None,
+            "attended_part_label": None,
+        }
+        if (
+            part_geometry
+            and result.get("assignment_status") == "assigned"
+            and result.get("selected_detection_id") is not None
+        ):
+            # Find chosen det (with mask) on this frame.
+            chosen_id = str(result["selected_detection_id"])
+            chosen = next(
+                (
+                    d
+                    for d in by_frame.get(fi, [])
+                    if str(d.get("detection_id")) == chosen_id
+                ),
+                None,
+            )
+            if chosen is not None:
+                gx, gy = g.get("gaze_x_px"), g.get("gaze_y_px")
+                if gx is not None and gy is not None and pd.notna(gx) and pd.notna(gy):
+                    allow = (
+                        {str(x).strip().lower() for x in part_objects}
+                        if part_objects
+                        else DEFAULT_PART_OBJECTS
+                    )
+                    part_fields = classify_gaze_part(
+                        float(gx),
+                        float(gy),
+                        chosen.get("mask"),
+                        result.get("selected_normalized_label"),
+                        part_objects=allow,
+                    )
         records.append(
             {
                 "source_row_id": g.get("source_row_id"),
@@ -418,6 +457,7 @@ def assign_table(
                 "gaze_x_px": g.get("gaze_x_px"),
                 "gaze_y_px": g.get("gaze_y_px"),
                 **result,
+                **part_fields,
                 "candidate_detection_ids": "|".join(result["candidate_detection_ids"]),
             }
         )
