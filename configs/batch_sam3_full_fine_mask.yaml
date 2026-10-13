@@ -1,12 +1,9 @@
-# Full Tobii corpus — FRESH mask pipeline + per-video SAM/gaze overlay + part labels.
-# Stages: detect → assign (mask + tip/handle/body) → sequences → overlay video
+# Full Tobii corpus — FRESH mask pipeline + fine/part CSV labels (NO overlay video).
+# Stages: detect → assign (mask + tip/handle/body) → sequences
 # NEW output root (do not reuse box-era batch_sam3_full_fine).
 #
-# Disk/time note: ~290 full videos with keep_masks + overlay is LARGE and SLOW.
-# One GPU job only. Resume with skip_if_done.
-#
 # Start:
-#   bash scripts/run_batch_mask_video.sh
+#   bash scripts/run_batch_mask_csv.sh
 # After:
 #   python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_full_fine_mask
 
@@ -17,7 +14,6 @@ stages:
   - detect
   - assign
   - sequences
-  - overlay
 
 skip_if_done: true
 continue_on_error: true
@@ -87,6 +83,3 @@ defaults:
     label_policy: part_majority
     min_assigned_samples: 2
     min_label_fraction: 0.5
-
-  overlay_filename: sam_gaze_overlay.mp4
-  overlay_gaze_radius: 28
