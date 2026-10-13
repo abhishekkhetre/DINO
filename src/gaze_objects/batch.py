@@ -13,6 +13,7 @@ import yaml
 
 from gaze_objects.audit import write_json
 from gaze_objects.evaluate import run_evaluate
+from gaze_objects.overlay_run import run_overlay
 from gaze_objects.sequences import run_sequences
 from gaze_objects.stage_c import run_assign, run_detect
 
@@ -153,6 +154,11 @@ def build_recording_config(
     cfg["participant_id"] = cfg.get("participant_id") or rec_id
     cfg["recording_id"] = cfg.get("recording_id") or rec_id
     cfg["_batch_recording_id"] = rec_id
+    # Allow overlay knobs at batch root or under defaults.
+    if "overlay_filename" not in cfg and batch_cfg.get("overlay_filename"):
+        cfg["overlay_filename"] = batch_cfg["overlay_filename"]
+    if "overlay_gaze_radius" not in cfg and batch_cfg.get("overlay_gaze_radius") is not None:
+        cfg["overlay_gaze_radius"] = batch_cfg["overlay_gaze_radius"]
     return cfg
 
 
@@ -235,6 +241,15 @@ def run_one_recording(
         elif (out_dir / "sequences_summary.json").is_file():
             seq_summary = json.loads((out_dir / "sequences_summary.json").read_text(encoding="utf-8"))
 
+        overlay_summary = None
+        if "overlay" in want:
+            ov_name = str(recording_cfg.get("overlay_filename", "sam_gaze_overlay.mp4"))
+            ov_done = (out_dir / ov_name).is_file() and (out_dir / "overlay_summary.json").is_file()
+            if skip_if_done and ov_done:
+                overlay_summary = json.loads((out_dir / "overlay_summary.json").read_text(encoding="utf-8"))
+            else:
+                overlay_summary = run_overlay(cfg_path)
+
         row["n_frames_processed"] = _safe_get(det_summary, "n_frames_processed")
         row["n_detections"] = _safe_get(det_summary, "n_detections")
         row["conditional_accuracy"] = _safe_get(
@@ -244,6 +259,10 @@ def run_one_recording(
         row["n_fixations"] = _safe_get(seq_summary, "n_fixations")
         row["n_fixations_labelled"] = _safe_get(seq_summary, "n_fixations_labelled")
         row["n_sequences"] = _safe_get(seq_summary, "n_sequences")
+        row["overlay_frames"] = _safe_get(overlay_summary, "overlay", "frames_written")
+        row["overlay_path"] = _safe_get(overlay_summary, "playable_path") or _safe_get(
+            overlay_summary, "overlay", "out_path"
+        )
     except Exception as exc:  # noqa: BLE001 — batch must continue
         tb = traceback.format_exc()
         msg = str(exc).strip() or "(no message)"

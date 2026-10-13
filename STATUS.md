@@ -29,15 +29,17 @@ python scripts/run_am07_part_geometry.py
 # HIT banner shows e.g. screwdriver.tip
 ```
 
-### Full corpus MASK batch (CSV only — new root)
+### Full corpus MASK batch + video overlays (fresh root)
 ```bash
-# NEW output root: outputs/batch_sam3_full_fine_mask
-bash scripts/run_batch_mask_csv.sh
+# detect → assign (mask + tip/handle) → sequences → overlay mp4
+bash scripts/run_batch_mask_video.sh
 # monitor: tail -f outputs/batch_sam3_full_fine_mask/batch_run.log
 # when finished:
 python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_full_fine_mask
 ```
-Config: `configs/batch_sam3_full_fine_mask.yaml` (hit_test=mask, part_geometry, cleaned prompts).
+Per recording: `detections.csv`, `detection_masks.npz`, `gaze_assignments.csv` (part labels),
+`attention_sequences.csv`, `sam_gaze_overlay.mp4`.
+Config: `configs/batch_sam3_full_fine_mask.yaml`.
 
 ## Fine SAM3 batch — COMPLETE (boxes era)
 

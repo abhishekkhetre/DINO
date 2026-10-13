@@ -1,16 +1,14 @@
-# Full Tobii corpus — fine labels + MASK assign + optional gaze tip/handle/body.
-# NEW output root so skip_if_done does not reuse old box-era detections.
-# Stages: detect → assign → sequences (NO overlay video).
+# Full Tobii corpus — FRESH mask pipeline + per-video SAM/gaze overlay + part labels.
+# Stages: detect → assign (mask + tip/handle/body) → sequences → overlay video
+# NEW output root (do not reuse box-era batch_sam3_full_fine).
 #
-# After batch finishes:
+# Disk/time note: ~290 full videos with keep_masks + overlay is LARGE and SLOW.
+# One GPU job only. Resume with skip_if_done.
+#
+# Start:
+#   bash scripts/run_batch_mask_video.sh
+# After:
 #   python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_full_fine_mask
-#
-# Workstation (one GPU job only):
-#   conda activate sam3
-#   export PYTHONPATH=src:$PYTHONPATH
-#   export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-#   nohup python -m gaze_objects.cli batch --config configs/batch_sam3_full_fine_mask.yaml \
-#     > outputs/batch_sam3_full_fine_mask/batch_run.log 2>&1 &
 
 data_dir: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data"
 output_root: "outputs/batch_sam3_full_fine_mask"
@@ -19,8 +17,8 @@ stages:
   - detect
   - assign
   - sequences
+  - overlay
 
-# Safe to resume; does NOT skip when output_root is fresh.
 skip_if_done: true
 continue_on_error: true
 
@@ -78,7 +76,6 @@ defaults:
     prefer_nested_parent: false
     prefer_smallest_containing: false
     label_map_mode: fine
-    # Gaze tip/handle/body on whole-object masks → CSV columns + part sequences
     part_geometry: true
     part_objects:
       - screwdriver
@@ -90,3 +87,6 @@ defaults:
     label_policy: part_majority
     min_assigned_samples: 2
     min_label_fraction: 0.5
+
+  overlay_filename: sam_gaze_overlay.mp4
+  overlay_gaze_radius: 28
