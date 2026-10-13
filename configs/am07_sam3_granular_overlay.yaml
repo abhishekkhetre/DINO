@@ -40,24 +40,28 @@ detector:
   min_free_vram_gib: 6.0
   score_threshold: 0.50
   score_threshold_by_concept:
-    angle grinder: 0.12
+    # Bare "grinder" removed from prompts (flooded at 0.12–0.20).
+    # Keep AG gate low for handheld; raise electric/power synonyms.
+    angle grinder: 0.18
+    electric grinder: 0.28
+    power tool: 0.25
     instruction manual: 0.60
     screwdriver: 0.48
-    phillips screwdriver: 0.48
     wrench: 0.50
     storage box: 0.45
-    grinder body: 0.25
+    grinder body: 0.28
     side handle: 0.28
-    grinder guard: 0.28
+    grinder guard: 0.30
     battery pack: 0.35
-    screw: 0.40
-    machine screw: 0.40
+    screw: 0.55
   min_box_area_frac_by_concept:
-    angle grinder: 0.008
+    angle grinder: 0.010
     side handle: 0.001
     grinder guard: 0.001
     battery pack: 0.002
-    screw: 0.0003
+    screw: 0.0005
+  # Assign uses the lowest concept gate so weak AG can still get gaze hits.
+
   # Drop part/screw dets that do not overlap a parent angle grinder.
   require_parent_overlap_for_parts: true
   parts_parent_expand_px: 48.0
@@ -67,7 +71,7 @@ detector:
 
 assignment:
   hit_test: mask
-  score_threshold: 0.12
+  score_threshold: 0.18
   overlap_policy: ambiguous
   require_normalized_label: false
   prefer_nested_parent: false

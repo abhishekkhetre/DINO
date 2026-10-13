@@ -11,7 +11,14 @@ Last updated: 2026-10-12.
 python scripts/run_am07_granular_overlay.py
 # → outputs/am07_sam3_granular_overlay/sam_gaze_overlay.mp4
 ```
-Config: `configs/am07_sam3_granular_overlay.yaml` · prompts: `metaSAM3/prompts_fine_parts.txt`
+If Media Player cannot open it (`mp4v` / missing ffmpeg):
+```bash
+conda install -y -c conda-forge ffmpeg
+bash scripts/make_overlay_playable.sh outputs/am07_sam3_granular_overlay/sam_gaze_overlay.mp4
+# → …/sam_gaze_overlay_playable.mp4
+```
+Config: `configs/am07_sam3_granular_overlay.yaml` · prompts: `metaSAM3/prompts_fine_parts.txt`  
+(2026-10-13 run: AG recall fixed from t≈25s, but bare `grinder` flooded 7k low-score dets — removed from prompts.)
 
 ## Fine SAM3 batch — COMPLETE (boxes era)
 

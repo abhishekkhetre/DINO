@@ -1,6 +1,5 @@
-# Alias / lighter name for the granular video-check overlay.
-# Canonical config: configs/am07_sam3_granular_overlay.yaml
-# (kept so older docs still work)
+# Alias → same as am07_sam3_granular_overlay.yaml (kept for older docs).
+# Prefer: configs/am07_sam3_granular_overlay.yaml
 
 participant_id: AM07AM07
 recording_id: "Recording 50"
@@ -33,24 +32,24 @@ detector:
   min_free_vram_gib: 6.0
   score_threshold: 0.50
   score_threshold_by_concept:
-    angle grinder: 0.12
+    angle grinder: 0.18
+    electric grinder: 0.28
+    power tool: 0.25
     instruction manual: 0.60
     screwdriver: 0.48
-    phillips screwdriver: 0.48
     wrench: 0.50
     storage box: 0.45
-    grinder body: 0.25
+    grinder body: 0.28
     side handle: 0.28
-    grinder guard: 0.28
+    grinder guard: 0.30
     battery pack: 0.35
-    screw: 0.40
-    machine screw: 0.40
+    screw: 0.55
   min_box_area_frac_by_concept:
-    angle grinder: 0.008
+    angle grinder: 0.010
     side handle: 0.001
     grinder guard: 0.001
     battery pack: 0.002
-    screw: 0.0003
+    screw: 0.0005
   require_parent_overlap_for_parts: true
   parts_parent_expand_px: 48.0
   load_from_hf: true
@@ -59,7 +58,7 @@ detector:
 
 assignment:
   hit_test: mask
-  score_threshold: 0.12
+  score_threshold: 0.18
   overlap_policy: ambiguous
   require_normalized_label: false
   prefer_nested_parent: false

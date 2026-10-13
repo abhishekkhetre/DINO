@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -11,6 +12,34 @@ import numpy as np
 import pandas as pd
 
 
+def _find_ffmpeg() -> str | None:
+    """Locate ffmpeg: PATH, conda envs, or imageio-ffmpeg bundle."""
+    found = shutil.which("ffmpeg")
+    if found:
+        return found
+    home = Path.home()
+    candidates = [
+        home / "miniconda3" / "bin" / "ffmpeg",
+        home / "miniconda3" / "envs" / "sam3" / "bin" / "ffmpeg",
+        home / "anaconda3" / "bin" / "ffmpeg",
+        home / "anaconda3" / "envs" / "sam3" / "bin" / "ffmpeg",
+        Path("/usr/bin/ffmpeg"),
+        Path("/usr/local/bin/ffmpeg"),
+    ]
+    for path in candidates:
+        if path.is_file() and os.access(path, os.X_OK):
+            return str(path)
+    try:
+        import imageio_ffmpeg
+
+        exe = imageio_ffmpeg.get_ffmpeg_exe()
+        if exe and Path(exe).is_file():
+            return str(exe)
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
 def _open_video_writer(
     out_path: Path,
     *,
@@ -18,7 +47,11 @@ def _open_video_writer(
     width: int,
     height: int,
 ):
-    """Open a VideoWriter; prefer H.264, fall back to mp4v."""
+    """Open a VideoWriter.
+
+    Prefer ``mp4v`` first on Linux — OpenCV's ``H264`` often selects the broken
+    ``h264_v4l2m2m`` backend (error -22). We always re-encode with ffmpeg after.
+    """
     import cv2
 
     out_path = Path(out_path)
@@ -26,7 +59,8 @@ def _open_video_writer(
     # Odd dimensions break many H.264 players — force even size at write time.
     w = int(width) - (int(width) % 2)
     h = int(height) - (int(height) % 2)
-    for fourcc_str in ("avc1", "H264", "X264", "mp4v"):
+    # mp4v first: reliable write; playable after ffmpeg libx264 pass.
+    for fourcc_str in ("mp4v", "avc1", "X264"):
         writer = cv2.VideoWriter(
             str(out_path),
             cv2.VideoWriter_fourcc(*fourcc_str),
@@ -50,9 +84,15 @@ def transcode_to_h264(src: str | Path, dst: str | Path | None = None) -> Path:
         dst = src.with_name(src.stem + "_h264.mp4")
     else:
         dst = Path(dst)
-    ffmpeg = shutil.which("ffmpeg")
+    ffmpeg = _find_ffmpeg()
     if ffmpeg is None:
-        print("[overlay] ffmpeg not found — leaving OpenCV mp4 as-is", flush=True)
+        print(
+            "[overlay] ffmpeg not found — OpenCV mp4 may not play in Windows/Media Player.\n"
+            "  Fix once:  conda install -y -c conda-forge ffmpeg\n"
+            "  Or convert: ffmpeg -y -i <file>.mp4 -c:v libx264 -pix_fmt yuv420p "
+            "-movflags +faststart <file>_playable.mp4",
+            flush=True,
+        )
         return src
     cmd = [
         ffmpeg,

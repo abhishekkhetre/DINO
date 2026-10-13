@@ -1,4 +1,4 @@
-"""Granular parts prompt list: kit-safe max detail, no grinding disc."""
+"""Granular parts prompt list: kit-safe, no grinding disc / bare grinder flood."""
 
 from __future__ import annotations
 
@@ -14,14 +14,16 @@ def test_parts_prompts_max_granular_no_grinding_disc():
         concepts_file=ROOT / "metaSAM3" / "prompts_fine_parts.txt"
     )
     assert "angle grinder" in concepts
+    assert "electric grinder" in concepts
+    assert "power tool" in concepts
     assert "side handle" in concepts
     assert "grinder guard" in concepts
     assert "grinder body" in concepts
     assert "battery pack" in concepts
-    assert "screw" in concepts
-    assert "phillips screwdriver" in concepts
-    # Not in study videos / kit FPs
+    # Flood / FP sources removed for cleaner video
+    assert "grinder" not in concepts  # bare word only
     assert "grinding disc" not in concepts
+    assert "phillips screwdriver" not in concepts
+    assert "screw" not in concepts
     assert "pliers" not in concepts
-    assert "hammer" not in concepts
-    assert len(concepts) <= 16
+    assert len(concepts) <= 14

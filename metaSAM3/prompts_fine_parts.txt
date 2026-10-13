@@ -1,21 +1,20 @@
-# Maximum kit-safe granular prompts for AM07 video verification (mask overlay).
-# No grinding disc — not present in the study videos.
-# Screws enabled for video check only (high FP risk; review overlay carefully).
-# One short noun phrase per line → one SAM3 forward pass each (~14 concepts).
+# Granular AM07 video verification prompts (mask overlay).
+# NO grinding disc (not in study videos).
+# NO bare "grinder" — it flooded overlays with low-score FPs (7k+ dets).
+# NO phillips screwdriver — near-duplicate of screwdriver on the same tools.
+# Screws OFF by default (2.4k dets / many FPs); uncomment for a screw-only check.
 #
-# Whole angle grinder (synonyms) first, then coarse parts, then kit objects.
+# Whole AG (specific synonyms) → coarse parts → kit objects.
 angle grinder
 electric grinder
-grinder
 power tool
 grinder body
 side handle
 grinder guard
 battery pack
-screw
-machine screw
 instruction manual
 storage box
 screwdriver
-phillips screwdriver
 wrench
+# screw
+# machine screw
