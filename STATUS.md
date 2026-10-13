@@ -20,6 +20,15 @@ bash scripts/make_overlay_playable.sh outputs/am07_sam3_granular_overlay/sam_gaz
 Config: `configs/am07_sam3_granular_overlay.yaml` · prompts: `metaSAM3/prompts_fine_parts.txt`  
 (2026-10-13 run: AG recall fixed from t≈25s, but bare `grinder` flooded 7k low-score dets — removed from prompts.)
 
+### Gaze tip/handle/body (no re-detect)
+Uses gaze position inside whole-object masks → `screwdriver.tip`, `angle grinder.body`, …
+```bash
+# After granular overlay already exists:
+python scripts/run_am07_part_geometry.py
+# → sam_gaze_overlay_parts.mp4 + part labels in gaze_assignments.csv
+# HIT banner shows e.g. screwdriver.tip
+```
+
 ## Fine SAM3 batch — COMPLETE (boxes era)
 
 Workstation corpus under `outputs/batch_sam3_full_fine/` / `output_SAM_labelled_290`:
