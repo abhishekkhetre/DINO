@@ -1,0 +1,79 @@
+# Full Tobii_Data corpus: every discoverable TSV + scenevideo pair.
+# Same dense SAM3 + Stage E settings as the 5-video smoke.
+# skip_if_done: re-run is safe; finished recordings are skipped.
+#
+# Reuse smoke outputs (optional, saves GPU):
+#   mv outputs/batch_sam3_dense_5 outputs/batch_sam3_dense
+# Or let this create a fresh tree under output_root.
+
+data_dir: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data"
+output_root: "outputs/batch_sam3_dense"
+
+stages:
+  - detect
+  - assign
+  - evaluate
+  - sequences
+
+skip_if_done: true
+continue_on_error: true
+
+# Prefer AM07 first when present; then all other discovered pairs.
+recordings:
+  - id: AM07AM07_01
+    tsv: AM07AM07_01_data_export.tsv
+    video: AM07AM07_01_scenevideo.mp4
+
+select:
+  mode: all
+
+defaults:
+  timestamp_unit: milliseconds
+  timestamp_unit_status: verified
+  video_start_recording_s: 0.0
+  time_mapping_status: verified
+  max_abs_residual_s: 0.05
+  compute_hash: true
+
+  clip:
+    recording_start_s: 30.0
+    recording_end_s: 60.0
+
+  frame_selection:
+    mode: unique_matched_frames
+    stride: 2
+    max_frames: 150
+
+  detector:
+    backend: sam3
+    device: cuda
+    score_threshold: 0.55
+    score_threshold_by_concept:
+      angle grinder: 0.25
+      grinder: 0.25
+      electric grinder: 0.25
+      disk grinder: 0.25
+      # AG→Manual is the main corpus failure mode; keep Manual stricter than AG.
+      instruction manual: 0.70
+    load_from_hf: true
+    text_concepts_file: "metaSAM3/prompts_assembly_aoi.txt"
+    class_map_file: "configs/class_definitions.yaml"
+    resolution: 1008
+
+  assignment:
+    score_threshold: 0.25
+    overlap_policy: ambiguous
+    require_normalized_label: false
+    prefer_nested_parent: true
+    nested_parent_expand_px: 80
+
+  # Tools AOI has no detector concepts in assembly prompts — exclude from QC scoring.
+  evaluation:
+    ignore_reference_labels:
+      - Tools
+
+  sequences:
+    movement_type: Fixation
+    label_policy: assigned_majority
+    min_assigned_samples: 2
+    min_label_fraction: 0.5

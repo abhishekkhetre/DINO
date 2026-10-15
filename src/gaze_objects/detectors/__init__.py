@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+import numpy as np
+
 
 @dataclass
 class Detection:
@@ -19,14 +21,18 @@ class Detection:
     score: float
     model_provenance: dict[str, Any] = field(default_factory=dict)
     coordinate_space: str = "native_scene_pixels"
+    # Optional HxW bool/uint8 mask (native scene pixels). Not written to CSV.
+    mask: np.ndarray | None = None
 
     def to_row(self) -> dict[str, Any]:
         row = asdict(self)
+        row.pop("mask", None)  # arrays stay in detection_masks.npz
         # Flatten provenance lightly for CSV
         prov = row.pop("model_provenance", {}) or {}
         row["model_name"] = prov.get("model_name")
         row["checkpoint"] = prov.get("checkpoint")
         row["backend"] = prov.get("backend")
+        row["has_mask"] = self.mask is not None
         return row
 
 

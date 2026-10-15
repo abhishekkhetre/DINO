@@ -1,0 +1,11 @@
+# Assembly AOI concepts aligned to Tobii study categories that have clear
+# object appearance: Angle Grinder, Manual, Boxes.
+# Do NOT include screwdriver/wrench/tool — generic tool prompts fire on the
+# grinder work region and steal Angle Grinder AOI (AA05ED02_03).
+# Tobii "Tools" AOI coverage is deferred until a safer prompt set exists.
+angle grinder
+grinder
+electric grinder
+disk grinder
+instruction manual
+storage box
