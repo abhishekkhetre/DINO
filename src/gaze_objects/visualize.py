@@ -431,14 +431,17 @@ def write_sam_gaze_overlay(
         gaze = gaze_by_frame.get(frame_index)
         hit = False
         hit_label = None
+        geometry_hit = False
         if gaze is not None:
             n_with_gaze += 1
             gx, gy = float(gaze["gaze_x_px"]), float(gaze["gaze_y_px"])
             hit = str(gaze.get("assignment_status", "")) == "assigned"
-            hit_label = (
-                gaze.get("attended_part_label")
-                or gaze.get("selected_normalized_label")
-                or gaze.get("selected_raw_label")
+            part_lbl = gaze.get("attended_part_label")
+            obj_lbl = gaze.get("selected_normalized_label") or gaze.get("selected_raw_label")
+            # Prefer geometric part (e.g. screwdriver.tip) for visual QC.
+            hit_label = part_lbl if (isinstance(part_lbl, str) and part_lbl.strip()) else obj_lbl
+            geometry_hit = bool(
+                isinstance(part_lbl, str) and "." in part_lbl and part_lbl.strip()
             )
             if hit:
                 n_hits += 1
@@ -478,15 +481,20 @@ def write_sam_gaze_overlay(
                     marker_size=gaze_radius + 8,
                 )
 
-        # Timestamp + status banner
+        # Timestamp + status banner (wide enough for screwdriver.tip etc.)
         ts = f"t={video_time_s:.2f}s  frame={frame_index}"
-        cv2.rectangle(canvas, (8, 8), (min(w - 8, 720), 78), (0, 0, 0), -1)
+        banner_w = min(w - 8, 920)
+        cv2.rectangle(canvas, (8, 8), (banner_w, 78), (0, 0, 0), -1)
         cv2.putText(
             canvas, ts, (18, 38), cv2.FONT_HERSHEY_SIMPLEX, 0.85, (255, 255, 255), 2, cv2.LINE_AA
         )
         if hit and hit_label:
-            status = f"HIT: {hit_label}"
-            status_color = (0, 255, 0)
+            if geometry_hit:
+                status = f"GEOMETRY: {hit_label}"
+                status_color = (0, 255, 180)
+            else:
+                status = f"HIT: {hit_label}"
+                status_color = (0, 255, 0)
         elif gaze is not None:
             status = f"gaze ({gaze.get('assignment_status', 'n/a')})"
             status_color = (0, 200, 255)
@@ -494,7 +502,7 @@ def write_sam_gaze_overlay(
             status = "no gaze on frame"
             status_color = (180, 180, 180)
         cv2.putText(
-            canvas, status, (18, 68), cv2.FONT_HERSHEY_SIMPLEX, 0.8, status_color, 2, cv2.LINE_AA
+            canvas, status[:48], (18, 68), cv2.FONT_HERSHEY_SIMPLEX, 0.75, status_color, 2, cv2.LINE_AA
         )
 
         writer.write(canvas)

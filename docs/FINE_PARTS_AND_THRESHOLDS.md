@@ -66,21 +66,35 @@ python -m gaze_objects.cli batch --config configs/batch_sam3_full_fine.yaml
 python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_full_fine
 ```
 
-**AM07 granular VIDEO check (recommended next step on workstation):**
+**AM07 geometry sample VIDEO (manual visual QC — recommended):**
 
 ```bash
 conda activate sam3
 cd ~/KHETRE/DINO_KHETRE/DINO
-git pull origin cursor/fine-parts-thresholds-e54c
+git pull origin cursor/geometry-overlay-sample-e54c
 export PYTHONPATH=src:$PYTHONPATH
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+# Reuses SAM detect if present; applies tip/handle/body geometry; H.264 overlay:
+python scripts/run_am07_geometry_sample_video.py
+# Faster scrub window:
+# python scripts/run_am07_geometry_sample_video.py --start-s 60 --end-s 180
+# → outputs/am07_sam3_granular_overlay/sam_gaze_overlay_geometry.mp4
+```
+
+Banner shows ``GEOMETRY: screwdriver.tip`` (etc.) when gaze-relative geometry fires.
+Also prints seek times per part label for manual review.
+
+**AM07 granular VIDEO check (SAM part prompts, no geometry pass):**
+
+```bash
 python scripts/run_am07_granular_overlay.py
 # → outputs/am07_sam3_granular_overlay/sam_gaze_overlay.mp4
 ```
 
 Labels: whole AG + `grinder body` / `side handle` / `grinder guard` / `battery pack` /
 `screw` + kit objects. **No grinding disc.** Orphan parts (no overlapping AG) are
-dropped. Gaze on AG+part prefers the **smaller** (part) mask.
+dropped. Gaze on AG+part prefers the **smaller** (part) mask. Geometry sample above
+adds tip/handle/body on whole-object masks without needing those part texts.
 
 ```bash
 python - <<'PY'

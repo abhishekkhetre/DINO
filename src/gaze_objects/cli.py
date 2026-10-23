@@ -346,10 +346,19 @@ def cmd_refine_parts(args: argparse.Namespace) -> int:
             end_s = float(ds.get("video_end_clip", start_s + 30.0))
         if end_s is None:
             end_s = float(vinfo.duration_s or 30.0)
+        if args.overlay_start_s is not None:
+            start_s = float(args.overlay_start_s)
+        if args.overlay_end_s is not None:
+            end_s = float(args.overlay_end_s)
+        if end_s <= start_s:
+            raise SystemExit(f"Invalid overlay window: start_s={start_s} end_s={end_s}")
         out_mp4 = out_dir / str(cfg.get("overlay_filename", "sam_gaze_overlay_parts.mp4"))
         if args.overlay_name:
             out_mp4 = out_dir / args.overlay_name
-        print("[refine-parts] rendering overlay…", flush=True)
+        print(
+            f"[refine-parts] rendering overlay {start_s:.1f}s–{end_s:.1f}s → {out_mp4.name}…",
+            flush=True,
+        )
         overlay_stats = write_sam_gaze_overlay(
             cfg["video_path"],
             detections=detections,
@@ -363,8 +372,8 @@ def cmd_refine_parts(args: argparse.Namespace) -> int:
             video_fps_hint=vinfo.average_fps,
             gaze_radius=int(cfg.get("overlay_gaze_radius", 28)),
         )
-        transcode_to_h264(out_mp4)
-        print(f"[refine-parts] wrote {out_mp4}", flush=True)
+        playable = transcode_to_h264(out_mp4)
+        print(f"[refine-parts] wrote {playable}", flush=True)
 
     summary = {
         "assign": asg_summary,
@@ -508,6 +517,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--overlay-name",
         default="sam_gaze_overlay_parts.mp4",
         help="Overlay filename under output_dir",
+    )
+    p_parts.add_argument(
+        "--overlay-start-s",
+        type=float,
+        default=None,
+        help="Optional overlay window start (seconds, video time)",
+    )
+    p_parts.add_argument(
+        "--overlay-end-s",
+        type=float,
+        default=None,
+        help="Optional overlay window end (seconds, video time)",
     )
     p_parts.set_defaults(func=cmd_refine_parts)
 
