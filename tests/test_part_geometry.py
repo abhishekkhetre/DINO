@@ -28,10 +28,20 @@ def test_screwdriver_tip_vs_handle():
     assert handle["attended_part_label"] == "screwdriver.handle"
 
 
-def test_angle_grinder_body_near_center():
+def test_angle_grinder_skipped_by_default():
+    """AG parts come from SAM text; geometry is elongated tools only."""
     m = np.zeros((100, 100), dtype=bool)
     m[20:80, 20:80] = True
     out = classify_gaze_part(50, 50, m, "angle grinder")
+    assert out["attended_part_label"] is None
+
+
+def test_angle_grinder_body_when_opted_in():
+    m = np.zeros((100, 100), dtype=bool)
+    m[20:80, 20:80] = True
+    out = classify_gaze_part(
+        50, 50, m, "angle grinder", part_objects={"angle grinder"}
+    )
     assert out["part_zone"] == "body"
     assert out["attended_part_label"] == "angle grinder.body"
 

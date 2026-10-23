@@ -11,10 +11,11 @@ DEFAULT_PART_LABELS = frozenset(
     {
         "grinder body",
         "side handle",
+        "main handle",
         "grinder guard",
         "battery pack",
         "screw",
-        "grinding disc",  # kept for safety if an old prompt reappears
+        "grinding disc",
     }
 )
 

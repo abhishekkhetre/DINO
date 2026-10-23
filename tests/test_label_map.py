@@ -30,7 +30,18 @@ def test_fine_grinder_synonyms():
 def test_fine_grinder_parts_are_separate_labels():
     assert normalize_fine_label("side handle") == "side handle"
     assert normalize_fine_label("angle grinder handle") == "side handle"
+    assert normalize_fine_label("main handle") == "main handle"
+    assert normalize_fine_label("rear handle") == "main handle"
     assert normalize_fine_label("grinder guard") == "grinder guard"
     assert normalize_fine_label("grinder body") == "grinder body"
     assert normalize_fine_label("battery pack") == "battery pack"
     assert normalize_fine_label("screw") == "screw"
+
+
+def test_fine_scene_context_labels():
+    assert normalize_fine_label("hand") == "hand"
+    assert normalize_fine_label("human hand") == "hand"
+    assert normalize_fine_label("table") == "table"
+    assert normalize_fine_label("workbench") == "table"
+    assert normalize_fine_label("floor") == "floor"
+    assert normalize_fine_label("table/floor") == "table/floor"

@@ -1,0 +1,24 @@
+# Dense full-corpus prompts (stride 2, sheets only).
+# Goal: label as many fixations as possible (hand / table / floor + AG parts).
+#
+# NO bare "grinder" — floods low-score FPs.
+# NO phillips screwdriver — near-duplicate of screwdriver.
+# Grinding disc ON — kept only when overlapping a parent angle grinder.
+#
+# Whole AG → AG parts → kit objects → scene context (hand / surfaces).
+angle grinder
+electric grinder
+power tool
+grinder body
+side handle
+main handle
+grinder guard
+battery pack
+grinding disc
+instruction manual
+storage box
+screwdriver
+wrench
+hand
+table
+floor

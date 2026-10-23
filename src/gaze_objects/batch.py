@@ -159,6 +159,8 @@ def build_recording_config(
         cfg["overlay_filename"] = batch_cfg["overlay_filename"]
     if "overlay_gaze_radius" not in cfg and batch_cfg.get("overlay_gaze_radius") is not None:
         cfg["overlay_gaze_radius"] = batch_cfg["overlay_gaze_radius"]
+    if "discard_masks_after_assign" in batch_cfg:
+        cfg["discard_masks_after_assign"] = bool(batch_cfg["discard_masks_after_assign"])
     return cfg
 
 
@@ -249,6 +251,25 @@ def run_one_recording(
                 overlay_summary = json.loads((out_dir / "overlay_summary.json").read_text(encoding="utf-8"))
             else:
                 overlay_summary = run_overlay(cfg_path)
+
+        # Sheets-only batches: drop bulky mask archives after assign succeeds.
+        # Overlay stage skipped → npz is only needed during assign.
+        if (
+            bool(recording_cfg.get("discard_masks_after_assign", False))
+            and "overlay" not in want
+            and (out_dir / "gaze_assignments.csv").is_file()
+        ):
+            from gaze_objects.masks import masks_archive_path
+
+            mask_path = masks_archive_path(out_dir)
+            if mask_path.is_file():
+                nbytes = mask_path.stat().st_size
+                mask_path.unlink()
+                print(
+                    f"[batch] discarded {mask_path.name} ({nbytes / (1024**2):.1f} MiB) "
+                    f"after assign for {rec_id}",
+                    flush=True,
+                )
 
         row["n_frames_processed"] = _safe_get(det_summary, "n_frames_processed")
         row["n_detections"] = _safe_get(det_summary, "n_detections")

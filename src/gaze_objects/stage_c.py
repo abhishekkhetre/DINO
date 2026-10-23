@@ -337,6 +337,8 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
     from gaze_objects.masks import save_detection_masks
 
     masks_path = save_detection_masks(out_dir, masks_by_id)
+    # Free RAM: masks live on disk until assign (or discard_masks_after_assign).
+    masks_by_id.clear()
     summary = {
         "backend": backend,
         "clip_mode": ctx.get("clip_mode"),

@@ -58,6 +58,18 @@ score gates to use next — based on all past AM07 and corpus batch evidence.
 
 ## 4. Configs / commands
 
+**Dense corpus rebatch (stride 2, AG parts + hand/table/floor, sheets only):**
+
+```bash
+bash scripts/run_batch_dense_parts_hand.sh
+# → outputs/batch_sam3_dense_parts_hand/  (CSV only; masks discarded after assign)
+python -m gaze_objects.cli aggregate-sequences \
+  --output-root outputs/batch_sam3_dense_parts_hand
+```
+
+Config: `configs/batch_sam3_dense_parts_hand.yaml` — `select.mode: all`, geometry on
+screwdriver/wrench only, SAM part prompts for AG, `prefer_smallest_containing`.
+
 **Object-level rebatch (reviewed thresholds, no parts):**
 
 ```bash

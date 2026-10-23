@@ -10,14 +10,14 @@ from typing import Any
 
 import numpy as np
 
-# Objects that get geometric sub-labels when gaze is on their mask.
+# Elongated hand tools only. Angle grinder parts come from SAM text prompts
+# (side handle / body / guard / …), not PCA geometry zones.
 DEFAULT_PART_OBJECTS = frozenset(
     {
         "screwdriver",
         "phillips screwdriver",
         "flathead screwdriver",
         "wrench",
-        "angle grinder",
     }
 )
 
