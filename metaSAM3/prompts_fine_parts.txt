@@ -1,0 +1,20 @@
+# Granular AM07 video verification prompts (mask overlay).
+# NO grinding disc (not in study videos).
+# NO bare "grinder" — it flooded overlays with low-score FPs (7k+ dets).
+# NO phillips screwdriver — near-duplicate of screwdriver on the same tools.
+# Screws OFF by default (2.4k dets / many FPs); uncomment for a screw-only check.
+#
+# Whole AG (specific synonyms) → coarse parts → kit objects.
+angle grinder
+electric grinder
+power tool
+grinder body
+side handle
+grinder guard
+battery pack
+instruction manual
+storage box
+screwdriver
+wrench
+# screw
+# machine screw

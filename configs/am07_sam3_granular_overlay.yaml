@@ -1,0 +1,95 @@
+# AM07 — maximum kit-safe granular labels + mask overlay for VIDEO verification.
+# No grinding disc (not in study videos). Screws on for visual check (review FPs).
+# Orphan parts (no overlapping angle grinder) are dropped after detect.
+#
+# Workstation ONLY (needs CUDA + Tobii paths):
+#   conda activate sam3
+#   export PYTHONPATH=src:$PYTHONPATH
+#   export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+#   python scripts/run_am07_granular_overlay.py
+#   # → outputs/am07_sam3_granular_overlay/sam_gaze_overlay.mp4
+
+participant_id: AM07AM07
+recording_id: "Recording 50"
+
+tsv_path: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data/AM07AM07_01_data_export.tsv"
+video_path: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data/AM07AM07_01_scenevideo.mp4"
+output_dir: "outputs/am07_sam3_granular_overlay"
+
+timestamp_unit: milliseconds
+timestamp_unit_status: verified
+video_start_recording_s: 0.0
+time_mapping_status: verified
+max_abs_residual_s: 0.05
+compute_hash: false
+
+clip:
+  mode: full
+
+frame_selection:
+  mode: unique_matched_frames
+  stride: 5
+
+detector:
+  backend: sam3
+  device: cuda
+  label_map_mode: fine
+  resolution: 1008
+  enable_segmentation: true
+  keep_masks: true
+  min_free_vram_gib: 6.0
+  score_threshold: 0.50
+  score_threshold_by_concept:
+    # Bare "grinder" removed from prompts (flooded at 0.12–0.20).
+    # Keep AG gate low for handheld; raise electric/power synonyms.
+    angle grinder: 0.18
+    electric grinder: 0.28
+    power tool: 0.25
+    instruction manual: 0.60
+    screwdriver: 0.48
+    wrench: 0.50
+    storage box: 0.45
+    grinder body: 0.28
+    side handle: 0.28
+    grinder guard: 0.30
+    battery pack: 0.35
+    screw: 0.55
+  min_box_area_frac_by_concept:
+    angle grinder: 0.010
+    side handle: 0.001
+    grinder guard: 0.001
+    battery pack: 0.002
+    screw: 0.0005
+  # Assign uses the lowest concept gate so weak AG can still get gaze hits.
+
+  # Drop part/screw dets that do not overlap a parent angle grinder.
+  require_parent_overlap_for_parts: true
+  parts_parent_expand_px: 48.0
+  load_from_hf: true
+  text_concepts_file: "metaSAM3/prompts_fine_parts.txt"
+  class_map_file: "configs/class_definitions.yaml"
+
+assignment:
+  hit_test: mask
+  score_threshold: 0.18
+  overlap_policy: ambiguous
+  require_normalized_label: false
+  prefer_nested_parent: false
+  prefer_smallest_containing: true
+  label_map_mode: fine
+  # Gaze position → tip/handle/body on whole-object masks (no SAM part text).
+  part_geometry: true
+  part_objects:
+    - screwdriver
+    - wrench
+    - angle grinder
+
+sequences:
+  movement_type: Fixation
+  # Use screwdriver.tip / angle_grinder.body etc. when part_geometry ran.
+  label_policy: part_majority
+  min_assigned_samples: 2
+  min_label_fraction: 0.5
+
+overlay_filename: sam_gaze_overlay.mp4
+overlay_gaze_radius: 28
