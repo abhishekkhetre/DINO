@@ -18,6 +18,7 @@ DEFAULT_PART_OBJECTS = frozenset(
         "phillips screwdriver",
         "flathead screwdriver",
         "wrench",
+        "hex key",
     }
 )
 
