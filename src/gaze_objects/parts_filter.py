@@ -10,12 +10,19 @@ import pandas as pd
 DEFAULT_PART_LABELS = frozenset(
     {
         "grinder body",
+        "motor housing",
+        "gear housing",
         "side handle",
         "main handle",
         "grinder guard",
         "battery pack",
-        "screw",
         "grinding disc",
+        "power switch",
+        "trigger",
+        "spindle lock",
+        "clamping flange",
+        "flange nut",
+        "screw",
     }
 )
 

@@ -1,5 +1,5 @@
 # Full Tobii corpus — dense stride-2 MASK sheets (NO overlay video).
-# Labels: kit objects + AG parts (SAM) + hand + table/floor.
+# All study-relevant AG fine parts + kit + hand/table/floor.
 # Geometry tip/handle/shaft ONLY on elongated hand tools (not angle grinder).
 #
 # Start:
@@ -7,7 +7,7 @@
 # After:
 #   python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_dense_parts_hand
 #
-# Disk: detection_masks.npz is deleted after assign (discard_masks_after_assign).
+# Disk: detection_masks.npz deleted after assign.
 # GPU: SAM3 unload + CUDA cache clear after every recording.
 
 data_dir: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data"
@@ -20,7 +20,6 @@ stages:
 
 skip_if_done: true
 continue_on_error: true
-# Free disk after mask assign — sheets/CSV do not need npz for analysis.
 discard_masks_after_assign: true
 
 recordings:
@@ -44,7 +43,6 @@ defaults:
 
   frame_selection:
     mode: unique_matched_frames
-    # Every 2nd matched frame — denser than stride 8 (~4× SAM work).
     stride: 2
 
   detector:
@@ -57,38 +55,68 @@ defaults:
     min_free_vram_gib: 5.5
     score_threshold: 0.50
     score_threshold_by_concept:
-      # Whole AG — keep recall for egocentric / handheld
+      # Whole AG
       angle grinder: 0.18
       electric grinder: 0.28
+      cordless grinder: 0.28
+      disk grinder: 0.28
       power tool: 0.25
-      # AG parts (SAM fine labels; parent-overlap filter drops orphans)
+      # AG fine parts (parent-overlap filter drops orphans)
       grinder body: 0.28
+      motor housing: 0.30
+      gear housing: 0.30
       side handle: 0.28
       main handle: 0.28
       grinder guard: 0.30
       battery pack: 0.32
       grinding disc: 0.35
+      power switch: 0.35
+      trigger: 0.35
+      spindle lock: 0.38
+      clamping flange: 0.38
+      flange nut: 0.40
+      screw: 0.50
+      machine screw: 0.50
+      bolt: 0.50
       # Kit
       instruction manual: 0.55
       screwdriver: 0.45
+      phillips screwdriver: 0.48
       wrench: 0.48
+      hex key: 0.50
       storage box: 0.42
-      # Scene context — catch previously unused fixations
+      # Scene
       hand: 0.40
       table: 0.35
       floor: 0.35
+      workbench: 0.35
     min_box_area_frac_by_concept:
       angle grinder: 0.008
+      electric grinder: 0.008
+      cordless grinder: 0.008
+      disk grinder: 0.008
+      power tool: 0.008
       grinder body: 0.002
+      motor housing: 0.002
+      gear housing: 0.002
       side handle: 0.001
       main handle: 0.001
       grinder guard: 0.001
       battery pack: 0.002
       grinding disc: 0.001
+      power switch: 0.0004
+      trigger: 0.0004
+      spindle lock: 0.0003
+      clamping flange: 0.0004
+      flange nut: 0.0003
+      screw: 0.0004
+      machine screw: 0.0004
+      bolt: 0.0004
       hand: 0.002
       table: 0.05
       floor: 0.05
-      screw: 0.0005
+      workbench: 0.05
+      hex key: 0.0005
     require_parent_overlap_for_parts: true
     parts_parent_expand_px: 48.0
     load_from_hf: true
@@ -97,26 +125,22 @@ defaults:
 
   assignment:
     hit_test: mask
-    # ≤ lowest AG gate so weak grinders still assign
     score_threshold: 0.18
     overlap_policy: ambiguous
     require_normalized_label: false
     prefer_nested_parent: false
-    # Gaze on whole AG + part → prefer the smaller (part) mask
     prefer_smallest_containing: true
     label_map_mode: fine
     part_geometry: true
-    # Geometry ONLY for elongated hand tools — AG parts come from SAM text.
     part_objects:
       - screwdriver
       - phillips screwdriver
       - flathead screwdriver
       - wrench
+      - hex key
 
   sequences:
     movement_type: Fixation
-    # screwdriver.tip when geometry fires; else SAM fine label (side handle, hand, …)
     label_policy: part_majority
-    # Slightly looser than 2/0.5 so more fixations enter sequence sheets
     min_assigned_samples: 1
     min_label_fraction: 0.40

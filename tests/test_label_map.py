@@ -34,8 +34,15 @@ def test_fine_grinder_parts_are_separate_labels():
     assert normalize_fine_label("rear handle") == "main handle"
     assert normalize_fine_label("grinder guard") == "grinder guard"
     assert normalize_fine_label("grinder body") == "grinder body"
+    assert normalize_fine_label("motor housing") == "motor housing"
+    assert normalize_fine_label("gear housing") == "gear housing"
     assert normalize_fine_label("battery pack") == "battery pack"
+    assert normalize_fine_label("power switch") == "power switch"
+    assert normalize_fine_label("spindle lock") == "spindle lock"
+    assert normalize_fine_label("clamping flange") == "clamping flange"
+    assert normalize_fine_label("flange nut") == "flange nut"
     assert normalize_fine_label("screw") == "screw"
+    assert normalize_fine_label("cordless grinder") == "angle grinder"
 
 
 def test_fine_scene_context_labels():
