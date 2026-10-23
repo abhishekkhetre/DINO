@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Dense full-corpus MASK batch → CSV sheets only (no overlay videos).
-# stride=2, AG parts + hand/table/floor, geometry on screwdriver/wrench only.
+# stride=2, AG parts + hand/table/floor, geometry on elongated tools only.
 # SAM3 unloads after each recording; mask npz deleted after assign (disk).
 set -euo pipefail
 
@@ -18,14 +18,35 @@ df -h . | tail -n 1 || true
 export PYTHONPATH=src:${PYTHONPATH:-}
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-# One GPU job only — refuse to start if another compute process holds the GPU.
+# Block only real CUDA compute jobs (python/torch), not desktop (Xorg/GNOME/Firefox).
+# gnome-remote-desktop often shows as C+G and must NOT abort the batch.
 if command -v nvidia-smi >/dev/null; then
-  OTHER=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null | grep -v '^$' | wc -l || true)
-  if [[ "${OTHER// /}" -gt 0 ]]; then
-    echo "ERROR: another GPU process is running. Stop it first (one job only)." >&2
+  BLOCKERS=""
+  while IFS=, read -r pid name; do
+    pid=$(echo "$pid" | tr -d ' ')
+    name=$(echo "$name" | tr -d ' ')
+    [[ -z "$pid" || "$pid" == "pid" ]] && continue
+    base=$(basename "$name" 2>/dev/null || echo "$name")
+    case "$base" in
+      python|python3|pt_main_thread|*torch*|jupyter*)
+        BLOCKERS="${BLOCKERS}${pid} ${name}\n"
+        ;;
+    esac
+  done < <(nvidia-smi --query-compute-apps=pid,process_name --format=csv,noheader 2>/dev/null || true)
+
+  if [[ -n "$BLOCKERS" ]]; then
+    echo "ERROR: another Python/CUDA job is on the GPU. Stop it first (one job only):" >&2
+    echo -e "$BLOCKERS" >&2
     nvidia-smi
     exit 4
   fi
+  echo "[batch-dense-parts] GPU free of other python/CUDA jobs (desktop display OK)"
+fi
+
+# Soft disk warning — masks are discarded after assign, but CSVs still need headroom.
+AVAIL_G=$(df -BG . | awk 'NR==2 {gsub(/G/,""); print $4}')
+if [[ -n "${AVAIL_G:-}" ]] && [[ "$AVAIL_G" -lt 25 ]]; then
+  echo "WARNING: only ~${AVAIL_G}G free on disk. Batch may fail mid-run; free space if possible." >&2
 fi
 
 LOG=$ROOT_OUT/batch_run.log
