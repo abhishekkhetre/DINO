@@ -34,6 +34,8 @@ cat >"$WRAP" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$ROOT"
+# Lighten desktop GPU load each (re)start — ignore failures
+bash "$ROOT/scripts/prepare_workstation_for_batch.sh" >> "$OUT/batch_run.log" 2>&1 || true
 # shellcheck disable=SC1090
 source "$CONDA_SH"
 conda activate sam3
