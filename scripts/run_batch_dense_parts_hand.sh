@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # Dense full-corpus MASK batch → CSV sheets only (no overlay videos).
-# stride=2, AG parts + hand/table/floor, geometry on elongated tools only.
-# SAM3 unloads after each recording; mask npz deleted after assign (disk).
+# Prefers tmux so a frozen desktop / closed terminal does NOT kill the job.
+# Monitor over SSH:  bash scripts/check_batch_dense_parts_hand.sh
+#                   tmux attach -t dense-parts-batch
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT_OUT=outputs/batch_sam3_dense_parts_hand
 mkdir -p "$ROOT_OUT"
+SESSION=dense-parts-batch
 
 echo "[batch-dense-parts] pwd=$(pwd)"
 echo "[batch-dense-parts] output_root=$ROOT_OUT"
@@ -19,7 +21,6 @@ export PYTHONPATH=src:${PYTHONPATH:-}
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # Block only real CUDA compute jobs (python/torch), not desktop (Xorg/GNOME/Firefox).
-# gnome-remote-desktop often shows as C+G and must NOT abort the batch.
 if command -v nvidia-smi >/dev/null; then
   BLOCKERS=""
   while IFS=, read -r pid name; do
@@ -43,20 +44,64 @@ if command -v nvidia-smi >/dev/null; then
   echo "[batch-dense-parts] GPU free of other python/CUDA jobs (desktop display OK)"
 fi
 
-# Soft disk warning — masks are discarded after assign, but CSVs still need headroom.
 AVAIL_G=$(df -BG . | awk 'NR==2 {gsub(/G/,""); print $4}')
 if [[ -n "${AVAIL_G:-}" ]] && [[ "$AVAIL_G" -lt 25 ]]; then
-  echo "WARNING: only ~${AVAIL_G}G free on disk. Batch may fail mid-run; free space if possible." >&2
+  echo "WARNING: only ~${AVAIL_G}G free on disk. Free space if possible." >&2
 fi
 
 LOG=$ROOT_OUT/batch_run.log
-echo "[batch-dense-parts] logging → $LOG"
 
-nohup python -m gaze_objects.cli batch --config configs/batch_sam3_dense_parts_hand.yaml \
-  >"$LOG" 2>&1 &
-PID=$!
-echo "$PID" > "$ROOT_OUT/batch_run.pid"
-echo "[batch-dense-parts] started pid=$PID"
-echo "[batch-dense-parts] monitor:  tail -f $LOG"
+# Already running?
+if [[ -f "$ROOT_OUT/batch_run.pid" ]]; then
+  old=$(cat "$ROOT_OUT/batch_run.pid" || true)
+  if [[ -n "${old:-}" ]] && ps -p "$old" >/dev/null 2>&1; then
+    echo "ERROR: batch already running as pid=$old — do not start a second job." >&2
+    echo "  check:  bash scripts/check_batch_dense_parts_hand.sh" >&2
+    exit 5
+  fi
+fi
+
+run_batch() {
+  # Append so resume keeps history across restarts
+  python -m gaze_objects.cli batch --config configs/batch_sam3_dense_parts_hand.yaml \
+    >>"$LOG" 2>&1
+}
+
+if command -v tmux >/dev/null 2>&1; then
+  if tmux has-session -t "$SESSION" 2>/dev/null; then
+    echo "ERROR: tmux session '$SESSION' already exists. Attach: tmux attach -t $SESSION" >&2
+    exit 5
+  fi
+  # Fresh log marker
+  {
+    echo ""
+    echo "======== batch start $(date -Is) ========"
+  } >>"$LOG"
+  tmux new-session -d -s "$SESSION" -c "$PWD" \
+    "export PYTHONPATH=src:\${PYTHONPATH:-}; export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True; python -m gaze_objects.cli batch --config configs/batch_sam3_dense_parts_hand.yaml >>$LOG 2>&1; echo EXIT=\$? >>$LOG; exec bash"
+  # Resolve python pid inside the session (best-effort)
+  sleep 2
+  PID=$(pgrep -f "gaze_objects.cli batch --config configs/batch_sam3_dense_parts_hand" | head -n 1 || true)
+  echo "${PID:-tmux}" >"$ROOT_OUT/batch_run.pid"
+  echo "[batch-dense-parts] started in tmux session: $SESSION  (pid≈${PID:-unknown})"
+  echo "[batch-dense-parts] DO NOT reboot if the screen freezes — SSH in instead."
+  echo "[batch-dense-parts] check:   bash scripts/check_batch_dense_parts_hand.sh"
+  echo "[batch-dense-parts] log:     tail -f $LOG"
+  echo "[batch-dense-parts] attach:  tmux attach -t $SESSION"
+else
+  {
+    echo ""
+    echo "======== batch start $(date -Is) ========"
+  } >>"$LOG"
+  nohup python -m gaze_objects.cli batch --config configs/batch_sam3_dense_parts_hand.yaml \
+    >>"$LOG" 2>&1 &
+  PID=$!
+  echo "$PID" >"$ROOT_OUT/batch_run.pid"
+  echo "[batch-dense-parts] tmux not found — started with nohup pid=$PID"
+  echo "[batch-dense-parts] Prefer: sudo apt install tmux   (next time)"
+  echo "[batch-dense-parts] check: bash scripts/check_batch_dense_parts_hand.sh"
+  echo "[batch-dense-parts] log:   tail -f $LOG"
+fi
+
 echo "[batch-dense-parts] when done:"
 echo "  python -m gaze_objects.cli aggregate-sequences --output-root $ROOT_OUT"
