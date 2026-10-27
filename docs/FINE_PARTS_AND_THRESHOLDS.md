@@ -58,17 +58,24 @@ score gates to use next — based on all past AM07 and corpus batch evidence.
 
 ## 4. Configs / commands
 
-**Dense corpus rebatch (stride 2, AG parts + hand/table/floor, sheets only):**
+**Dense corpus rebatch — recommended feasible (stride 4 + lean labels):**
 
 ```bash
-bash scripts/run_batch_dense_parts_hand.sh
-# → outputs/batch_sam3_dense_parts_hand/  (CSV only; masks discarded after assign)
+bash scripts/start_stable_dense_batch_fast.sh
+# → outputs/batch_sam3_dense_parts_hand_fast/
 python -m gaze_objects.cli aggregate-sequences \
-  --output-root outputs/batch_sam3_dense_parts_hand
+  --output-root outputs/batch_sam3_dense_parts_hand_fast
 ```
 
-Config: `configs/batch_sam3_dense_parts_hand.yaml` — `select.mode: all`, geometry on
-screwdriver/wrench only, SAM part prompts for AG, `prefer_smallest_containing`.
+~16 prompts (not 31), stride 4 (not 2) → ~**4×** lighter than the heavy stride-2 full set.
+Still denser than the old stride-8 lean batch. Geometry on screwdriver/wrench only.
+
+**Heavy variant (stride 2 × full AG part list) — often unfeasible on one 3080 Ti:**
+
+```bash
+bash scripts/start_stable_dense_batch.sh
+# → outputs/batch_sam3_dense_parts_hand/
+```
 
 **Object-level rebatch (reviewed thresholds, no parts):**
 
