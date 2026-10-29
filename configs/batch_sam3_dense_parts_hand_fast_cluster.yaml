@@ -1,0 +1,105 @@
+# bwUniCluster 3 — feasible SAM mask batch (sheets only).
+# EDIT data_dir / output_root to your Lustre workspace before sbatch.
+#
+# See docs/BWUNICLUSTER3_SAM_BATCH.md
+
+data_dir: "/pfs/work9/CHANGE_ME/gaze_sam3/Tobii_Data"
+output_root: "/pfs/work9/CHANGE_ME/gaze_sam3/outputs/batch_sam3_dense_parts_hand_fast"
+
+stages:
+  - detect
+  - assign
+  - sequences
+
+skip_if_done: true
+continue_on_error: true
+discard_masks_after_assign: true
+
+recordings:
+  - id: AM07AM07_01
+    tsv: AM07AM07_01_data_export.tsv
+    video: AM07AM07_01_scenevideo.mp4
+
+select:
+  mode: all
+
+defaults:
+  timestamp_unit: milliseconds
+  timestamp_unit_status: verified
+  video_start_recording_s: 0.0
+  time_mapping_status: verified
+  max_abs_residual_s: 0.05
+  compute_hash: false
+
+  clip:
+    mode: full
+
+  frame_selection:
+    mode: unique_matched_frames
+    stride: 4
+
+  detector:
+    backend: sam3
+    device: cuda
+    label_map_mode: fine
+    resolution: 1008
+    enable_segmentation: true
+    keep_masks: true
+    min_free_vram_gib: 20.0
+    score_threshold: 0.50
+    score_threshold_by_concept:
+      angle grinder: 0.18
+      power tool: 0.25
+      grinder body: 0.28
+      side handle: 0.28
+      main handle: 0.28
+      grinder guard: 0.30
+      battery pack: 0.32
+      grinding disc: 0.35
+      screw: 0.50
+      instruction manual: 0.55
+      screwdriver: 0.45
+      wrench: 0.48
+      storage box: 0.42
+      hand: 0.40
+      table: 0.35
+      floor: 0.35
+    min_box_area_frac_by_concept:
+      angle grinder: 0.008
+      power tool: 0.008
+      grinder body: 0.002
+      side handle: 0.001
+      main handle: 0.001
+      grinder guard: 0.001
+      battery pack: 0.002
+      grinding disc: 0.001
+      screw: 0.0004
+      hand: 0.002
+      table: 0.05
+      floor: 0.05
+    require_parent_overlap_for_parts: true
+    parts_parent_expand_px: 48.0
+    load_from_hf: true
+    text_concepts_file: "metaSAM3/prompts_dense_parts_hand_fast.txt"
+    class_map_file: "configs/class_definitions.yaml"
+
+  assignment:
+    hit_test: mask
+    score_threshold: 0.18
+    overlap_policy: ambiguous
+    require_normalized_label: false
+    prefer_nested_parent: false
+    prefer_smallest_containing: true
+    label_map_mode: fine
+    part_geometry: true
+    part_objects:
+      - screwdriver
+      - phillips screwdriver
+      - flathead screwdriver
+      - wrench
+
+  sequences:
+    movement_type: Fixation
+    label_policy: part_majority
+    min_assigned_samples: 1
+    min_label_fraction: 0.40
