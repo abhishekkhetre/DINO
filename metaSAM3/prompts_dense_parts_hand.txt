@@ -1,0 +1,43 @@
+# Dense full-corpus prompts — all study-relevant kit + AG fine parts.
+# Sheets only (stride 2). One line = one SAM3 forward pass per frame.
+#
+# NO bare "grinder" — floods low-score FPs.
+# NO pliers/hammer — not in kit / sheet pollution.
+# AG parts kept only when overlapping a parent angle grinder (parent filter).
+# Screws ON with parent filter (assembly-relevant; expect some metal FPs).
+#
+# --- Whole angle grinder (recall synonyms) ---
+angle grinder
+electric grinder
+cordless grinder
+disk grinder
+power tool
+# --- AG fine parts (SAM text; not geometry) ---
+grinder body
+motor housing
+gear housing
+side handle
+main handle
+grinder guard
+battery pack
+grinding disc
+power switch
+trigger
+spindle lock
+clamping flange
+flange nut
+screw
+machine screw
+bolt
+# --- Kit / packaging ---
+instruction manual
+storage box
+screwdriver
+phillips screwdriver
+wrench
+hex key
+# --- Scene context (recover unused fixations) ---
+hand
+table
+floor
+workbench
