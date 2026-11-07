@@ -1,0 +1,11 @@
+finding_id,pattern,value,unit,n_context,keep_tier,careful_inference,overclaim_to_avoid
+P1,angle_grinder_dominance,~50,pct_equal_participant_labelled_time,17 experts + 20 non-experts,A,Grinder is task visual anchor,Expertise equals looking at AG
+P2,grinder_box_routes_prevalence,36/37,people_with_motif,almost all participants,A,Kit interaction is central to observed workflow,Everyone follows identical procedure
+P3,screwdriver_share_start_middle_end,14.2 | 18.8 | 13.2,pct_labelled_thirds,equal thirds of labelled span,B,Mid-span tool-use phase hypothesis,Named assembly/disassembly step
+P4,storage_box_first_labelled_object,52.6,pct_recordings,corpus with sequences,B,Often marks kit-open boundary of label stream,Confirmed chronological stage
+P5,storage_box_last_labelled_object,45.0,pct_recordings,corpus with sequences,B,Often marks kit-close boundary of label stream,Confirmed chronological stage
+P6,median_detailed_episode_duration,0.46,seconds,detailed episodes,B,Attention episodes are brief,Long look equals confusion
+P7,episodes_under_1s,73,pct,detailed episodes,B,Short attention units dominate,Ignore longer looks
+P8,within_tool_detailed_transitions,32,pct,detailed transitions,B,Much detail is within-tool not tool switch,Every part change is a new action
+P9,unlabelled_gaps_between_neighbours,84,pct_neighbouring_detailed_episodes,corpus,A,Transitions are partial traces,Continuous eye-path matrices
+P10,recordings_with_logged_timing_bounds,92,recordings,12 people / only 2 experts,C,Too thin for stage models,Use as main stage evidence
