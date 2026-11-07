@@ -1,0 +1,29 @@
+# Feasible workstation prompts — stride 4 batch.
+# One line = one SAM3 forward pass per frame. Keep lean.
+#
+# Dropped vs full set (still covered by label_map synonyms if SAM returns them):
+#   cordless/disk grinder, motor/gear housing, switch/trigger/spindle/flange,
+#   machine screw/bolt as extra prompts, phillips screwdriver, hex key, workbench
+#
+# NO bare "grinder". Parent-overlap filter still drops orphan AG parts/screws.
+#
+# --- Whole AG (2 recall phrases; rest are synonyms in label_map only) ---
+angle grinder
+power tool
+# --- Main AG parts ---
+grinder body
+side handle
+main handle
+grinder guard
+battery pack
+grinding disc
+screw
+# --- Kit ---
+instruction manual
+storage box
+screwdriver
+wrench
+# --- Scene (recover unused fixations) ---
+hand
+table
+floor

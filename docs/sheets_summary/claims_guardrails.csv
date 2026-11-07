@@ -1,0 +1,6 @@
+topic,can_claim,cannot_claim
+expertise_separation,Group-level differences on manual share (and secondary screwdriver / grinder-box motifs),High-accuracy individual expertise classifier; manual avoidance equals better performance
+process_structure,Coarse temporal structure of labelled attention (thirds; box first/last; motifs),True named assembly/disassembly step recognition without stage annotations
+object_attention,Object time budgets and gaze-order strings on the labelled subset (~20% of fixations),That unlabelled fixations are looking at nothing; continuous path claims across unlabelled gaps
+fine_parts,Within-tool structure exists (e.g. tip vs handle; AG body/side-handle-zone) as detector output,Anatomically verified part labels without manual validation
+scientific_contribution,Scalable attended-object layer for CRC/psychology analysis,That object detection alone is the research result

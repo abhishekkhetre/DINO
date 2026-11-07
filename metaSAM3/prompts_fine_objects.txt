@@ -1,0 +1,12 @@
+# Fine object concepts for full-corpus mask batch (CSV sequences).
+# Keep lean for 12GB GPUs. One phrase = one SAM3 forward pass.
+#
+# NO bare "grinder" — flooded low-score FPs on AM07 granular run.
+# NO pliers / hex key / hammer / grinding disc — not in kit / sheet FPs.
+angle grinder
+electric grinder
+power tool
+instruction manual
+storage box
+screwdriver
+wrench

@@ -24,4 +24,5 @@ categories:
 
 notes:
   - Detector boxes describe visible objects; reference AOIs may be broader regions.
-  - Hands / background / unlisted parts: unresolved; keep uncertainty statuses.
+  - Fine dense batch also emits hand / table / floor and AG part labels (SAM text).
+  - Geometry tip/handle applies only to elongated hand tools, not angle grinder.

@@ -1,4 +1,4 @@
-"""Map detector raw labels/phrases to study category IDs."""
+"""Map detector raw labels/phrases to study category IDs or fine SAM3 labels."""
 
 from __future__ import annotations
 
@@ -30,13 +30,20 @@ DEFAULT_COCO_TO_STUDY = {
     "hair drier": None,
 }
 
-# Grounding-DINO / prompt phrase heuristics (provisional).
+# Grounding-DINO / prompt phrase heuristics (provisional) → Tobii study AOIs.
 DEFAULT_PHRASE_TO_STUDY = {
     "angle grinder": "Angle Grinder",
     "grinder": "Angle Grinder",
     "electric grinder": "Angle Grinder",
     "disk grinder": "Angle Grinder",
     "disc grinder": "Angle Grinder",
+    "cordless grinder": "Angle Grinder",
+    "power tool": "Angle Grinder",
+    "angle grinder disc": "Angle Grinder",
+    "angle grinder handle": "Angle Grinder",
+    "angle grinder guard": "Angle Grinder",
+    "grinder disc": "Angle Grinder",
+    "grinder handle": "Angle Grinder",
     "instruction manual": "Manual",
     "manual": "Manual",
     "booklet": "Manual",
@@ -56,6 +63,132 @@ DEFAULT_PHRASE_TO_STUDY = {
     "pliers": "Tools",
 }
 
+# Fine-grained SAM3 approach: keep object-level labels (not Tobii AOI collapse).
+# Synonyms only → stable canonical names for sequences.
+# Part / appearance phrases map to the whole AG — egocentric frames often
+# miss the bare "angle grinder" prompt when hands occlude the body.
+FINE_PHRASE_TO_CANONICAL = {
+    # whole device (+ egocentric / appearance synonyms)
+    "angle grinder": "angle grinder",
+    "grinder": "angle grinder",
+    "electric grinder": "angle grinder",
+    "disk grinder": "angle grinder",
+    "disc grinder": "angle grinder",
+    "cordless grinder": "angle grinder",
+    "battery grinder": "angle grinder",
+    "handheld grinder": "angle grinder",
+    "power tool": "angle grinder",  # kit's only powered hand tool
+    # AG body / housings
+    "grinder body": "grinder body",
+    "angle grinder body": "grinder body",
+    "tool body": "grinder body",
+    "motor housing": "motor housing",
+    "grinder motor": "motor housing",
+    "motor casing": "motor housing",
+    "gear housing": "gear housing",
+    "gearbox": "gear housing",
+    "gear box": "gear housing",
+    # Handles
+    "side handle": "side handle",
+    "grinder side handle": "side handle",
+    "angle grinder handle": "side handle",
+    "grinder handle": "side handle",
+    "auxiliary handle": "side handle",
+    "anti vibration handle": "side handle",
+    "main handle": "main handle",
+    "rear handle": "main handle",
+    "grinder main handle": "main handle",
+    "grinder rear handle": "main handle",
+    "pistol grip": "main handle",
+    # Guard / battery / disc
+    "grinder guard": "grinder guard",
+    "angle grinder guard": "grinder guard",
+    "safety guard": "grinder guard",
+    "wheel guard": "grinder guard",
+    "protective guard": "grinder guard",
+    "battery pack": "battery pack",
+    "grinder battery": "battery pack",
+    "battery": "battery pack",
+    "li-ion battery": "battery pack",
+    "grinding disc": "grinding disc",
+    "cutting disc": "grinding disc",
+    "abrasive disc": "grinding disc",
+    "cutting wheel": "grinding disc",
+    "grinding wheel": "grinding disc",
+    "angle grinder disc": "grinding disc",
+    "grinder disc": "grinding disc",
+    # Controls / spindle hardware
+    "power switch": "power switch",
+    "on off switch": "power switch",
+    "slider switch": "power switch",
+    "trigger": "trigger",
+    "paddle switch": "trigger",
+    "spindle lock": "spindle lock",
+    "spindle lock button": "spindle lock",
+    "clamping flange": "clamping flange",
+    "flange": "clamping flange",
+    "inner flange": "clamping flange",
+    "outer flange": "clamping flange",
+    "flange nut": "flange nut",
+    "lock nut": "flange nut",
+    "clamp nut": "flange nut",
+    # Fasteners (parent-filtered when on AG)
+    "screw": "screw",
+    "machine screw": "screw",
+    "bolt": "screw",
+    "hex bolt": "screw",
+    "cap screw": "screw",
+    # manual
+    "instruction manual": "instruction manual",
+    "manual": "instruction manual",
+    "booklet": "instruction manual",
+    "instructions": "instruction manual",
+    "user manual": "instruction manual",
+    # containers
+    "storage box": "storage box",
+    "toolbox": "storage box",
+    "tool box": "storage box",
+    "carrying case": "storage box",
+    "box": "storage box",
+    "boxes": "storage box",
+    # hand tools
+    "screwdriver": "screwdriver",
+    "phillips screwdriver": "phillips screwdriver",
+    "philips screwdriver": "phillips screwdriver",
+    "flathead screwdriver": "flathead screwdriver",
+    "slotted screwdriver": "flathead screwdriver",
+    "wrench": "wrench",
+    "spanner": "wrench",
+    "open end wrench": "wrench",
+    "combination wrench": "wrench",
+    "allen key": "hex key",
+    "hex key": "hex key",
+    "hex wrench": "hex key",
+    "allen wrench": "hex key",
+    "pliers": "pliers",
+    "needle nose pliers": "pliers",
+    "locking pliers": "pliers",
+    "hammer": "hammer",
+    # Scene context — recover fixations that miss kit objects
+    "hand": "hand",
+    "hands": "hand",
+    "human hand": "hand",
+    "gloved hand": "hand",
+    "finger": "hand",
+    "fingers": "hand",
+    "table": "table",
+    "workbench": "table",
+    "work bench": "table",
+    "desk": "table",
+    "tabletop": "table",
+    "work surface": "table",
+    "table / floor": "table/floor",
+    "table/floor": "table/floor",
+    "floor": "floor",
+    "ground": "floor",
+    "workshop floor": "floor",
+}
+
 
 def load_class_definitions(path: str | Path | None) -> dict[str, Any]:
     if path is None:
@@ -67,17 +200,45 @@ def load_class_definitions(path: str | Path | None) -> dict[str, Any]:
         return yaml.safe_load(handle) or {}
 
 
-def normalize_label(raw_label: str, class_defs: dict[str, Any] | None = None) -> str | None:
-    """
-    Map a raw detector label to a study AOI-style name when possible.
+def normalize_fine_label(raw_label: str) -> str | None:
+    """Map a SAM3 concept to a stable fine object name (not Tobii AOI)."""
+    if raw_label is None:
+        return None
+    text = str(raw_label).strip()
+    if not text:
+        return None
+    lower = text.lower()
+    if lower in FINE_PHRASE_TO_CANONICAL:
+        return FINE_PHRASE_TO_CANONICAL[lower]
+    for phrase, canon in FINE_PHRASE_TO_CANONICAL.items():
+        if phrase in lower:
+            return canon
+    # Unknown concept: keep cleaned raw text so sequences still work.
+    return lower
 
-    Returns None if no explicit mapping exists (keep raw_label separately).
+
+def normalize_label(
+    raw_label: str,
+    class_defs: dict[str, Any] | None = None,
+    *,
+    mode: str = "study_aoi",
+) -> str | None:
+    """
+    Map a raw detector label.
+
+    Modes:
+    - ``study_aoi`` (default): map to Tobii-style AOIs (Angle Grinder / Manual / …).
+    - ``fine`` / ``sam3`` / ``identity``: keep fine object labels for gaze-order analysis.
     """
     if raw_label is None:
         return None
     text = str(raw_label).strip()
     if not text:
         return None
+
+    mode_norm = str(mode or "study_aoi").strip().lower()
+    if mode_norm in {"fine", "sam3", "identity", "raw"}:
+        return normalize_fine_label(text)
 
     known = {"Angle Grinder", "Boxes", "Manual", "Tools"}
     if text in known:

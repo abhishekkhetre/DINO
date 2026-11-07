@@ -1,0 +1,146 @@
+# Full Tobii corpus — dense stride-2 MASK sheets (NO overlay video).
+# All study-relevant AG fine parts + kit + hand/table/floor.
+# Geometry tip/handle/shaft ONLY on elongated hand tools (not angle grinder).
+#
+# Start:
+#   bash scripts/run_batch_dense_parts_hand.sh
+# After:
+#   python -m gaze_objects.cli aggregate-sequences --output-root outputs/batch_sam3_dense_parts_hand
+#
+# Disk: detection_masks.npz deleted after assign.
+# GPU: SAM3 unload + CUDA cache clear after every recording.
+
+data_dir: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data"
+output_root: "outputs/batch_sam3_dense_parts_hand"
+
+stages:
+  - detect
+  - assign
+  - sequences
+
+skip_if_done: true
+continue_on_error: true
+discard_masks_after_assign: true
+
+recordings:
+  - id: AM07AM07_01
+    tsv: AM07AM07_01_data_export.tsv
+    video: AM07AM07_01_scenevideo.mp4
+
+select:
+  mode: all
+
+defaults:
+  timestamp_unit: milliseconds
+  timestamp_unit_status: verified
+  video_start_recording_s: 0.0
+  time_mapping_status: verified
+  max_abs_residual_s: 0.05
+  compute_hash: false
+
+  clip:
+    mode: full
+
+  frame_selection:
+    mode: unique_matched_frames
+    stride: 2
+
+  detector:
+    backend: sam3
+    device: cuda
+    label_map_mode: fine
+    resolution: 1008
+    enable_segmentation: true
+    keep_masks: true
+    min_free_vram_gib: 5.5
+    score_threshold: 0.50
+    score_threshold_by_concept:
+      # Whole AG
+      angle grinder: 0.18
+      electric grinder: 0.28
+      cordless grinder: 0.28
+      disk grinder: 0.28
+      power tool: 0.25
+      # AG fine parts (parent-overlap filter drops orphans)
+      grinder body: 0.28
+      motor housing: 0.30
+      gear housing: 0.30
+      side handle: 0.28
+      main handle: 0.28
+      grinder guard: 0.30
+      battery pack: 0.32
+      grinding disc: 0.35
+      power switch: 0.35
+      trigger: 0.35
+      spindle lock: 0.38
+      clamping flange: 0.38
+      flange nut: 0.40
+      screw: 0.50
+      machine screw: 0.50
+      bolt: 0.50
+      # Kit
+      instruction manual: 0.55
+      screwdriver: 0.45
+      phillips screwdriver: 0.48
+      wrench: 0.48
+      hex key: 0.50
+      storage box: 0.42
+      # Scene
+      hand: 0.40
+      table: 0.35
+      floor: 0.35
+      workbench: 0.35
+    min_box_area_frac_by_concept:
+      angle grinder: 0.008
+      electric grinder: 0.008
+      cordless grinder: 0.008
+      disk grinder: 0.008
+      power tool: 0.008
+      grinder body: 0.002
+      motor housing: 0.002
+      gear housing: 0.002
+      side handle: 0.001
+      main handle: 0.001
+      grinder guard: 0.001
+      battery pack: 0.002
+      grinding disc: 0.001
+      power switch: 0.0004
+      trigger: 0.0004
+      spindle lock: 0.0003
+      clamping flange: 0.0004
+      flange nut: 0.0003
+      screw: 0.0004
+      machine screw: 0.0004
+      bolt: 0.0004
+      hand: 0.002
+      table: 0.05
+      floor: 0.05
+      workbench: 0.05
+      hex key: 0.0005
+    require_parent_overlap_for_parts: true
+    parts_parent_expand_px: 48.0
+    load_from_hf: true
+    text_concepts_file: "metaSAM3/prompts_dense_parts_hand.txt"
+    class_map_file: "configs/class_definitions.yaml"
+
+  assignment:
+    hit_test: mask
+    score_threshold: 0.18
+    overlap_policy: ambiguous
+    require_normalized_label: false
+    prefer_nested_parent: false
+    prefer_smallest_containing: true
+    label_map_mode: fine
+    part_geometry: true
+    part_objects:
+      - screwdriver
+      - phillips screwdriver
+      - flathead screwdriver
+      - wrench
+      - hex key
+
+  sequences:
+    movement_type: Fixation
+    label_policy: part_majority
+    min_assigned_samples: 1
+    min_label_fraction: 0.40

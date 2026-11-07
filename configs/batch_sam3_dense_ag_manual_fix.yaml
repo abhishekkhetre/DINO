@@ -1,0 +1,101 @@
+# Re-detect only AG→Manual heavy outliers (Tools already excluded from scoring).
+# Uses instruction manual threshold 0.70. Same output_root as full corpus so
+# QC merges; delete per-id detect/assign/eval/seq before running.
+
+data_dir: "/home/ifab-agiprobotw-0001/KHETRE/Tobii_Data"
+output_root: "outputs/batch_sam3_dense"
+
+stages:
+  - detect
+  - assign
+  - evaluate
+  - sequences
+
+skip_if_done: false
+continue_on_error: true
+
+recordings:
+  - id: KJ03JM25_06
+    tsv: KJ03JM25_06_data_export.tsv
+    video: KJ03JM25_06_scenevideo.mp4
+  - id: ER10WE06_06
+    tsv: ER10WE06_06_data_export.tsv
+    video: ER10WE06_06_scenevideo.mp4
+  - id: LE07UF1_06
+    tsv: LE07UF1_06_data_export.tsv
+    video: LE07UF1_06_scenevideo.mp4
+  - id: LE07UF1_01
+    tsv: LE07UF1_01_data_export.tsv
+    video: LE07UF1_01_scenevideo.mp4
+  - id: KI05KO01_02
+    tsv: KI05KO01_02_data_export.tsv
+    video: KI05KO01_02_scenevideo.mp4
+  - id: ER08ER23_03
+    tsv: ER08ER23_03_data_export.tsv
+    video: ER08ER23_03_scenevideo.mp4
+  - id: LE07UF1_05
+    tsv: LE07UF1_05_data_export.tsv
+    video: LE07UF1_05_scenevideo.mp4
+  - id: KJ03JM25_08
+    tsv: KJ03JM25_08_data_export.tsv
+    video: KJ03JM25_08_scenevideo.mp4
+  - id: AL07EJ17_05
+    tsv: AL07EJ17_05_data_export.tsv
+    video: AL07EJ17_05_scenevideo.mp4
+  - id: LE07UF1_04
+    tsv: LE07UF1_04_data_export.tsv
+    video: LE07UF1_04_scenevideo.mp4
+  - id: LE07UF1_08
+    tsv: LE07UF1_08_data_export.tsv
+    video: LE07UF1_08_scenevideo.mp4
+
+# No select.first_n — only the explicit list above.
+
+defaults:
+  timestamp_unit: milliseconds
+  timestamp_unit_status: verified
+  video_start_recording_s: 0.0
+  time_mapping_status: verified
+  max_abs_residual_s: 0.05
+  compute_hash: true
+
+  clip:
+    recording_start_s: 30.0
+    recording_end_s: 60.0
+
+  frame_selection:
+    mode: unique_matched_frames
+    stride: 2
+    max_frames: 150
+
+  detector:
+    backend: sam3
+    device: cuda
+    score_threshold: 0.55
+    score_threshold_by_concept:
+      angle grinder: 0.25
+      grinder: 0.25
+      electric grinder: 0.25
+      disk grinder: 0.25
+      instruction manual: 0.70
+    load_from_hf: true
+    text_concepts_file: "metaSAM3/prompts_assembly_aoi.txt"
+    class_map_file: "configs/class_definitions.yaml"
+    resolution: 1008
+
+  assignment:
+    score_threshold: 0.25
+    overlap_policy: ambiguous
+    require_normalized_label: false
+    prefer_nested_parent: true
+    nested_parent_expand_px: 80
+
+  evaluation:
+    ignore_reference_labels:
+      - Tools
+
+  sequences:
+    movement_type: Fixation
+    label_policy: assigned_majority
+    min_assigned_samples: 2
+    min_label_fraction: 0.5
