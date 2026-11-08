@@ -458,6 +458,51 @@ def cmd_aggregate_sequences(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_map_manual_steps(args: argparse.Namespace) -> int:
+    from gaze_objects.manual_steps import run_manual_step_mapping
+
+    summary = run_manual_step_mapping(
+        args.sequences,
+        args.out,
+        model_config=args.model,
+        participants_csv=args.participants,
+        annotations_csv=args.annotations,
+        em_iterations=args.em_iterations,
+        label_column=args.label_column,
+        panels_root=args.panels_root,
+    )
+    print(json.dumps(summary, indent=2, default=str))
+    return 0
+
+
+def cmd_predict_step(args: argparse.Namespace) -> int:
+    from gaze_objects.manual_steps import build_step_model, load_manual_config, predict_from_sequence
+
+    config = load_manual_config(args.model)
+    model = build_step_model(config, args.task)
+    labels = [p.strip() for p in args.sequence.split(">") if p.strip()]
+    table = predict_from_sequence(model, labels, config["symbols"])
+    print(table.to_string(index=False, float_format=lambda v: f"{v:.3f}"))
+    return 0
+
+
+def cmd_manual_panels(args: argparse.Namespace) -> int:
+    from gaze_objects.manual_panels import run_manual_panels
+    from gaze_objects.manual_steps import load_manual_config
+
+    config = load_manual_config(args.model)
+    summary = run_manual_panels(
+        args.output_root,
+        args.data_dir,
+        args.pages,
+        config["manual_panels"],
+        label_column=args.label_column,
+        recordings=args.recording or None,
+    )
+    print(json.dumps(summary, indent=2, default=str))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="gaze_objects", description="Gaze-to-object pipeline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -577,6 +622,42 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_agg.add_argument("--output-root", required=True)
     p_agg.set_defaults(func=cmd_aggregate_sequences)
+
+    p_map = sub.add_parser(
+        "map-manual-steps",
+        help="Align corpus attention sequences to instruction-manual steps (D1-D8 / A1-A8)",
+    )
+    p_map.add_argument("--sequences", required=True, help="corpus_attention_sequences.csv")
+    p_map.add_argument("--out", required=True)
+    p_map.add_argument("--model", default="configs/manual_steps.yaml")
+    p_map.add_argument("--participants", default=None, help="CSV: participant_id, expertise")
+    p_map.add_argument("--annotations", default=None, help="CSV: recording_id, step_id, start_s, end_s")
+    p_map.add_argument("--em-iterations", type=int, default=5)
+    p_map.add_argument("--label-column", default="attended_label")
+    p_map.add_argument(
+        "--panels-root",
+        default=None,
+        help="Batch output root containing <recording>/manual_panels.csv",
+    )
+    p_map.set_defaults(func=cmd_map_manual_steps)
+
+    p_pred = sub.add_parser("predict-step", help="Which manual step does a label sequence suggest?")
+    p_pred.add_argument("--task", required=True, choices=["disassembly", "assembly"])
+    p_pred.add_argument("--sequence", required=True, help="'screwdriver.tip > angle grinder > storage box'")
+    p_pred.add_argument("--model", default="configs/manual_steps.yaml")
+    p_pred.set_defaults(func=cmd_predict_step)
+
+    p_pan = sub.add_parser(
+        "manual-panels",
+        help="Gaze on the printed manual -> which Schritt panel is read (needs video)",
+    )
+    p_pan.add_argument("--output-root", required=True)
+    p_pan.add_argument("--data-dir", required=True)
+    p_pan.add_argument("--pages", default="docs/manual/pages")
+    p_pan.add_argument("--model", default="configs/manual_steps.yaml")
+    p_pan.add_argument("--label-column", default="attended_label")
+    p_pan.add_argument("--recording", action="append", default=[])
+    p_pan.set_defaults(func=cmd_manual_panels)
 
     return parser
 
