@@ -1,0 +1,15 @@
+group,transition,kind,from_share,to_share,relative_change
+expert,D1->A1 (rec 1->2),within pair: disassembly -> its assembly,0.115,0.092,-0.20000000000000007
+expert,A1->D2 (rec 2->3),between pairs: assembly -> next disassembly,0.092,0.048,-0.4782608695652174
+expert,D2->A2 (rec 3->4),within pair: disassembly -> its assembly,0.048,0.029,-0.39583333333333337
+expert,A2->D3 (rec 4->5),between pairs: assembly -> next disassembly,0.029,0.075,1.5862068965517238
+expert,D3->A3 (rec 5->6),within pair: disassembly -> its assembly,0.075,0.039,-0.48
+expert,A3->D4 (rec 6->7),between pairs: assembly -> next disassembly,0.039,0.024,-0.3846153846153846
+expert,D4->A4 (rec 7->8),within pair: disassembly -> its assembly,0.024,0.033,0.375
+non-expert,D1->A1 (rec 1->2),within pair: disassembly -> its assembly,0.52,0.368,-0.2923076923076924
+non-expert,A1->D2 (rec 2->3),between pairs: assembly -> next disassembly,0.368,0.372,0.010869565217391353
+non-expert,D2->A2 (rec 3->4),within pair: disassembly -> its assembly,0.372,0.22,-0.4086021505376344
+non-expert,A2->D3 (rec 4->5),between pairs: assembly -> next disassembly,0.22,0.206,-0.06363636363636371
+non-expert,D3->A3 (rec 5->6),within pair: disassembly -> its assembly,0.206,0.164,-0.20388349514563098
+non-expert,A3->D4 (rec 6->7),between pairs: assembly -> next disassembly,0.164,0.144,-0.12195121951219523
+non-expert,D4->A4 (rec 7->8),within pair: disassembly -> its assembly,0.144,0.1,-0.30555555555555547
