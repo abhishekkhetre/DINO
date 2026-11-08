@@ -1,0 +1,17 @@
+task,step_id,schritt,manual_page,phase,action,tools,parts,box,reverse_of,distinguishing_gaze_cue
+disassembly,D1,1,1,handle,Unscrew the side handle by hand; put it (with washer) in Box 1,hand,side handle,Box 1 (red),A8,"side_handle, hand, box"
+disassembly,D2,2,1,unscrew_block,Green-handled screwdriver: remove screw(s) of the lever/lock bracket at the gear head; bracket + small screws to Box 2,green screwdriver,"lever bracket, small screws",Box 2 (red),A7,"screwdriver, screw, box"
+disassembly,D3,3,1,unscrew_block,Green-handled screwdriver: remove gear-head flange screws (circled); gear-head flange/bevel gear + 2 screws to Box 3,green screwdriver,"gear-head flange, bevel gear, screws",Box 3 (red),A6,"screwdriver, screw, box"
+disassembly,D4,4,1,unscrew_block,Red-handled screwdriver: loosen housing-ring screws while holding the ring (circled),"red screwdriver, hand","housing ring, long screws",none shown (parts later sorted into Box 4),A4,"screwdriver, screw, hand"
+disassembly,D5,5,1,unscrew_block,Loosen the side screw near the rear (circled); tool not pictured,unknown,side screw,none shown,A5,"screwdriver, screw"
+disassembly,D6,6,2,wrench,Flat wrench/spanner inside the gear housing (green arrow): release internal fastener,wrench,internal nut,none shown,A3,wrench
+disassembly,D7,7,2,extract,Pull the armature with white gear out of the housing by hand,hand,"armature, white gear, housing",none shown,A1,"inner_part, hand"
+disassembly,D8,8,2,sort,"Sort parts: housing ring, small gear, long screws, nut -> Box 4 (red); gear housing + armature -> Box 5 (blue)",hand,"housing ring, bevel gear, long screws, armature, gear housing",Box 4 (red) + Box 5 (blue),,"box, grinder, inner_part, hand"
+assembly,A1,1,3,insert,"Insert the armature with white gear into the housing (circled), parts from Box 5 (blue)",hand,"armature, white gear, housing",Box 5 (blue),D7,"inner_part, hand, box"
+assembly,A2,2,3,insert,Turn the internal gear by hand to seat it,hand,white gear,none shown,,"hand, inner_part"
+assembly,A3,3,3,wrench,Wrench/spanner inside the gear housing: tighten internal fastener,wrench,internal nut,none shown,D6,wrench
+assembly,A4,4,3,screw_block,Red-handled screwdriver: fit housing ring and tighten its screws (Box 4 parts),"red screwdriver, hand","housing ring, long screws",Box 4 (red),D4,"screwdriver, screw, hand, box"
+assembly,A5,5,3,screw_block,Tighten the side screw near the rear; tool not pictured,unknown,side screw,none shown,D5,"screwdriver, screw"
+assembly,A6,6,4,screw_block,Green-handled screwdriver: refit gear-head flange and tighten screws (Box 3 parts),green screwdriver,"gear-head flange, screws",Box 3 (red),D3,"screwdriver, screw, box"
+assembly,A7,7,4,screw_block,Refit lever/lock bracket with spring and screw (circled; Box 2 parts); screwdriver not pictured,unknown,"lever bracket, spring, screw",Box 2 (red),D2,"screwdriver, screw, hand, box"
+assembly,A8,8,4,handle,Screw the side handle in by hand (Box 1),hand,side handle,Box 1 (red),D1,"side_handle, hand, box"

@@ -1,0 +1,3 @@
+group,share_recording_1,share_recording_8,share_recordings_9_10_mean,spearman_order_vs_share_rec1_8,spearman_order_vs_share_rec1_10,decay_per_recording_rec1_8,half_life_recordings_rec1_8,drop_rec8_to_rec9_fold,non_expert_reaches_expert_rec1_level_at
+expert,0.115,0.033,0.006,-0.7619047619047621,-0.8787878787878788,0.16483291335901595,3.8481780251510984,4.714285714285714,8
+non-expert,0.52,0.1,0.004,-0.9761904761904763,-0.9878787878787878,0.20010222126481914,3.1045059020727708,20.0,8

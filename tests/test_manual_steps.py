@@ -176,3 +176,20 @@ def test_run_manual_step_mapping_end_to_end(tmp_path):
     assert summary["annotation_evaluation"]["episode_accuracy_offline"] >= 0.7
     episodes = pd.read_csv(out / "step_episode_map.csv")
     assert {"online_step_id", "online_step_prob", "step_confidence", "p_D1"} <= set(episodes.columns)
+    signature = pd.read_csv(out / "direction_signature.csv")
+    assert {"T>W>S", "S>W>T", "unscrew_vs_fasten_asymmetry"} <= set(signature.columns)
+
+
+def test_direction_signature_separates_reversed_routes():
+    from gaze_objects.manual_steps import _auc, direction_signature
+
+    rows = []
+    for i in range(4):
+        dis = ["TOOL", "WORKPIECE", "STORAGE"] * 3
+        asm = ["STORAGE", "WORKPIECE", "TOOL"] * 3
+        for task, roles in (("disassembly", dis), ("assembly", asm)):
+            for r in roles:
+                rows.append({"recording_id": f"P{i}_{task}", "task": task, "role": r})
+    sig = direction_signature(pd.DataFrame(rows))
+    auc = _auc(sig["unscrew_vs_fasten_asymmetry"].to_numpy(), (sig["task"] == "disassembly").to_numpy())
+    assert auc == 1.0

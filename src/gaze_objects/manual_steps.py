@@ -832,6 +832,42 @@ def _motifs(ep: pd.DataFrame, index: pd.DataFrame, n: int = 3, top: int = 15) ->
     return table.groupby(["task", "step_id", "level"], sort=False).head(top).reset_index(drop=True)
 
 
+ROLE_LETTER = {"WORKPIECE": "W", "STORAGE": "S", "TOOL": "T", "CONSULT": "C", "HAND": "H", "CONTEXT": "X"}
+SIGNATURE_MOTIFS = ["T>W>S", "S>W>T", "W>S>W", "S>W>S", "W>S>C", "W>T>W"]
+
+
+def direction_signature(episodes: pd.DataFrame) -> pd.DataFrame:
+    """Per-recording role-trigram counts and the unscrew/fasten asymmetry index.
+
+    Disassembly is the manual read forwards (unscrew -> remove -> deposit,
+    T>W>S); assembly reverses it (fetch -> place -> fasten, S>W>T).
+    asymmetry = (T>W>S - S>W>T) / (T>W>S + S>W>T): positive = disassembly-like.
+    """
+    rows = []
+    for rid, rec in episodes.groupby("recording_id", sort=False):
+        roles = [ROLE_LETTER.get(r, "X") for r in rec["role"]]
+        roles = [r for r in roles if r in "WSTC"]
+        collapsed = [r for i, r in enumerate(roles) if i == 0 or r != roles[i - 1]]
+        grams = [">".join(collapsed[i : i + 3]) for i in range(len(collapsed) - 2)]
+        row: dict[str, Any] = {"recording_id": rid, "task": rec["task"].iloc[0], "n_role_trigrams": len(grams)}
+        for motif in SIGNATURE_MOTIFS:
+            row[motif] = grams.count(motif)
+        a, b = row["T>W>S"], row["S>W>T"]
+        row["unscrew_vs_fasten_asymmetry"] = (a - b) / (a + b) if a + b else np.nan
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def _auc(scores: np.ndarray, positive: np.ndarray) -> float:
+    """Rank AUC of `scores` for `positive` (ties count half)."""
+    pos, neg = scores[positive], scores[~positive]
+    if len(pos) == 0 or len(neg) == 0:
+        return float("nan")
+    greater = (pos[:, None] > neg[None, :]).sum()
+    ties = (pos[:, None] == neg[None, :]).sum()
+    return float((greater + 0.5 * ties) / (len(pos) * len(neg)))
+
+
 # ---------------------------------------------------------------------------
 # Group summaries
 # ---------------------------------------------------------------------------
@@ -1170,6 +1206,15 @@ def run_manual_step_mapping(
     _motifs(decoded, index).to_csv(out / "step_motifs.csv", index=False)
 
     summaries: dict[str, Any] = {}
+    signature = direction_signature(decoded) if len(decoded) else pd.DataFrame()
+    if len(signature):
+        signature.to_csv(out / "direction_signature.csv", index=False)
+        valid = signature.dropna(subset=["unscrew_vs_fasten_asymmetry"])
+        summaries["direction_asymmetry_auc_disassembly"] = _auc(
+            valid["unscrew_vs_fasten_asymmetry"].to_numpy(dtype=float),
+            (valid["task"] == "disassembly").to_numpy(),
+        )
+        summaries["direction_asymmetry_n_recordings"] = int(len(valid))
     if len(step_table):
         summarise_groups(step_table, ["task", "step_id"]).to_csv(out / "step_summary_all.csv", index=False)
         summarise_groups(step_table, ["task", "step_id", "repetition"]).to_csv(
