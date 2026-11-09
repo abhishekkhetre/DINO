@@ -7,25 +7,42 @@
 
 All numbers below are real results from these tables. Shares are of *labelled* fixation time, averaged over participants. Derived tables are in `docs/manual_step_results/derived/`.
 
+**Figures and proof.** Every finding below has a figure in `docs/manual_step_results/figures/`:
+- each figure has the exact plotted numbers in `figures/data/`;
+- `figure_index.csv` lists each figure's insight, proof and source tables;
+- `manual_step_evidence_report.html` (a single file that opens offline) and `manual_step_evidence_figures.pdf` hold all figures for sharing.
+
+| Figure | Shows | Findings |
+|---|---|---|
+| 0 | The manual as a process (reverse pairs, phases) | 1 |
+| 1 | Manual-use learning curve, exponential fit | 2, 3, 4 |
+| 2 | Change within vs between disassembly → assembly pairs | 2 |
+| 3 | Attention composition, direction effect, expertise gap | 5, 8 |
+| 4 | Execution vs guidance budget, box routine | 8 |
+| 5 | Gaze routes and their mirror reversal | 6, 7 |
+| 6 | Wrench timing and coverage | 9, 10 |
+| 7 | Step recognisability per step and window length | §3 |
+| 8 | Step prediction examples | §4 |
+
 ---
 
 ## 0. Findings in brief
 
-1. **The manual is a fixed 8-step script, and assembly is disassembly in reverse.** Gaze follows that structure. The manual's five phases can be recognised from today's labels: handle, screw block, wrench, armature, sort. The exact step within the screw block cannot yet be recognised.
-2. **Manual use is a learning curve, and the learning happens inside each disassembly → assembly pair.** Non-experts cut manual use by 30% from a disassembly to its assembly, but only by 6% from that assembly to the next disassembly. Reassembling right after taking the device apart is done largely from memory.
-3. **Exposure, not direction, sets the level.** Non-expert manual share is 52 → 37 → 37 → 22 → 21 → 16 → 14 → 10% over recordings 1–8. It halves about every 3 recordings. Only at recording 8 do non-experts read as little as experts did on recording 1.
-4. **Recordings 9–10 break the curve.** Manual share falls to ~0.5% in both groups, a 20-fold drop for non-experts. This is a change of condition or of data, not learning (Q1).
+1. **The manual is a fixed 8-step script, and assembly is disassembly in reverse.** Gaze follows that structure. The manual's five phases can be recognised from today's labels: handle, screw block, wrench, armature, sort. The exact step within the screw block cannot yet be recognised. *(Figures 0, 7)*
+2. **Manual use is a learning curve, and for non-experts the drop happens inside each disassembly → assembly pair.** Non-experts cut manual use by 30% from a disassembly to its assembly, but only by 6% from that assembly to the next disassembly. Reassembling right after taking the device apart is done largely from memory. *(Figure 2)*
+3. **Exposure, not direction, sets the level.** Non-expert manual share is 52 → 37 → 37 → 22 → 21 → 16 → 14 → 10% over recordings 1–8. It halves about every 3 recordings. Only at recording 8 do non-experts read as little as experts did on recording 1. *(Figure 1)*
+4. **Recordings 9–10 break the curve.** Manual share falls to ~0.5% in both groups, a 20-fold drop for non-experts. This is a change of condition or of data, not learning (Q1). *(Figure 1)*
 5. **Each direction has its own gaze signature that matches the manual.**
    - Assembly: +9–10 pp grinder, because A1–A3 are hands-only work inside the housing.
-   - Disassembly: +7–9 pp screwdriver, because D2–D5 are four unscrew steps in a row.
+   - Disassembly: +7–9 pp screwdriver, because D2–D5 are four unscrew steps in a row. *(Figure 3B)*
 6. **Gaze routes reverse with the task, as the manual does.**
    - Disassembly: *tool → grinder → box* (unscrew, remove, deposit) leads 1.33 : 1.
    - Assembly: *box → grinder → tool* (fetch, place, fasten) leads 1.54 : 1.
-   - The task can therefore be read from routes alone.
-7. **"Deposit, then read" marks a step boundary.** *grinder → box → manual* occurs in 42% of disassembly recordings and in 30 of 36 participants. This is the manual's rhythm of "part into Box n, then the next Schritt".
-8. **Experts do, non-experts read.** In disassembly, experts look 19.5 pp less at the manual and about 10 pp more at boxes and at the screwdriver. Experts keep a stable box protocol (24% box share in both directions). Non-experts pay for skipping it with box search in assembly (+5.4 pp).
-9. **Assembly has a slow front end.** The first wrench gaze comes later at A3 (the 3rd assembly step, median 180 s) than at D6 (the 6th disassembly step, median 132 s). Inserting the armature and seating the gear (A1–A2) costs more time than the first five disassembly steps.
-10. **Tool steps are watched through the target, not the tool.** Wrench gaze is 0.3–0.7% of labelled time and appears in only a third of recordings, although every recording contains the wrench step.
+   - The task can therefore be read from routes alone. *(Figure 5A)*
+7. **"Deposit, then read" marks a step boundary.** *grinder → box → manual* occurs in 42% of disassembly recordings and in 30 of 36 participants. This is the manual's rhythm of "part into Box n, then the next Schritt". *(Figure 5B)*
+8. **Experts do, non-experts read.** In disassembly, experts look 19.5 pp less at the manual and about 10 pp more at boxes and at the screwdriver. Experts keep a stable box protocol (24% box share in both directions). Non-experts pay for skipping it with box search in assembly (+5.4 pp). *(Figures 3C, 4)*
+9. **Assembly has a slow front end.** The first wrench gaze comes later at A3 (the 3rd assembly step, median 180 s) than at D6 (the 6th disassembly step, median 132 s). Inserting the armature and seating the gear (A1–A2) costs more time than the first five disassembly steps. *(Figure 6A)*
+10. **Tool steps are watched through the target, not the tool.** Wrench gaze is 0.3–0.7% of labelled time and appears in only a third of recordings, although every recording contains the wrench step. *(Figure 6C)*
 
 ---
 
@@ -91,7 +108,7 @@ The within-pair mean is **−30%** and the between-pair mean is **−6%**.
 **Interpretation.**
 - The assembly pages are the disassembly pages read backwards. Right after taking the grinder apart, participants rebuild it from fresh episodic memory: the last part out is the first part in, and it sits in Box 5.
 - That memory does not fully carry over to the next disassembly, which again needs the manual nearly as much as the previous assembly did. The step order learned in the moment is short-lived. What persists from one repetition to the next is a slower, general familiarity.
-- Experts show the same within-pair drop at a much lower level, with a median of −30%. Their between-pair changes are noisy. The clearest example is a rise at recording 5 (4.8 → 7.5%), the third disassembly. That is a candidate for a step that experts deliberately re-check.
+- Experts show a within-pair median of −30% at a much lower level, but their between-pair changes are just as large and noisier (median −38%). So the within-versus-between contrast is a non-expert pattern (Figure 2B–C). Their largest jump is a rise at recording 5 (4.8 → 7.5%), the third disassembly. That is a candidate for a step that experts deliberately re-check.
 
 **Exposure, not direction.** Non-expert assembly 1 (36.8%) is equal to disassembly 2 (37.2%). Both are the second contact with the device. Disassembly is not intrinsically more manual-heavy; it simply comes first in each pair.
 
@@ -269,7 +286,7 @@ Order adds information that a single window lacks. Knowing the previous phase na
 
 **General caveats:**
 - About 20% of fixations carry a label, so hand-only steps are under-observed.
-- The numbers here are participant-averaged descriptives. Formal tests need the participant-level tables.
+- The numbers here are participant-averaged descriptives, so the figures show group means without error bars. The proof they give is consistency: the same direction in every transition (Figure 2), in both groups (Figure 3), and across most participants (participant counts in Figure 5). Spread between people, confidence intervals and significance tests need the participant-level sheets, which stay on the HPC under the data policy.
 
 ---
 

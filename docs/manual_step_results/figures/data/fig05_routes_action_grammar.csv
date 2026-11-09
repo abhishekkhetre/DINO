@@ -1,0 +1,17 @@
+level,task,length,sequence,occurrences,recordings,participants,role_pattern,occurrences_per_recording,share_of_recordings,action_reading,candidate_manual_steps
+Object,Disassembly,3,angle grinder > storage box > angle grinder,238,102,35,W>S>W,1.3222222222222222,0.5666666666666667,"deposit part, return to grinder","D1, D2, D3 (Box 1-3), D8 sorting"
+Object,Assembly,3,storage box > angle grinder > storage box,483,145,34,S>W>S,2.683333333333333,0.8055555555555556,fetch part - fit - fetch again,"A1 (Box 5), A4 (Box 4), A6 (Box 3), A7 (Box 2), A8 (Box 1)"
+Object,Assembly,3,angle grinder > storage box > angle grinder,541,134,33,W>S>W,3.0055555555555555,0.7444444444444445,look up part in box while fitting,"A1, A4, A6-A8"
+Object,Assembly,3,storage box > angle grinder > screwdriver,215,110,33,S>W>T,1.1944444444444444,0.6111111111111112,fetch part -> place -> fasten,"A4, A6, A7"
+Object,Disassembly,3,screwdriver > angle grinder > storage box,160,92,33,T>W>S,0.8888888888888888,0.5111111111111111,unscrew -> remove part -> deposit,"D2, D3 (screwdriver then Box 2/3)"
+Object,Disassembly,3,angle grinder > screwdriver > angle grinder,231,89,33,W>T>W,1.2833333333333334,0.49444444444444446,operate screwdriver on grinder,D2-D5 unscrew block
+Object,Disassembly,3,storage box > angle grinder > screwdriver,120,72,33,S>W>T,0.6666666666666666,0.4,"after deposit, start next screw","D2->D3, D3->D4 hand-over"
+Object,Disassembly,3,angle grinder > screwdriver > storage box,86,66,33,W>T>S,0.4777777777777778,0.36666666666666664,tool then box,"D2, D3 (screws to box)"
+Object,Assembly,3,angle grinder > screwdriver > angle grinder,291,107,31,W>T>W,1.6166666666666667,0.5944444444444444,operate screwdriver on grinder,A4-A7 screw block
+Object,Disassembly,3,storage box > angle grinder > storage box,211,92,31,S>W>S,1.1722222222222223,0.5111111111111111,box-grinder-box shuttling,D8 sorting into Box 4/5; D1-D3 deposits
+Object,Assembly,3,screwdriver > angle grinder > storage box,140,86,31,T>W>S,0.7777777777777778,0.4777777777777778,fasten -> check -> next part,"A4->A5, A6->A7, A7->A8"
+Object,Disassembly,3,angle grinder > storage box > screwdriver,100,69,31,W>S>T,0.5555555555555556,0.38333333333333336,deposit then pick tool,"D1->D2, D2->D3 hand-over"
+Object,Assembly,3,screwdriver > storage box > angle grinder,126,89,30,T>S>W,0.7,0.49444444444444446,tool -> fetch -> fit,"A5->A6, A6->A7"
+Object,Disassembly,3,angle grinder > storage box > instruction manual,146,75,30,W>S>C,0.8111111111111111,0.4166666666666667,deposit then read manual,step boundary after D1/D2/D3
+Object,Assembly,3,angle grinder > screwdriver > storage box,100,75,30,W>T>S,0.5555555555555556,0.4166666666666667,tool then box,"A4, A6, A7"
+Object,Assembly,3,angle grinder > storage box > screwdriver,84,67,30,W>S>T,0.4666666666666667,0.37222222222222223,fetch screw/part then tool,"A4, A6, A7"

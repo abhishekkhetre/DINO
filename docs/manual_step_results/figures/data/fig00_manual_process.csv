@@ -1,0 +1,17 @@
+task,step_id,phase,action,tools,box,reverse_of
+disassembly,D1,handle,Unscrew the side handle by hand; put it (with washer) in Box 1,hand,Box 1 (red),A8
+disassembly,D2,unscrew_block,Green-handled screwdriver: remove screw(s) of the lever/lock bracket at the gear head; bracket + small screws to Box 2,green screwdriver,Box 2 (red),A7
+disassembly,D3,unscrew_block,Green-handled screwdriver: remove gear-head flange screws (circled); gear-head flange/bevel gear + 2 screws to Box 3,green screwdriver,Box 3 (red),A6
+disassembly,D4,unscrew_block,Red-handled screwdriver: loosen housing-ring screws while holding the ring (circled),"red screwdriver, hand",none shown (parts later sorted into Box 4),A4
+disassembly,D5,unscrew_block,Loosen the side screw near the rear (circled); tool not pictured,unknown,none shown,A5
+disassembly,D6,wrench,Flat wrench/spanner inside the gear housing (green arrow): release internal fastener,wrench,none shown,A3
+disassembly,D7,extract,Pull the armature with white gear out of the housing by hand,hand,none shown,A1
+disassembly,D8,sort,"Sort parts: housing ring, small gear, long screws, nut -> Box 4 (red); gear housing + armature -> Box 5 (blue)",hand,Box 4 (red) + Box 5 (blue),
+assembly,A1,insert,"Insert the armature with white gear into the housing (circled), parts from Box 5 (blue)",hand,Box 5 (blue),D7
+assembly,A2,insert,Turn the internal gear by hand to seat it,hand,none shown,
+assembly,A3,wrench,Wrench/spanner inside the gear housing: tighten internal fastener,wrench,none shown,D6
+assembly,A4,screw_block,Red-handled screwdriver: fit housing ring and tighten its screws (Box 4 parts),"red screwdriver, hand",Box 4 (red),D4
+assembly,A5,screw_block,Tighten the side screw near the rear; tool not pictured,unknown,none shown,D5
+assembly,A6,screw_block,Green-handled screwdriver: refit gear-head flange and tighten screws (Box 3 parts),green screwdriver,Box 3 (red),D3
+assembly,A7,screw_block,Refit lever/lock bracket with spring and screw (circled; Box 2 parts); screwdriver not pictured,unknown,Box 2 (red),D2
+assembly,A8,handle,Screw the side handle in by hand (Box 1),hand,Box 1 (red),D1
