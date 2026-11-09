@@ -1,0 +1,11 @@
+recording_number,task,task_repetition,expert_manual_share,non_expert_manual_share,gap_pp,ratio_non_expert_to_expert
+1,Disassembly,1,0.115,0.52,40.5,4.521739130434782
+2,Assembly,1,0.092,0.368,27.6,4.0
+3,Disassembly,2,0.048,0.372,32.4,7.75
+4,Assembly,2,0.029,0.22,19.1,7.586206896551724
+5,Disassembly,3,0.075,0.206,13.100000000000001,2.7466666666666666
+6,Assembly,3,0.039,0.164,12.5,4.205128205128205
+7,Disassembly,4,0.024,0.144,12.0,5.999999999999999
+8,Assembly,4,0.033,0.1,6.7,3.0303030303030303
+9,Disassembly,5,0.007,0.005,-0.2,0.7142857142857143
+10,Assembly,5,0.005,0.003,-0.2,0.6

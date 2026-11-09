@@ -1,0 +1,11 @@
+task,label,expert_share,non_expert_share,expert_minus_non_expert_pp
+Assembly,angle grinder,0.557,0.541,1.6000000000000014
+Assembly,instruction manual,0.04,0.169,-12.9
+Assembly,screwdriver,0.154,0.083,7.1
+Assembly,storage box,0.246,0.2,4.599999999999999
+Assembly,wrench,0.003,0.007,-0.4
+Disassembly,angle grinder,0.454,0.451,0.30000000000000027
+Disassembly,instruction manual,0.054,0.249,-19.5
+Disassembly,screwdriver,0.245,0.15,9.5
+Disassembly,storage box,0.243,0.146,9.700000000000001
+Disassembly,wrench,0.003,0.004,-0.1

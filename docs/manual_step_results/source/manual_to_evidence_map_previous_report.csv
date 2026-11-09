@@ -1,0 +1,17 @@
+manual_step,visual_reading_of_manual,available_gaze_evidence
+D1,Remove side handle; Box 1,Grinder/box; no unique action label
+D2,Remove illustrated fastener mechanism; Box 2,Screwdriver/grinder/box; overlaps D3
+D3,Remove illustrated cover/gear assembly; Box 3,Screwdriver/grinder/box; overlaps D2
+D4,Release illustrated housing fastener,Screwdriver/grinder; overlaps D2/D3/D5
+D5,Release illustrated side fastener,Screwdriver/grinder; tool identity needs video check
+D6,Use wrench at internal fastener,Wrench/grinder candidate anchor
+D7,Withdraw shaft and internal component,Grinder; hands/component labels absent
+D8,Sort separated components into Boxes 4 and 5,Box/grinder; box identity absent
+A1,Insert shaft and internal component,Grinder; hands/component labels absent
+A2,Turn internal component by hand,Grinder; difficult to separate from A1
+A3,Use wrench at internal fastener,Wrench/grinder candidate anchor
+A4,Secure illustrated housing fastener,Screwdriver/grinder
+A5,Secure illustrated side fastener,Grinder; tool identity needs video check
+A6,Refit illustrated cover/gear assembly,Screwdriver/grinder
+A7,Refit illustrated fastener mechanism,Grinder/screwdriver; screwdriver not shown in this panel
+A8,Attach side handle,Grinder; handle state absent

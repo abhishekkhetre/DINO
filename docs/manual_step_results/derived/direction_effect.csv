@@ -1,0 +1,11 @@
+expertise,label,assembly_share,disassembly_share,assembly_minus_disassembly_pp
+Expert,angle grinder,0.557,0.454,10.300000000000004
+Expert,instruction manual,0.04,0.054,-1.4
+Expert,screwdriver,0.154,0.245,-9.1
+Expert,storage box,0.246,0.243,0.30000000000000027
+Expert,wrench,0.003,0.003,0.0
+Non-expert,angle grinder,0.541,0.451,9.000000000000002
+Non-expert,instruction manual,0.169,0.249,-7.999999999999999
+Non-expert,screwdriver,0.083,0.15,-6.699999999999999
+Non-expert,storage box,0.2,0.146,5.400000000000002
+Non-expert,wrench,0.007,0.004,0.3

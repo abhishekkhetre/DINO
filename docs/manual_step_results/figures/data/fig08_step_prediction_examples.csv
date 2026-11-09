@@ -1,0 +1,25 @@
+example,task,sequence,step_id,phase,p_step,p_phase
+"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D1,handle,0.0003006141506609765,0.0003006141506609765
+"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D2,unscrew_block,0.36738330753125964,0.9980381782296845
+"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D3,unscrew_block,0.39245163119123155,0.9980381782296845
+"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D4,unscrew_block,0.1278896435627723,0.9980381782296845
+"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D5,unscrew_block,0.110313595944421,0.9980381782296845
+"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D6,wrench,0.0012613104888081874,0.0012613104888081874
+"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D7,extract,0.00015011267076317343,0.00015011267076317343
+"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D8,sort,0.00024978446008353965,0.00024978446008353965
+"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A1,insert,0.00025651728855260385,0.0003584449359536437
+"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A2,insert,0.00010192764740103986,0.0003584449359536437
+"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A3,wrench,0.0010524110275305482,0.0010524110275305482
+"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A4,screw_block,0.3283714362541841,0.9983326267479626
+"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A5,screw_block,0.12316294881487248,0.9983326267479626
+"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A6,screw_block,0.37694153640004724,0.9983326267479626
+"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A7,screw_block,0.16985670527885882,0.9983326267479626
+"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A8,handle,0.00025651728855260385,0.00025651728855260385
+C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A1,insert,4.389996361298662e-05,8.750930508574836e-05
+C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A2,insert,4.3609341472761744e-05,8.750930508574836e-05
+C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A3,wrench,0.00045026990261732853,0.00045026990261732853
+C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A4,screw_block,0.9103908971904461,0.9992427209742323
+C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A5,screw_block,0.05269478133373699,0.9992427209742323
+C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A6,screw_block,0.01290183583769784,0.9992427209742323
+C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A7,screw_block,0.02325520661235134,0.9992427209742323
+C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A8,handle,0.0002194998180649333,0.0002194998180649333
