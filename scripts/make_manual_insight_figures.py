@@ -582,6 +582,31 @@ def fig_recognisability() -> None:
 
 
 # ---------------------------------------------------------------- figure 8
+PLAIN_STEPS = {
+    "disassembly": ["Remove side handle", "Unscrew lever bracket", "Unscrew gear-head cover", "Unscrew housing ring",
+                    "Unscrew rear screw", "Use wrench inside", "Pull out motor part", "Sort parts into boxes"],
+    "assembly": ["Insert motor part", "Turn gear into place", "Use wrench inside", "Fit housing ring",
+                 "Tighten rear screw", "Refit gear-head cover", "Refit lever bracket", "Attach side handle"],
+}
+CHIP_COLOURS = {"screwdriver": "#D4A017", "grinder": "#5B7083", "box": "#C0504D", "red screwdriver": "#B22222", "red box": "#C0504D"}
+
+
+def plain_object(label: str) -> tuple[str, str]:
+    t = label.strip().lower()
+    red = t.startswith("red ")
+    base = t.split(".")[0]
+    part = t.split(".")[1].replace("_", " ") if "." in t else ""
+    if "screwdriver" in base:
+        name, col = ("Red screwdriver" if red else "Screwdriver"), ("#B22222" if red else "#D4A017")
+    elif "box" in base:
+        name, col = ("Red box" if red else "Box"), "#C0504D"
+    else:
+        name, col = "Grinder", "#5B7083"
+    if part in ("tip", "handle"):
+        name += f"\n({part})"
+    return name, col
+
+
 def fig_prediction_examples() -> None:
     from gaze_objects.manual_steps import build_step_model, load_manual_config, predict_from_sequence
 
@@ -589,39 +614,76 @@ def fig_prediction_examples() -> None:
     rules = cfg["symbols"]
     examples = [
         ("disassembly", "screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone",
-         "A. Route the earlier report called \"step two\""),
-        ("assembly", "screwdriver > angle grinder > storage box > screwdriver", "B. Assembly window, today's labels"),
-        ("assembly", "red screwdriver.tip > angle grinder > red box > red screwdriver.tip", "C. Same window with colour labels"),
+         "1. Taking apart (a real sequence from our data)",
+         "The person is clearly unscrewing something (99.8% sure).\nBut which screw? Two steps are almost tied (39% vs 37%)."),
+        ("assembly", "screwdriver > angle grinder > storage box > screwdriver",
+         "2. Putting back together (today's labels)",
+         "Clearly the screwing part of assembly,\nbut the chance is spread over four steps: no single answer."),
+        ("assembly", "red screwdriver.tip > angle grinder > red box > red screwdriver.tip",
+         "3. Same moment, if labels knew colours",
+         "One clear answer: \"Fit housing ring\" (91%).\nThe red screwdriver and red box give it away."),
     ]
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.8))
+    fig = plt.figure(figsize=(16, 12))
+    gs = fig.add_gridspec(3, 2, width_ratios=[1, 1], hspace=0.5, wspace=0.42, top=0.86, bottom=0.07)
     rows = []
-    for ax, (task, seq, title) in zip(axes, examples):
+    for r, (task, seq, title, verdict) in enumerate(examples):
         model = build_step_model(cfg, task)
-        p = predict_from_sequence(model, [t.strip() for t in seq.split(">")], rules)
+        tokens = [t.strip() for t in seq.split(">")]
+        p = predict_from_sequence(model, tokens, rules)
         p = p.set_index("step_id").reindex([f"{task[0].upper()}{i}" for i in range(1, 9)]).reset_index()
-        colours = [PHASE_COLOURS.get(ph, LIGHT) for ph in p.phase]
-        ax.bar(p.step_id, 100 * p.p_step_bag_of_objects, color=colours, edgecolor="#555")
-        for i, v in enumerate(p.p_step_bag_of_objects):
-            if v >= 0.01:
-                ax.text(i, 100 * v + 1.5, f"{100 * v:.0f}%", ha="center", fontsize=9)
-        top_phase = p.loc[p.p_step_bag_of_objects.idxmax(), "phase"]
-        ax.text(0.98, 0.95, f"phase '{top_phase.replace('_', ' ')}': {100 * p.p_phase.max():.1f}%", transform=ax.transAxes,
-                ha="right", fontsize=9, fontweight="bold")
-        ax.set_ylim(0, 105)
-        ax.set_ylabel("Probability of step (%)")
-        ax.set_title(title)
-        ax.text(0.0, -0.2, wrap(seq.replace(" > ", " → "), 62), transform=ax.transAxes, fontsize=7.6, color="#333", va="top", family="DejaVu Sans Mono")
-        for _, r in p.iterrows():
-            rows.append({"example": title, "task": task, "sequence": seq, "step_id": r.step_id, "phase": r.phase,
-                         "p_step": r.p_step_bag_of_objects, "p_phase": r.p_phase})
-    fig.subplots_adjust(bottom=0.28, wspace=0.3)
-    fig.suptitle("Figure 8. Predicting the manual step from a gaze sequence", x=0.01, y=1.04, ha="left", fontweight="bold", fontsize=13)
-    footer(fig, "Model: manual step profiles (configs/manual_steps.yaml), posterior over steps from the objects in the window. Sequence A is a real route from five_label_route_occurrences.csv (NG06NG25_07, KJ03JM25_10).")
+        probs = 100 * p.p_step_bag_of_objects.to_numpy()
+
+        ax = fig.add_subplot(gs[r, 0])
+        ax.axis("off")
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 10)
+        ax.text(0, 9.6, title, fontsize=12.5, fontweight="bold", va="top")
+        ax.text(0, 7.9, "What the person looked at, in order:", fontsize=10, color="#444", va="top")
+        n = len(tokens)
+        step = 10 / n
+        for i, tok in enumerate(tokens):
+            name, col = plain_object(tok)
+            x = i * step + 0.1
+            ax.add_patch(FancyBboxPatch((x, 4.6), step - 0.75, 2.1, boxstyle="round,pad=0.02,rounding_size=0.25", fc=col, ec="none"))
+            ax.text(x + (step - 0.75) / 2, 5.65, (name.replace("Screwdriver", "Screw-\ndriver") if n > 4 else name.replace(" screwdriver", "\nscrewdriver")), ha="center", va="center", color="white", fontsize=7.6 if n > 4 else 8.5, fontweight="bold")
+            if i < n - 1:
+                ax.annotate("", xy=(x + step + 0.08, 5.65), xytext=(x + step - 0.62, 5.65), arrowprops=dict(arrowstyle="->", lw=1.5, color="#555"))
+        ax.text(0, 3.4, "What the model concludes:", fontsize=10, color="#444", va="top")
+        ax.text(0, 2.5, verdict, fontsize=11, va="top", color="#111",
+                bbox=dict(boxstyle="round,pad=0.5", fc="#F3F6FA", ec="#2F6DB5"))
+
+        ax2 = fig.add_subplot(gs[r, 1])
+        names = [f"Step {i + 1}: {n_}" for i, n_ in enumerate(PLAIN_STEPS[task])]
+        top = probs.max()
+        colours = [("#2F6DB5" if v == top else ("#8FB3DE" if v >= 5 else "#D9D9D9")) for v in probs]
+        ax2.barh(range(8), probs, color=colours)
+        for i, v in enumerate(probs):
+            ax2.text(v + 1, i, f"{v:.0f}%" if v >= 0.5 else "~0%", va="center", fontsize=9.5,
+                     fontweight="bold" if v == top else "normal", color="#111" if v >= 0.5 else GREY)
+        ax2.set_yticks(range(8), names, fontsize=9.5)
+        ax2.invert_yaxis()
+        ax2.set_xlim(0, 105)
+        ax2.set_xlabel("Chance that the person is in this step (%)")
+        ax2.set_title(f"The 8 {'disassembly' if task == 'disassembly' else 'assembly'} steps of the manual", fontsize=10.5)
+        for i, row in p.iterrows():
+            rows.append({"example": title, "task": task, "gaze_sequence": seq, "step_number": i + 1,
+                         "step": PLAIN_STEPS[task][i], "manual_step_id": row.step_id, "chance_pct": round(100 * row.p_step_bag_of_objects, 1),
+                         "phase_chance_pct": round(100 * row.p_phase, 1)})
+    fig.suptitle("Figure 8. Can we tell which manual step someone is on, just from where they look?",
+                 x=0.01, y=0.95, ha="left", fontweight="bold", fontsize=15)
+    fig.text(0.01, 0.915, "Short answer: we can tell the kind of work (unscrewing, screwing, wrench, handle) almost for sure. "
+             "To name the exact step, the labels need colours (red/green screwdriver, red/blue box).", fontsize=10.5, color="#333")
+    footer(fig, "Method: each manual step has an expected mix of objects (configs/manual_steps.yaml); the chart shows how well the looked-at objects match each step. "
+                "Sequence 1 is a real route from our data (recordings NG06NG25_07, KJ03JM25_10).")
     save(
         fig, "fig08_step_prediction_examples",
         "Predicting the step from a sequence",
-        "Today's labels pin the phase almost certainly but spread the probability over the steps of the block; colour labels resolve the step.",
-        "A: unscrew block 99.8%, D3 39% vs D2 37%. B: screw block certain, step spread over A4–A7. C: A4 91%.",
+        "From a few seconds of gaze we can tell what kind of work the person is doing (unscrewing, screwing, wrench, handle) almost for certain. "
+        "With today's labels we often cannot name the exact step, because several steps use the same screwdriver and the same kind of box. "
+        "If the labels also knew colours, the exact step becomes clear.",
+        "Example 1 (taking apart, real sequence): 99.8% sure it is unscrewing, but 'Unscrew gear-head cover' 39% vs 'Unscrew lever bracket' 37% — a near tie. "
+        "Example 2 (putting together, today's labels): screwing for sure, but split over four steps (33%, 12%, 38%, 17%). "
+        "Example 3 (same moment with colour labels): 'Fit housing ring' 91%.",
         pd.DataFrame(rows), ["five_label_route_occurrences.csv", "configs/manual_steps.yaml"],
     )
 

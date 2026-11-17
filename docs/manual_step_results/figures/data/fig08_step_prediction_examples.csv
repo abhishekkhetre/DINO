@@ -1,25 +1,25 @@
-example,task,sequence,step_id,phase,p_step,p_phase
-"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D1,handle,0.0003006141506609765,0.0003006141506609765
-"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D2,unscrew_block,0.36738330753125964,0.9980381782296845
-"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D3,unscrew_block,0.39245163119123155,0.9980381782296845
-"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D4,unscrew_block,0.1278896435627723,0.9980381782296845
-"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D5,unscrew_block,0.110313595944421,0.9980381782296845
-"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D6,wrench,0.0012613104888081874,0.0012613104888081874
-"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D7,extract,0.00015011267076317343,0.00015011267076317343
-"A. Route the earlier report called ""step two""",disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,D8,sort,0.00024978446008353965,0.00024978446008353965
-"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A1,insert,0.00025651728855260385,0.0003584449359536437
-"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A2,insert,0.00010192764740103986,0.0003584449359536437
-"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A3,wrench,0.0010524110275305482,0.0010524110275305482
-"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A4,screw_block,0.3283714362541841,0.9983326267479626
-"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A5,screw_block,0.12316294881487248,0.9983326267479626
-"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A6,screw_block,0.37694153640004724,0.9983326267479626
-"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A7,screw_block,0.16985670527885882,0.9983326267479626
-"B. Assembly window, today's labels",assembly,screwdriver > angle grinder > storage box > screwdriver,A8,handle,0.00025651728855260385,0.00025651728855260385
-C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A1,insert,4.389996361298662e-05,8.750930508574836e-05
-C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A2,insert,4.3609341472761744e-05,8.750930508574836e-05
-C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A3,wrench,0.00045026990261732853,0.00045026990261732853
-C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A4,screw_block,0.9103908971904461,0.9992427209742323
-C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A5,screw_block,0.05269478133373699,0.9992427209742323
-C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A6,screw_block,0.01290183583769784,0.9992427209742323
-C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A7,screw_block,0.02325520661235134,0.9992427209742323
-C. Same window with colour labels,assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,A8,handle,0.0002194998180649333,0.0002194998180649333
+example,task,gaze_sequence,step_number,step,manual_step_id,chance_pct,phase_chance_pct
+1. Taking apart (a real sequence from our data),disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,1,Remove side handle,D1,0.0,0.0
+1. Taking apart (a real sequence from our data),disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,2,Unscrew lever bracket,D2,36.7,99.8
+1. Taking apart (a real sequence from our data),disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,3,Unscrew gear-head cover,D3,39.2,99.8
+1. Taking apart (a real sequence from our data),disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,4,Unscrew housing ring,D4,12.8,99.8
+1. Taking apart (a real sequence from our data),disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,5,Unscrew rear screw,D5,11.0,99.8
+1. Taking apart (a real sequence from our data),disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,6,Use wrench inside,D6,0.1,0.1
+1. Taking apart (a real sequence from our data),disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,7,Pull out motor part,D7,0.0,0.0
+1. Taking apart (a real sequence from our data),disassembly,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone,8,Sort parts into boxes,D8,0.0,0.0
+2. Putting back together (today's labels),assembly,screwdriver > angle grinder > storage box > screwdriver,1,Insert motor part,A1,0.0,0.0
+2. Putting back together (today's labels),assembly,screwdriver > angle grinder > storage box > screwdriver,2,Turn gear into place,A2,0.0,0.0
+2. Putting back together (today's labels),assembly,screwdriver > angle grinder > storage box > screwdriver,3,Use wrench inside,A3,0.1,0.1
+2. Putting back together (today's labels),assembly,screwdriver > angle grinder > storage box > screwdriver,4,Fit housing ring,A4,32.8,99.8
+2. Putting back together (today's labels),assembly,screwdriver > angle grinder > storage box > screwdriver,5,Tighten rear screw,A5,12.3,99.8
+2. Putting back together (today's labels),assembly,screwdriver > angle grinder > storage box > screwdriver,6,Refit gear-head cover,A6,37.7,99.8
+2. Putting back together (today's labels),assembly,screwdriver > angle grinder > storage box > screwdriver,7,Refit lever bracket,A7,17.0,99.8
+2. Putting back together (today's labels),assembly,screwdriver > angle grinder > storage box > screwdriver,8,Attach side handle,A8,0.0,0.0
+"3. Same moment, if labels knew colours",assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,1,Insert motor part,A1,0.0,0.0
+"3. Same moment, if labels knew colours",assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,2,Turn gear into place,A2,0.0,0.0
+"3. Same moment, if labels knew colours",assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,3,Use wrench inside,A3,0.0,0.0
+"3. Same moment, if labels knew colours",assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,4,Fit housing ring,A4,91.0,99.9
+"3. Same moment, if labels knew colours",assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,5,Tighten rear screw,A5,5.3,99.9
+"3. Same moment, if labels knew colours",assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,6,Refit gear-head cover,A6,1.3,99.9
+"3. Same moment, if labels knew colours",assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,7,Refit lever bracket,A7,2.3,99.9
+"3. Same moment, if labels knew colours",assembly,red screwdriver.tip > angle grinder > red box > red screwdriver.tip,8,Attach side handle,A8,0.0,0.0
