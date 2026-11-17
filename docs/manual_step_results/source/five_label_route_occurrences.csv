@@ -1,0 +1,3 @@
+recording_id,task,first_observed_s,last_observed_s,sequence
+KJ03JM25_10,Assembly,443.179,456.073,screwdriver.tip > angle grinder.body > screwdriver.handle > storage box > angle grinder.side_handle_zone
+NG06NG25_07,Disassembly,81.99,90.355,screwdriver.tip > angle grinder.side_handle_zone > screwdriver.handle > storage box > angle grinder.side_handle_zone

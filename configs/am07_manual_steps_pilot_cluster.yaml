@@ -1,0 +1,104 @@
+# bwUniCluster 3 — PILOT of the manual-step prompt set on AM07 (one
+# disassembly + one assembly recording). Check that the colour prompts find
+# the red/green screwdrivers and red/blue boxes before the corpus run.
+#
+# See docs/MANUAL_STEP_MAPPING_RESEARCH.md
+
+data_dir: "/pfs/work9/workspace/scratch/ka_wn6139-gaze_sam3/Tobii_Data"
+output_root: "/pfs/work9/workspace/scratch/ka_wn6139-gaze_sam3/outputs/am07_manual_steps_pilot"
+
+stages:
+  - detect
+  - assign
+  - sequences
+
+skip_if_done: true
+continue_on_error: true
+discard_masks_after_assign: false
+
+recordings:
+  - id: AM07AM07_01
+    tsv: AM07AM07_01_data_export.tsv
+    video: AM07AM07_01_scenevideo.mp4
+  - id: AM07AM07_02
+    tsv: AM07AM07_02_data_export.tsv
+    video: AM07AM07_02_scenevideo.mp4
+
+defaults:
+  timestamp_unit: milliseconds
+  timestamp_unit_status: verified
+  video_start_recording_s: 0.0
+  time_mapping_status: verified
+  max_abs_residual_s: 0.05
+  compute_hash: false
+
+  clip:
+    mode: full
+
+  frame_selection:
+    mode: unique_matched_frames
+    stride: 4
+
+  detector:
+    backend: sam3
+    device: cuda
+    label_map_mode: fine
+    resolution: 1008
+    enable_segmentation: true
+    keep_masks: true
+    min_free_vram_gib: 20.0
+    score_threshold: 0.50
+    score_threshold_by_concept:
+      angle grinder: 0.18
+      power tool: 0.25
+      side handle: 0.28
+      armature: 0.30
+      white gear: 0.30
+      screw: 0.50
+      instruction manual: 0.55
+      red box: 0.40
+      blue box: 0.40
+      green screwdriver: 0.40
+      red screwdriver: 0.40
+      wrench: 0.45
+      hand: 0.40
+      table: 0.35
+    min_box_area_frac_by_concept:
+      angle grinder: 0.008
+      power tool: 0.008
+      side handle: 0.001
+      armature: 0.001
+      white gear: 0.0005
+      screw: 0.0004
+      hand: 0.002
+      table: 0.05
+    # Side handle and armature are handled off the grinder (in boxes / hands),
+    # so only small hardware must overlap the grinder.
+    require_parent_overlap_for_parts: true
+    parent_required_part_labels:
+      - screw
+    parts_parent_expand_px: 48.0
+    load_from_hf: true
+    text_concepts_file: "metaSAM3/prompts_manual_steps.txt"
+    class_map_file: "configs/class_definitions.yaml"
+
+  assignment:
+    hit_test: mask
+    score_threshold: 0.18
+    overlap_policy: ambiguous
+    require_normalized_label: false
+    prefer_nested_parent: false
+    prefer_smallest_containing: true
+    label_map_mode: fine
+    part_geometry: true
+    part_objects:
+      - screwdriver
+      - green screwdriver
+      - red screwdriver
+      - wrench
+
+  sequences:
+    movement_type: Fixation
+    label_policy: part_majority
+    min_assigned_samples: 1
+    min_label_fraction: 0.40

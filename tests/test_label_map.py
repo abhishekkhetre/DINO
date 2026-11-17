@@ -27,6 +27,15 @@ def test_fine_grinder_synonyms():
     assert normalize_fine_label("storage box") == "storage box"
 
 
+def test_manual_step_colour_labels_stay_distinct():
+    assert normalize_fine_label("red screwdriver") == "red screwdriver"
+    assert normalize_fine_label("green screwdriver") == "green screwdriver"
+    assert normalize_fine_label("blue box") == "blue box"
+    assert normalize_fine_label("red box") == "red box"
+    assert normalize_fine_label("white gear") == "gear"
+    assert normalize_fine_label("armature") == "armature"
+
+
 def test_fine_grinder_parts_are_separate_labels():
     assert normalize_fine_label("side handle") == "side handle"
     assert normalize_fine_label("angle grinder handle") == "side handle"

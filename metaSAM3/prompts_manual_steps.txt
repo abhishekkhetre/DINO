@@ -1,0 +1,27 @@
+# Manual-step prompt set (stride 4). Built from Anleitung Demontage 16.03.2025:
+# objects that separate manual steps, not generic grinder parts.
+#
+#   side handle         D1 / A8
+#   green screwdriver   D2 / D3 / A6 (A7)
+#   red screwdriver     D4 / A4
+#   wrench              D6 / A3
+#   armature, white gear D7 / A1 / A2
+#   red box / blue box  Boxes 1-4 red, Box 5 blue (D8, A1)
+#
+# Dropped vs prompts_dense_parts_hand_fast.txt: grinder guard, battery pack,
+# grinding disc, main handle, grinder body, floor — not shown in the manual's kit.
+# Pilot on AM07 _01/_02 before the corpus run: colour prompts must keep recall.
+angle grinder
+power tool
+side handle
+armature
+white gear
+screw
+instruction manual
+red box
+blue box
+green screwdriver
+red screwdriver
+wrench
+hand
+table

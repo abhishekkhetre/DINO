@@ -322,6 +322,7 @@ def run_detect(config_path: str | Path) -> dict[str, Any]:
         before_ids = set(detections_df["detection_id"].astype(str)) if "detection_id" in detections_df else set()
         detections_df, parts_filter_stats = filter_parts_requiring_parent(
             detections_df,
+            part_labels=det_cfg.get("parent_required_part_labels"),
             expand_px=float(det_cfg.get("parts_parent_expand_px", 40.0)),
         )
         after_ids = set(detections_df["detection_id"].astype(str)) if "detection_id" in detections_df else set()

@@ -100,6 +100,13 @@ FINE_PHRASE_TO_CANONICAL = {
     "grinder main handle": "main handle",
     "grinder rear handle": "main handle",
     "pistol grip": "main handle",
+    # Internals handled in manual steps D7/A1/A2 (armature with white gear)
+    "armature": "armature",
+    "motor armature": "armature",
+    "rotor": "armature",
+    "white gear": "gear",
+    "plastic gear": "gear",
+    "gear wheel": "gear",
     # Guard / battery / disc
     "grinder guard": "grinder guard",
     "angle grinder guard": "grinder guard",
@@ -144,14 +151,24 @@ FINE_PHRASE_TO_CANONICAL = {
     "booklet": "instruction manual",
     "instructions": "instruction manual",
     "user manual": "instruction manual",
-    # containers
+    # containers — manual Boxes 1-4 are red, Box 5 is blue; keep colour distinct
+    "red box": "red box",
+    "red storage box": "red box",
+    "red bin": "red box",
+    "blue box": "blue box",
+    "blue storage box": "blue box",
+    "blue bin": "blue box",
     "storage box": "storage box",
     "toolbox": "storage box",
     "tool box": "storage box",
     "carrying case": "storage box",
     "box": "storage box",
     "boxes": "storage box",
-    # hand tools
+    # hand tools — manual uses a green-handled (D2/D3/A6) and a red-handled (D4/A4) screwdriver
+    "green screwdriver": "green screwdriver",
+    "green handled screwdriver": "green screwdriver",
+    "red screwdriver": "red screwdriver",
+    "red handled screwdriver": "red screwdriver",
     "screwdriver": "screwdriver",
     "phillips screwdriver": "phillips screwdriver",
     "philips screwdriver": "phillips screwdriver",

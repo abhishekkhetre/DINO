@@ -1,0 +1,286 @@
+# Step model of "Anleitung Demontage 16.03.2025" (4 pages, pictures only).
+#
+# Pages 1-2 = disassembly (Demontage) Schritt 1-8, pages 3-4 = assembly Schritt 1-8.
+# Readings below are visual readings of the pictures, not verified part names.
+#
+# Recording rule (user-confirmed): odd recording number = disassembly,
+# even = assembly; repetition = (number + 1) // 2  -> 5 trials per direction.
+#
+# gaze_weights are relative prior weights of observing each gaze symbol while a
+# participant is in that step. They are hypotheses derived from the manual
+# pictures (tool shown, part handled, box used) and are only priors: the
+# mapper can re-estimate them from the corpus (EM) or from annotations.
+
+recording_rule:
+  odd: disassembly
+  even: assembly
+  repetition: "(n + 1) // 2"
+  # Participants whose suffixes run 00-09 instead of 01-10 (direction unknown).
+  zero_based_policy: exclude
+
+# Gaze label -> symbol. First matching rule wins (lower-cased, part suffix
+# such as ".tip" stripped first; the part is kept separately).
+symbols:
+  manual: ["instruction manual", "manual", "booklet"]
+  screwdriver_green: ["green screwdriver"]
+  screwdriver_red: ["red screwdriver"]
+  screwdriver: ["screwdriver", "phillips screwdriver", "flathead screwdriver"]
+  wrench: ["wrench", "spanner", "hex key"]
+  box_blue: ["blue box", "blue storage box"]
+  box_red: ["red box", "red storage box"]
+  box: ["storage box", "box"]
+  side_handle: ["side handle"]
+  inner_part: ["armature", "gear", "white gear", "rotor", "motor armature"]
+  screw: ["screw"]
+  hand: ["hand"]
+  surface: ["table", "floor", "table/floor"]
+  grinder: ["angle grinder", "grinder body", "main handle", "motor housing", "gear housing",
+            "spindle lock", "clamping flange", "flange nut", "grinder guard", "battery pack",
+            "grinding disc", "power switch", "trigger", "power tool"]
+
+# Symbols the October 2026 corpus actually contains (used to report what is
+# separable with today's sheets vs. with the extended prompt set).
+current_vocabulary: [grinder, screwdriver, wrench, box, manual]
+
+# Colour attributes: a coloured observation (e.g. screwdriver_red) is scored as
+# weight[screwdriver] * colour_share; an uncoloured observation uses the
+# marginal weight[screwdriver], so it carries no colour evidence.
+colour_children:
+  screwdriver: {screwdriver_green: green, screwdriver_red: red}
+  box: {box_red: red, box_blue: blue}
+
+default_weights:
+  grinder: 4.0
+  side_handle: 0.2
+  inner_part: 0.2
+  screwdriver: 0.3
+  wrench: 0.05
+  screw: 0.3
+  box: 0.8
+  manual: 1.0
+  hand: 1.0
+  surface: 0.5
+  other: 0.3
+
+tasks:
+  disassembly:
+    manual_pages: [1, 2]
+    steps:
+      - id: D1
+        schritt: 1
+        page: 1
+        action: "Unscrew the side handle by hand; put it (with washer) in Box 1"
+        tools: [hand]
+        parts: [side handle]
+        box: "Box 1 (red)"
+        reverse_of: A8
+        phase: handle
+        gaze_weights: {side_handle: 4.0, hand: 2.0, box: 2.0, screwdriver: 0.1}
+        colours: {box: {red: 1.0, blue: 0.0}}
+      - id: D2
+        schritt: 2
+        page: 1
+        action: "Green-handled screwdriver: remove screw(s) of the lever/lock bracket at the gear head; bracket + small screws to Box 2"
+        tools: [green screwdriver]
+        parts: [lever bracket, small screws]
+        box: "Box 2 (red)"
+        reverse_of: A7
+        phase: unscrew_block
+        gaze_weights: {screwdriver: 4.0, screw: 2.0, box: 2.0}
+        colours: {screwdriver: {green: 0.9, red: 0.1}, box: {red: 1.0, blue: 0.0}}
+      - id: D3
+        schritt: 3
+        page: 1
+        action: "Green-handled screwdriver: remove gear-head flange screws (circled); gear-head flange/bevel gear + 2 screws to Box 3"
+        tools: [green screwdriver]
+        parts: [gear-head flange, bevel gear, screws]
+        box: "Box 3 (red)"
+        reverse_of: A6
+        phase: unscrew_block
+        gaze_weights: {screwdriver: 4.0, screw: 1.5, box: 2.0, inner_part: 0.5}
+        colours: {screwdriver: {green: 0.9, red: 0.1}, box: {red: 1.0, blue: 0.0}}
+      - id: D4
+        schritt: 4
+        page: 1
+        action: "Red-handled screwdriver: loosen housing-ring screws while holding the ring (circled)"
+        tools: [red screwdriver, hand]
+        parts: [housing ring, long screws]
+        box: "none shown (parts later sorted into Box 4)"
+        reverse_of: A4
+        phase: unscrew_block
+        gaze_weights: {screwdriver: 4.0, screw: 1.5, hand: 1.5, box: 0.4}
+        colours: {screwdriver: {green: 0.1, red: 0.9}}
+      - id: D5
+        schritt: 5
+        page: 1
+        action: "Loosen the side screw near the rear (circled); tool not pictured"
+        tools: [unknown]
+        parts: [side screw]
+        box: "none shown"
+        reverse_of: A5
+        phase: unscrew_block
+        gaze_weights: {screwdriver: 2.5, screw: 1.5, hand: 1.0, box: 0.4}
+        colours: {screwdriver: {green: 0.5, red: 0.5}}
+      - id: D6
+        schritt: 6
+        page: 2
+        action: "Flat wrench/spanner inside the gear housing (green arrow): release internal fastener"
+        tools: [wrench]
+        parts: [internal nut]
+        box: "none shown"
+        reverse_of: A3
+        phase: wrench
+        gaze_weights: {wrench: 4.0, hand: 1.0, box: 0.4, screwdriver: 0.3}
+      - id: D7
+        schritt: 7
+        page: 2
+        action: "Pull the armature with white gear out of the housing by hand"
+        tools: [hand]
+        parts: [armature, white gear, housing]
+        box: "none shown"
+        reverse_of: A1
+        phase: extract
+        gaze_weights: {inner_part: 3.0, hand: 3.0, box: 0.6, screwdriver: 0.1}
+      - id: D8
+        schritt: 8
+        page: 2
+        action: "Sort parts: housing ring, small gear, long screws, nut -> Box 4 (red); gear housing + armature -> Box 5 (blue)"
+        tools: [hand]
+        parts: [housing ring, bevel gear, long screws, armature, gear housing]
+        box: "Box 4 (red) + Box 5 (blue)"
+        reverse_of: null
+        phase: sort
+        gaze_weights: {box: 5.0, grinder: 2.0, inner_part: 2.0, screw: 1.0, hand: 1.5, screwdriver: 0.1}
+        colours: {box: {red: 0.5, blue: 0.5}}
+
+  assembly:
+    manual_pages: [3, 4]
+    steps:
+      - id: A1
+        schritt: 1
+        page: 3
+        action: "Insert the armature with white gear into the housing (circled), parts from Box 5 (blue)"
+        tools: [hand]
+        parts: [armature, white gear, housing]
+        box: "Box 5 (blue)"
+        reverse_of: D7
+        phase: insert
+        gaze_weights: {inner_part: 3.0, hand: 3.0, box: 1.5, screwdriver: 0.1}
+        colours: {box: {red: 0.2, blue: 0.8}}
+      - id: A2
+        schritt: 2
+        page: 3
+        action: "Turn the internal gear by hand to seat it"
+        tools: [hand]
+        parts: [white gear]
+        box: "none shown"
+        reverse_of: null
+        phase: insert
+        gaze_weights: {hand: 3.0, inner_part: 2.0, box: 0.3, screwdriver: 0.1}
+      - id: A3
+        schritt: 3
+        page: 3
+        action: "Wrench/spanner inside the gear housing: tighten internal fastener"
+        tools: [wrench]
+        parts: [internal nut]
+        box: "none shown"
+        reverse_of: D6
+        phase: wrench
+        gaze_weights: {wrench: 4.0, hand: 1.0, box: 0.4, screwdriver: 0.3}
+      - id: A4
+        schritt: 4
+        page: 3
+        action: "Red-handled screwdriver: fit housing ring and tighten its screws (Box 4 parts)"
+        tools: [red screwdriver, hand]
+        parts: [housing ring, long screws]
+        box: "Box 4 (red)"
+        reverse_of: D4
+        phase: screw_block
+        gaze_weights: {screwdriver: 4.0, screw: 1.5, hand: 1.5, box: 1.5}
+        colours: {screwdriver: {green: 0.1, red: 0.9}, box: {red: 1.0, blue: 0.0}}
+      - id: A5
+        schritt: 5
+        page: 3
+        action: "Tighten the side screw near the rear; tool not pictured"
+        tools: [unknown]
+        parts: [side screw]
+        box: "none shown"
+        reverse_of: D5
+        phase: screw_block
+        gaze_weights: {screwdriver: 2.5, screw: 1.5, hand: 1.0, box: 0.6}
+        colours: {screwdriver: {green: 0.5, red: 0.5}}
+      - id: A6
+        schritt: 6
+        page: 4
+        action: "Green-handled screwdriver: refit gear-head flange and tighten screws (Box 3 parts)"
+        tools: [green screwdriver]
+        parts: [gear-head flange, screws]
+        box: "Box 3 (red)"
+        reverse_of: D3
+        phase: screw_block
+        gaze_weights: {screwdriver: 4.0, screw: 1.5, box: 1.5}
+        colours: {screwdriver: {green: 0.9, red: 0.1}, box: {red: 1.0, blue: 0.0}}
+      - id: A7
+        schritt: 7
+        page: 4
+        action: "Refit lever/lock bracket with spring and screw (circled; Box 2 parts); screwdriver not pictured"
+        tools: [unknown]
+        parts: [lever bracket, spring, screw]
+        box: "Box 2 (red)"
+        reverse_of: D2
+        phase: screw_block
+        gaze_weights: {screwdriver: 2.5, screw: 2.0, hand: 1.5, box: 1.5}
+        colours: {screwdriver: {green: 0.8, red: 0.2}, box: {red: 1.0, blue: 0.0}}
+      - id: A8
+        schritt: 8
+        page: 4
+        action: "Screw the side handle in by hand (Box 1)"
+        tools: [hand]
+        parts: [side handle]
+        box: "Box 1 (red)"
+        reverse_of: D1
+        phase: handle
+        gaze_weights: {side_handle: 4.0, hand: 2.0, box: 1.5, screwdriver: 0.1}
+        colours: {box: {red: 1.0, blue: 0.0}}
+
+# Step panels in normalised page coordinates (x0, y0, x1, y1), measured from
+# the "Schritt n" captions of the PDF. Used to turn gaze on the manual into
+# "which step is being read".
+manual_panels:
+  1:
+    D1: [0.0, 0.0, 1.0, 0.250]
+    D2: [0.0, 0.250, 1.0, 0.505]
+    D3: [0.0, 0.505, 1.0, 0.768]
+    D4: [0.0, 0.768, 0.50, 1.0]
+    D5: [0.50, 0.768, 1.0, 1.0]
+  2:
+    D6: [0.0, 0.0, 1.0, 0.278]
+    D7: [0.0, 0.278, 1.0, 0.505]
+    D8: [0.0, 0.505, 1.0, 0.880]
+  3:
+    A1: [0.0, 0.0, 1.0, 0.250]
+    A2: [0.0, 0.250, 0.50, 0.505]
+    A3: [0.50, 0.250, 1.0, 0.505]
+    A4: [0.0, 0.505, 0.50, 0.820]
+    A5: [0.50, 0.505, 1.0, 0.820]
+  4:
+    A6: [0.0, 0.0, 1.0, 0.342]
+    A7: [0.0, 0.342, 1.0, 0.606]
+    A8: [0.0, 0.606, 1.0, 0.960]
+
+# Left-to-right step model used by the mapper.
+alignment:
+  # Fraction of step advances that jump over one step (hand-only steps can
+  # leave no labelled gaze).
+  skip_prob: 0.10
+  # Labelled episodes expected per step. "auto" = corpus median recording
+  # length / 8 per direction (kept fixed so live prediction never sees the future).
+  expected_episodes_per_step: auto
+  # Start must be within the first `max_start_step` steps; end penalties keep
+  # the path from stopping early without forcing the last step.
+  max_start_step: 2
+  end_penalty_per_missing_step: 2.0
+  # Pseudo-count strength of the manual prior when re-estimating emissions.
+  prior_strength: 30.0
+  # Bonus (multiplicative likelihood) when gaze on the manual reads a step panel.
+  panel_boost: 6.0
