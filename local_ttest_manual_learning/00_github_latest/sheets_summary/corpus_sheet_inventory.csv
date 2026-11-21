@@ -1,0 +1,13 @@
+sheet_name,typical_location_on_hpc,row_grain,purpose,status_in_this_pack
+batch_qc_summary.csv,$WS/sheets/ and $WS/outputs/<batch>/,one row per recording,Per-recording success / error / metrics,FULL — download from HPC (§ below)
+batch_summary.json,$WS/sheets/ and $WS/outputs/<batch>/,batch rollup,Overall ok/error counts,FULL — download from HPC
+corpus_attention_sequences.csv,$WS/sheets/ and $WS/outputs/<batch>/,one row per attention episode,All episodes + durations across corpus,FULL — download from HPC
+corpus_sequence_strings.csv,$WS/sheets/ and $WS/outputs/<batch>/,one row per recording,Primary product: gaze-order string,FULL — download from HPC
+corpus_transitions.csv,$WS/sheets/ and $WS/outputs/<batch>/,from→to pairs,Transition counts / behaviour graph,FULL — download from HPC
+corpus_results.csv,$WS/sheets/ and $WS/outputs/<batch>/,one row per recording,QC joined with sequence_string,FULL — download from HPC
+corpus_sequences_summary.json,$WS/sheets/ and $WS/outputs/<batch>/,rollup,Aggregate counts,FULL — download from HPC
+Final_Gaze_Visual_Report.html,often $WS/sheets/ or laptop Downloads,HTML report,Charts + stats snapshot (16 Oct 2026),FULL — download from HPC/laptop if present
+SUPERVISOR_FEEDBACK_RESULTS_INTERPRETATION.md,this pack,markdown,Supervisor Q&A + Tier A curation,INCLUDED
+tier_a_expertise_findings.csv,this pack,one row per finding,Summarised expertise metrics,INCLUDED
+tier_a_process_structure.csv,this pack,one row per pattern,Summarised process / motif metrics,INCLUDED
+claims_guardrails.csv,this pack,one row per claim boundary,What we can / cannot claim,INCLUDED

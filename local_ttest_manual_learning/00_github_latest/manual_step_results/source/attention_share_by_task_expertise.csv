@@ -1,0 +1,21 @@
+task,expertise,label,mean,count
+Assembly,Expert,angle grinder,0.557,17
+Assembly,Expert,instruction manual,0.04,17
+Assembly,Expert,screwdriver,0.154,17
+Assembly,Expert,storage box,0.246,17
+Assembly,Expert,wrench,0.003,17
+Assembly,Non-expert,angle grinder,0.541,19
+Assembly,Non-expert,instruction manual,0.169,19
+Assembly,Non-expert,screwdriver,0.083,19
+Assembly,Non-expert,storage box,0.2,19
+Assembly,Non-expert,wrench,0.007,19
+Disassembly,Expert,angle grinder,0.454,17
+Disassembly,Expert,instruction manual,0.054,17
+Disassembly,Expert,screwdriver,0.245,17
+Disassembly,Expert,storage box,0.243,17
+Disassembly,Expert,wrench,0.003,17
+Disassembly,Non-expert,angle grinder,0.451,19
+Disassembly,Non-expert,instruction manual,0.249,19
+Disassembly,Non-expert,screwdriver,0.15,19
+Disassembly,Non-expert,storage box,0.146,19
+Disassembly,Non-expert,wrench,0.004,19

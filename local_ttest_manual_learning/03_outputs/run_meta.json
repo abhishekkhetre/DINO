@@ -1,0 +1,29 @@
+{
+  "coverage": {
+    "n_recordings_in_attention_sheet": 238,
+    "n_participants_in_attention_sheet": 24,
+    "n_participants_after_expertise_join": 24,
+    "n_experts": 14,
+    "n_nonexperts": 10,
+    "labels_in_sheet": [
+      "Angle Grinder",
+      "Boxes",
+      "Manual"
+    ],
+    "pid_aliases_applied": {
+      "LE07UF1": "LE07UF17"
+    },
+    "source_attention": "HPC sheets/corpus_attention_sequences.csv (2026-11-02)",
+    "source_expertise": "Expertise (2).xlsx \u2192 participants_expertise.csv (Trained Yes/No)",
+    "assumption_rec_9_10": "manual not provided; excluded from learning fits"
+  },
+  "n_rows_analysis_table": 238,
+  "outputs": [
+    "analysis_table_participant_recording.csv",
+    "manual_share_by_recording_expertise.csv",
+    "no_manual_condition_rec9_10_summary.csv",
+    "per_participant_log_decay.csv",
+    "ttest_results.csv",
+    "within_vs_between_per_participant.csv"
+  ]
+}

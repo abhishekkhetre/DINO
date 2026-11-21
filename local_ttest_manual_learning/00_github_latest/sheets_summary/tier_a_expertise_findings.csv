@@ -1,0 +1,7 @@
+finding_id,metric,unit,experts,non_experts,difference_pp,exploratory_q,keep_tier,interpretation
+A1,manual_looking_share,pct_of_labelled_time,4.7,20.6,-15.9,0.00025,A,Strongest expertise separator; non-experts rely more on instruction manual in labelled gaze
+A2,screwdriver_looking_share,pct_of_labelled_time,20.0,12.7,7.3,0.0416,A,Secondary separator; more tool-use attention among experts
+A3,angle_grinder_looking_share,pct_of_labelled_time,50.6,49.1,1.5,,A,Similar across groups — expertise is not who looks at the grinder
+A4,grinder_box_grinder_motif_rate,per_100_eligible_triples,12.4,8.1,4.3,0.0129,A,Experts densify workpiece↔storage cycling in labelled sequences
+A5,return_to_first_object_rate,pct,~52,~51,~1,,B,Similar habit; not a group separator
+A6,fixation_label_coverage,pct_of_fixations,~19.7,~19.7,0,,A,Only labelled subset analysed; ~80% fixations remain unlabelled

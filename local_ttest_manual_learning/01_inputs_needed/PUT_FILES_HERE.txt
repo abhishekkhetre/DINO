@@ -1,0 +1,16 @@
+Put the participant-level CSVs in THIS folder.
+
+Minimum to unlock manual-share t-tests + log decay:
+  manual_share_by_participant_recording.csv
+  OR
+  corpus_attention_sequences.csv + participants_expertise.csv
+
+Also for duration / timestamp decay:
+  recording_duration_by_participant.csv
+  (or a task_duration_s column in the share file)
+
+See ../README.md for exact column names.
+
+Confirmed assumption (do not treat as anomaly):
+  Recordings 9 and 10: instruction manual was NOT provided → expect ~0 manual gaze.
+  Learning-curve fits and practice t-tests use recordings 1–8 only.

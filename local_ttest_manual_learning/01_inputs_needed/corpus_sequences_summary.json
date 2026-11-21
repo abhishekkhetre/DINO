@@ -1,0 +1,58 @@
+{
+  "n_recordings_with_sequences": 238,
+  "n_recordings_nonempty": 238,
+  "n_sequence_events": 21420,
+  "n_transition_types": 6,
+  "corpus_attention_sequences_csv": "outputs/batch_sam3_full/corpus_attention_sequences.csv",
+  "corpus_sequence_strings_csv": "outputs/batch_sam3_full/corpus_sequence_strings.csv",
+  "corpus_transitions_csv": "outputs/batch_sam3_full/corpus_transitions.csv",
+  "example_sequence_strings": [
+    "Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Manual > Angle Grinder > Manual > Angle Grinder > Boxes > Angle Grinder > Boxes > Manual > Boxes",
+    "Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Manual > Angle Grinder > Manual > Angle Grinder > Boxes > Angle Grinder > Manual > Boxes > Angle Grinder > Boxes > Angle Grinder > Manual",
+    "Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes",
+    "Boxes > Manual > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Manual > Angle Grinder > Manual > Angle Grinder > Boxes > Angle Grinder > Manual",
+    "Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Manual > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes",
+    "Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes",
+    "Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Manual > Angle Grinder > Boxes > Angle Grinder > Boxes > Manual > Boxes > Manual > Angle Grinder > Boxes > Manual",
+    "Boxes > Angle Grinder > Boxes > Angle Grinder > Manual > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder",
+    "Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes",
+    "Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder > Boxes > Angle Grinder"
+  ],
+  "top_transitions": [
+    {
+      "from_label": "Angle Grinder",
+      "to_label": "Boxes",
+      "count": 1722
+    },
+    {
+      "from_label": "Boxes",
+      "to_label": "Angle Grinder",
+      "count": 1678
+    },
+    {
+      "from_label": "Manual",
+      "to_label": "Angle Grinder",
+      "count": 1293
+    },
+    {
+      "from_label": "Angle Grinder",
+      "to_label": "Manual",
+      "count": 1254
+    },
+    {
+      "from_label": "Boxes",
+      "to_label": "Manual",
+      "count": 409
+    },
+    {
+      "from_label": "Manual",
+      "to_label": "Boxes",
+      "count": 356
+    }
+  ],
+  "notes": [
+    "sequence_string = ordered attended AOI labels across Stage E sequences (e.g. Angle Grinder > Manual > Boxes).",
+    "Only labelled fixations that pass quality gates enter sequences.",
+    "Unlabelled gaps break runs; they do not appear as tokens in the string."
+  ]
+}

@@ -1,0 +1,17 @@
+task,expertise,budget,share
+Assembly,Expert,guidance (manual + box),0.286
+Assembly,Expert,execution (grinder + tools),0.7140000000000001
+Assembly,Expert,manual only,0.04
+Assembly,Expert,tools only,0.157
+Assembly,Non-expert,guidance (manual + box),0.369
+Assembly,Non-expert,execution (grinder + tools),0.631
+Assembly,Non-expert,manual only,0.169
+Assembly,Non-expert,tools only,0.09000000000000001
+Disassembly,Expert,guidance (manual + box),0.297
+Disassembly,Expert,execution (grinder + tools),0.7020000000000001
+Disassembly,Expert,manual only,0.054
+Disassembly,Expert,tools only,0.248
+Disassembly,Non-expert,guidance (manual + box),0.395
+Disassembly,Non-expert,execution (grinder + tools),0.605
+Disassembly,Non-expert,manual only,0.249
+Disassembly,Non-expert,tools only,0.154

@@ -1,0 +1,17 @@
+level,task,length,sequence,occurrences,recordings,participants
+Object,Disassembly,3,angle grinder > storage box > angle grinder,238,102,35
+Object,Assembly,3,storage box > angle grinder > storage box,483,145,34
+Object,Assembly,3,angle grinder > storage box > angle grinder,541,134,33
+Object,Assembly,3,storage box > angle grinder > screwdriver,215,110,33
+Object,Disassembly,3,screwdriver > angle grinder > storage box,160,92,33
+Object,Disassembly,3,angle grinder > screwdriver > angle grinder,231,89,33
+Object,Disassembly,3,storage box > angle grinder > screwdriver,120,72,33
+Object,Disassembly,3,angle grinder > screwdriver > storage box,86,66,33
+Object,Assembly,3,angle grinder > screwdriver > angle grinder,291,107,31
+Object,Disassembly,3,storage box > angle grinder > storage box,211,92,31
+Object,Assembly,3,screwdriver > angle grinder > storage box,140,86,31
+Object,Disassembly,3,angle grinder > storage box > screwdriver,100,69,31
+Object,Assembly,3,screwdriver > storage box > angle grinder,126,89,30
+Object,Disassembly,3,angle grinder > storage box > instruction manual,146,75,30
+Object,Assembly,3,angle grinder > screwdriver > storage box,100,75,30
+Object,Assembly,3,angle grinder > storage box > screwdriver,84,67,30
