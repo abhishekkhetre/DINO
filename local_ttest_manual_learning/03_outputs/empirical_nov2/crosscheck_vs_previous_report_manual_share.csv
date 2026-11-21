@@ -1,0 +1,21 @@
+recording_number,task,expertise,previous_report_mean_manual_share,previous_report_n,this_batch_mean_manual_share,this_batch_n,difference,why_may_differ
+2,Assembly,Expert,0.092,17,0.04869879536528078,14,-0.04330120463471922,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+4,Assembly,Expert,0.029,17,0.027462893550015355,14,-0.0015371064499846467,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+6,Assembly,Expert,0.039,17,0.02268136014993933,14,-0.01631863985006067,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+8,Assembly,Expert,0.033,17,0.015382792004236737,14,-0.017617207995763266,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+10,Assembly,Expert,0.005,17,0.0018047383433605233,13,-0.0031952616566394768,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+2,Assembly,Non-expert,0.368,19,0.22420060508231526,10,-0.14379939491768473,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+4,Assembly,Non-expert,0.22,18,0.10967541156629823,10,-0.11032458843370177,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+6,Assembly,Non-expert,0.164,19,0.09882427849441652,10,-0.06517572150558348,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+8,Assembly,Non-expert,0.1,19,0.05373924629029051,10,-0.046260753709709494,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+10,Assembly,Non-expert,0.003,19,0.001701488639331418,10,-0.001298511360668582,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+1,Disassembly,Expert,0.115,17,0.052293360124158306,14,-0.0627066398758417,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+3,Disassembly,Expert,0.048,17,0.045699744509903405,14,-0.0023002554900965963,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+5,Disassembly,Expert,0.075,17,0.04559464739869198,14,-0.02940535260130802,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+7,Disassembly,Expert,0.024,17,0.02438672999531677,14,0.0003867299953167688,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+9,Disassembly,Expert,0.007,17,0.005691571933091017,13,-0.001308428066908983,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+1,Disassembly,Non-expert,0.52,19,0.2588153219410917,10,-0.2611846780589083,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+3,Disassembly,Non-expert,0.372,19,0.17864391838374832,10,-0.19335608161625167,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+5,Disassembly,Non-expert,0.206,19,0.12295145811198568,10,-0.0830485418880143,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+7,Disassembly,Non-expert,0.144,19,0.10103388477812898,10,-0.04296611522187101,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.
+9,Disassembly,Non-expert,0.005,19,0.002178937202019836,10,-0.002821062797980164,Different label set (3 vs 5 labels changes denominator); different participant set (24 vs ~17/19); possibly different batch.

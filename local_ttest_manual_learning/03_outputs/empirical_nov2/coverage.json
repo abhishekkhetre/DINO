@@ -1,0 +1,19 @@
+{
+  "source_attention": "HPC $WS/sheets/corpus_attention_sequences.csv (mtime 2026-11-02)",
+  "source_expertise": "Expertise (2).xlsx Trained Yes\u2192Expert No\u2192Non-expert",
+  "n_episodes": 21420,
+  "n_recordings": 238,
+  "n_participants": 24,
+  "n_expert": 14,
+  "n_nonexpert": 10,
+  "labels_only": [
+    "Angle Grinder",
+    "Boxes",
+    "Manual"
+  ],
+  "note": "Previous report graphs used a 5-label vocabulary (incl. screwdriver, wrench) and ~17/19 participants. This sheet has 3 labels and 24 participants. Manual share here = Manual / (Manual+Boxes+Angle Grinder) duration. It is NOT the same denominator as the old report. Do not equate bar heights to old slides.",
+  "pid_alias": {
+    "LE07UF1": "LE07UF17"
+  },
+  "rec_9_10": "manual not provided \u2014 excluded from learning tests; summarised separately"
+}
